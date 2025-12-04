@@ -1,0 +1,220 @@
+"""
+视频分析API视图模块。
+"""
+import logging
+
+from apps.common.mixins import SafeAPIView
+from apps.common.response import APIResponse
+from apps.common.pagination import paginate_queryset
+from apps.common.exceptions import ValidationException, NotFoundException
+
+from .models import VideoAnalysis
+from .services import VideoAnalysisService
+
+logger = logging.getLogger(__name__)
+
+
+class VideoAnalysisView(SafeAPIView):
+    """
+    视频分析API
+    POST: 上传视频并开始分析
+    """
+    
+    def handle_post(self, request):
+        """上传视频并开始分析。"""
+        video_file = request.FILES.get('video_file')
+        candidate_name = self.get_param(request, 'candidate_name', required=True)
+        position_applied = self.get_param(request, 'position_applied', required=True)
+        resume_data_id = self.get_param(request, 'resume_data_id')
+        video_name = self.get_param(request, 'video_name') or (video_file.name if video_file else None)
+        
+        if not video_file:
+            raise ValidationException("缺少参数: video_file")
+        
+        if not video_name:
+            raise ValidationException("无法确定视频名称")
+        
+        # 如果提供了简历数据则进行验证
+        resume_data = None
+        if resume_data_id:
+            from apps.resume_screening.models import ResumeData
+            try:
+                resume_data = ResumeData.objects.get(id=resume_data_id)
+            except ResumeData.DoesNotExist:
+                raise NotFoundException("指定的简历数据不存在")
+        
+        # 创建视频分析记录
+        video_analysis = VideoAnalysis.objects.create(
+            video_name=video_name,
+            video_file=video_file,
+            file_size=video_file.size if video_file else None,
+            candidate_name=candidate_name,
+            position_applied=position_applied,
+            status='pending'
+        )
+        
+        # 如果提供了简历数据则关联
+        if resume_data:
+            resume_data.video_analysis = video_analysis
+            resume_data.save()
+        
+        # 开始分析
+        self._start_analysis(video_analysis)
+        
+        response_data = {
+            "video_id": str(video_analysis.id),
+            "video_name": video_analysis.video_name,
+            "candidate_name": video_analysis.candidate_name,
+            "position_applied": video_analysis.position_applied,
+            "status": video_analysis.status,
+            "created_at": video_analysis.created_at.isoformat()
+        }
+        
+        if resume_data:
+            response_data["resume_data_id"] = str(resume_data.id)
+        
+        return APIResponse.created(
+            data=response_data,
+            message="视频数据接收成功，分析已在后台开始"
+        )
+    
+    def _start_analysis(self, video_analysis):
+        """在后台启动视频分析。"""
+        try:
+            from .tasks import analyze_video_task
+            analyze_video_task.delay(str(video_analysis.id))
+            logger.info(f"已启动视频分析Celery任务 {video_analysis.id}")
+        except Exception as e:
+            logger.warning(f"Celery不可用，使用线程: {e}")
+            import threading
+            import time
+            
+            def run_analysis():
+                time.sleep(1)  # 短暂延迟
+                VideoAnalysisService.analyze_video(str(video_analysis.id))
+            
+            thread = threading.Thread(target=run_analysis)
+            thread.daemon = True
+            thread.start()
+
+
+class VideoAnalysisStatusView(SafeAPIView):
+    """
+    视频分析状态API
+    GET: 获取视频分析状态和结果
+    """
+    
+    def handle_get(self, request, video_id):
+        """获取视频分析状态。"""
+        video_analysis = self.get_object_or_404(VideoAnalysis, id=video_id)
+        
+        response_data = {
+            "video_id": str(video_analysis.id),
+            "video_name": video_analysis.video_name,
+            "candidate_name": video_analysis.candidate_name,
+            "position_applied": video_analysis.position_applied,
+            "status": video_analysis.status,
+            "created_at": video_analysis.created_at.isoformat()
+        }
+        
+        if video_analysis.status == 'completed':
+            response_data.update({
+                "analysis_result": video_analysis.analysis_result,
+                "summary": video_analysis.summary,
+                "confidence_score": video_analysis.confidence_score
+            })
+        
+        if video_analysis.status == 'failed' and video_analysis.error_message:
+            response_data["error_message"] = video_analysis.error_message
+        
+        return APIResponse.success(response_data)
+
+
+class VideoAnalysisUpdateView(SafeAPIView):
+    """
+    视频分析结果更新API
+    POST: 更新视频分析结果
+    """
+    
+    def handle_post(self, request, video_id):
+        """更新视频分析结果。"""
+        scores = {
+            'fraud_score': request.data.get('fraud_score'),
+            'neuroticism_score': request.data.get('neuroticism_score'),
+            'extraversion_score': request.data.get('extraversion_score'),
+            'openness_score': request.data.get('openness_score'),
+            'agreeableness_score': request.data.get('agreeableness_score'),
+            'conscientiousness_score': request.data.get('conscientiousness_score'),
+            'summary': request.data.get('summary'),
+            'confidence_score': request.data.get('confidence_score'),
+            'status': request.data.get('status', 'completed'),
+        }
+        
+        # 将适用的字段转换为浮点数
+        for key in ['fraud_score', 'neuroticism_score', 'extraversion_score',
+                    'openness_score', 'agreeableness_score', 'conscientiousness_score',
+                    'confidence_score']:
+            if scores[key] is not None:
+                try:
+                    scores[key] = float(scores[key])
+                except (TypeError, ValueError):
+                    raise ValidationException(f"{key}必须是有效的数字")
+        
+        video_analysis = VideoAnalysisService.update_analysis_result(video_id, **scores)
+        
+        response_data = {
+            "video_id": str(video_analysis.id),
+            "status": video_analysis.status,
+            "analysis_result": video_analysis.analysis_result
+        }
+        
+        if hasattr(video_analysis, 'linked_resume_data') and video_analysis.linked_resume_data:
+            response_data["resume_data_id"] = str(video_analysis.linked_resume_data.id)
+        
+        return APIResponse.success(
+            data=response_data,
+            message="视频分析结果更新成功"
+        )
+
+
+class VideoAnalysisListView(SafeAPIView):
+    """
+    视频分析列表API
+    GET: 获取视频分析列表
+    """
+    
+    def handle_get(self, request):
+        """获取视频分析列表，支持过滤和分页。"""
+        candidate_name = request.GET.get('candidate_name')
+        position_applied = request.GET.get('position_applied')
+        status_filter = request.GET.get('status')
+        
+        queryset = VideoAnalysis.objects.all().order_by('-created_at')
+        
+        if candidate_name:
+            queryset = queryset.filter(candidate_name__icontains=candidate_name)
+        if position_applied:
+            queryset = queryset.filter(position_applied__icontains=position_applied)
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        items, pagination = paginate_queryset(queryset, request)
+        
+        result = []
+        for video in items:
+            data = {
+                "video_id": str(video.id),
+                "video_name": video.video_name,
+                "candidate_name": video.candidate_name,
+                "position_applied": video.position_applied,
+                "status": video.status,
+                "confidence_score": video.confidence_score,
+                "created_at": video.created_at.isoformat()
+            }
+            
+            if video.status == 'completed':
+                data["analysis_result"] = video.analysis_result
+            
+            result.append(data)
+        
+        return APIResponse.paginated(result, pagination['total'], pagination['page'], pagination['page_size'])
