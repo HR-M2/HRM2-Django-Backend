@@ -1,9 +1,11 @@
-from .screening_agents import create_screening_agents
-from .evaluation_agents import create_evaluation_agents
+from .screening_agents import create_screening_agents, ScreeningAgentManager
+from .evaluation_agents import create_evaluation_agents, EvaluationAgentManager
 from .base import BaseAgentManager
 
 __all__ = [
     'create_screening_agents',
     'create_evaluation_agents', 
-    'BaseAgentManager'
+    'BaseAgentManager',
+    'ScreeningAgentManager',
+    'EvaluationAgentManager',
 ]
