@@ -145,16 +145,158 @@ class ReportDownloadView(SafeAPIView):
     """
     报告下载API
     GET: 下载筛选报告
+    
+    支持两种方式：
+    1. 如果有 md_file，直接返回文件
+    2. 如果没有文件，从数据库的 ResumeData 动态生成 Markdown 报告
     """
     
     def handle_get(self, request, report_id):
         """下载筛选报告。"""
-        report = self.get_object_or_404(ScreeningReport, id=report_id)
+        # 首先尝试从 ResumeData 获取数据（优先，因为包含完整信息）
+        resume_data = ResumeData.objects.filter(id=report_id).first()
         
-        response = FileResponse(
-            report.md_file.open('rb'),
-            content_type='text/markdown'
+        if resume_data:
+            # 从数据库动态生成 Markdown 报告
+            md_content = self._generate_markdown_report(resume_data)
+            filename = f"{resume_data.candidate_name}简历初筛结果.md"
+            
+            response = self._create_markdown_response(md_content, filename)
+            return response
+        
+        # 备选：尝试从 ScreeningReport 获取
+        report = ScreeningReport.objects.filter(id=report_id).first()
+        
+        if report:
+            # 如果有实际文件，返回文件
+            if report.md_file:
+                try:
+                    response = FileResponse(
+                        report.md_file.open('rb'),
+                        content_type='text/markdown'
+                    )
+                    response['Content-Disposition'] = f'attachment; filename="{report.original_filename}"'
+                    return response
+                except FileNotFoundError:
+                    logger.warning(f"Report file not found for report_id={report_id}")
+            
+            # 如果文件不存在但有关联的 ResumeData
+            resume_data = report.resume_data.first()
+            if resume_data:
+                md_content = self._generate_markdown_report(resume_data)
+                filename = report.original_filename or f"{resume_data.candidate_name}简历初筛结果.md"
+                response = self._create_markdown_response(md_content, filename)
+                return response
+        
+        # 都找不到，返回404
+        return JsonResponse({"error": "报告不存在"}, status=404)
+    
+    def _generate_markdown_report(self, resume_data: ResumeData) -> str:
+        """从 ResumeData 生成 Markdown 报告内容。"""
+        lines = []
+        
+        # 标题
+        lines.append(f"# {resume_data.candidate_name} 简历初筛报告")
+        lines.append("")
+        lines.append(f"**岗位**: {resume_data.position_title}")
+        lines.append(f"**生成时间**: {resume_data.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append("")
+        
+        # 评分部分
+        if resume_data.screening_score:
+            scores = resume_data.screening_score
+            lines.append("## 📊 评分结果")
+            lines.append("")
+            lines.append("| 评分维度 | 分数 |")
+            lines.append("|---------|------|")
+            lines.append(f"| 综合评分 | **{scores.get('comprehensive_score', 'N/A')}** |")
+            lines.append(f"| HR评分 | {scores.get('hr_score', 'N/A')} |")
+            lines.append(f"| 技术评分 | {scores.get('technical_score', 'N/A')} |")
+            lines.append(f"| 管理评分 | {scores.get('manager_score', 'N/A')} |")
+            lines.append("")
+        
+        # 筛选总结
+        if resume_data.screening_summary:
+            lines.append("## 📝 筛选总结")
+            lines.append("")
+            lines.append(resume_data.screening_summary)
+            lines.append("")
+        
+        # JSON 报告内容（如果有详细分析）
+        if resume_data.json_report_content:
+            try:
+                import json
+                json_data = json.loads(resume_data.json_report_content)
+                
+                # HR分析
+                if 'hr_analysis' in json_data:
+                    lines.append("## 👔 HR分析")
+                    lines.append("")
+                    hr = json_data['hr_analysis']
+                    if isinstance(hr, dict):
+                        for key, value in hr.items():
+                            lines.append(f"**{key}**: {value}")
+                    else:
+                        lines.append(str(hr))
+                    lines.append("")
+                
+                # 技术分析
+                if 'technical_analysis' in json_data:
+                    lines.append("## 💻 技术分析")
+                    lines.append("")
+                    tech = json_data['technical_analysis']
+                    if isinstance(tech, dict):
+                        for key, value in tech.items():
+                            lines.append(f"**{key}**: {value}")
+                    else:
+                        lines.append(str(tech))
+                    lines.append("")
+                
+                # 管理分析
+                if 'manager_analysis' in json_data:
+                    lines.append("## 📋 管理分析")
+                    lines.append("")
+                    mgr = json_data['manager_analysis']
+                    if isinstance(mgr, dict):
+                        for key, value in mgr.items():
+                            lines.append(f"**{key}**: {value}")
+                    else:
+                        lines.append(str(mgr))
+                    lines.append("")
+                    
+            except (json.JSONDecodeError, TypeError):
+                # JSON解析失败，直接输出原始内容
+                lines.append("## 📄 详细分析")
+                lines.append("")
+                lines.append(resume_data.json_report_content)
+                lines.append("")
+        
+        # 简历原文
+        if resume_data.resume_content:
+            lines.append("## 📄 简历原文")
+            lines.append("")
+            lines.append("```")
+            lines.append(resume_data.resume_content)
+            lines.append("```")
+            lines.append("")
+        
+        # 页脚
+        lines.append("---")
+        lines.append("*此报告由 HRM 智能招聘系统自动生成*")
+        
+        return "\n".join(lines)
+    
+    def _create_markdown_response(self, content: str, filename: str):
+        """创建 Markdown 文件下载响应。"""
+        from django.http import HttpResponse
+        from urllib.parse import quote
+        
+        response = HttpResponse(
+            content.encode('utf-8'),
+            content_type='text/markdown; charset=utf-8'
         )
-        response['Content-Disposition'] = f'attachment; filename="{report.original_filename}"'
+        # 处理中文文件名
+        encoded_filename = quote(filename)
+        response['Content-Disposition'] = f"attachment; filename*=UTF-8''{encoded_filename}"
         
         return response
