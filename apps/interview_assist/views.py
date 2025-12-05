@@ -1,10 +1,12 @@
 """
-面试辅助API视图模块。
+面试辅助API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
 from datetime import datetime
 from django.utils import timezone
 from django.core.files.base import ContentFile
+from django.http import JsonResponse
+from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import APIResponse
@@ -66,17 +68,19 @@ class SessionView(SafeAPIView):
         if resume_data.screening_summary:
             resume_summary['screening_summary'] = resume_data.screening_summary[:200]
         
-        return APIResponse.created(
-            data={
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'message': '面试辅助会话已创建',
+            'data': {
                 'session_id': str(session.id),
                 'candidate_name': resume_data.candidate_name,
                 'position_title': job_config.get('title', resume_data.position_title),
                 'status': session.status,
                 'created_at': session.created_at.isoformat(),
                 'resume_summary': resume_summary
-            },
-            message="面试辅助会话已创建"
-        )
+            }
+        }, status=201)
     
     def handle_get(self, request, session_id=None):
         """获取会话详情。"""
@@ -105,7 +109,11 @@ class SessionView(SafeAPIView):
                 'overall_assessment', {}
             ).get('summary', '')
         
-        return APIResponse.success(response_data)
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'data': response_data
+        })
     
     def handle_delete(self, request, session_id=None):
         """结束会话。"""
@@ -116,7 +124,11 @@ class SessionView(SafeAPIView):
         session.status = 'completed'
         session.save()
         
-        return APIResponse.success(message="会话已结束")
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'message': '会话已结束'
+        })
 
 
 class GenerateQuestionsView(SafeAPIView):
@@ -169,14 +181,16 @@ class GenerateQuestionsView(SafeAPIView):
         session.resume_highlights = interest_points
         session.save()
         
-        return APIResponse.success(
-            data={
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'message': f'已生成{len(all_questions)}个候选问题',
+            'data': {
                 'session_id': str(session.id),
                 'question_pool': all_questions,
                 'resume_highlights': interest_points
-            },
-            message=f"已生成{len(all_questions)}个候选问题"
-        )
+            }
+        })
 
 
 class RecordQAView(SafeAPIView):
@@ -256,16 +270,18 @@ class RecordQAView(SafeAPIView):
         # 生成HR提示
         hr_hints = self._generate_hr_hints(evaluation)
         
-        return APIResponse.success(
-            data={
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'message': '问答已记录，评估完成',
+            'data': {
                 'round_number': round_number,
                 'qa_record_id': str(qa_record.id),
                 'evaluation': evaluation,
                 'followup_recommendation': followup_recommendation,
                 'hr_action_hints': hr_hints
-            },
-            message="问答已记录，评估完成"
-        )
+            }
+        })
     
     def _generate_hr_hints(self, evaluation: dict) -> list:
         """生成HR行动提示。"""
@@ -347,13 +363,15 @@ class GenerateReportView(SafeAPIView):
         
         session.save()
         
-        return APIResponse.success(
-            data={
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'message': '评估报告生成成功',
+            'data': {
                 'report': report,
                 'report_file_url': session.report_file.url if session.report_file else None
-            },
-            message="评估报告生成成功"
-        )
+            }
+        })
     
     def _format_report(self, session, report: dict, qa_data: list = None) -> str:
         """将报告格式化为Markdown。"""

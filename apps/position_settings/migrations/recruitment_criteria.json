@@ -1,0 +1,29 @@
+{
+    "position": "大模型算法工程师",
+    "required_skills": [
+        "Python",
+        "PyTorch/TensorFlow",
+        "深度学习",
+        "Transformer模型架构"
+    ],
+    "optional_skills": [
+        "多模态大模型",
+        "Prompt Engineering",
+        "\"CUDA/Triton GPU编程",
+        "算子性能优化"
+    ],
+    "min_experience": 3,
+    "education": [
+        "硕士",
+        "博士"
+    ],
+    "certifications": [],
+    "salary_range": [
+        25000,
+        50000
+    ],
+    "project_requirements": {
+        "min_projects": 1,
+        "team_lead_experience": false
+    }
+}

@@ -1,8 +1,11 @@
 """
-简历筛选API视图模块。
+简历筛选API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
 from django.conf import settings
+from django.http import JsonResponse
+from rest_framework.response import Response
+from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import APIResponse
@@ -44,13 +47,12 @@ class ResumeScreeningView(SafeAPIView):
             # 启动异步任务（使用Celery或线程）
             self._start_screening_task(task, position_data, resumes_data)
             
-            return APIResponse.accepted(
-                data={
-                    "task_id": str(task.id),
-                    "total_resumes": len(resumes_data)
-                },
-                message="简历筛选任务已提交，正在后台处理"
-            )
+            # 返回与原版一致的格式
+            return Response({
+                "status": "submitted",
+                "message": "简历筛选任务已提交，正在后台处理",
+                "task_id": str(task.id)
+            }, status=status.HTTP_202_ACCEPTED)
             
         except ValidationException as e:
             return APIResponse.validation_error(e.errors, e.message)
@@ -148,7 +150,8 @@ class ScreeningTaskStatusView(SafeAPIView):
         if task.status == 'failed' and task.error_message:
             response_data['error_message'] = task.error_message
         
-        return APIResponse.success(response_data)
+        # 返回与原版一致的格式
+        return JsonResponse(response_data)
     
     def _get_reports(self, task):
         """获取任务的报告。"""
@@ -157,7 +160,7 @@ class ScreeningTaskStatusView(SafeAPIView):
             {
                 "report_id": str(report.id),
                 "report_filename": report.original_filename,
-                "download_url": f"/api/v1/screening/reports/{report.id}/download/",
+                "download_url": f"/resume-screening/reports/{report.id}/download/",
                 "resume_content": report.resume_content or ""
             }
             for report in reports

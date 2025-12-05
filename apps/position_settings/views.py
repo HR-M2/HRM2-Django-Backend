@@ -1,10 +1,11 @@
 """
-岗位设置API视图模块。
+岗位设置API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import os
 import json
 import logging
 from django.conf import settings
+from django.http import JsonResponse
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import APIResponse
@@ -22,34 +23,34 @@ class RecruitmentCriteriaView(SafeAPIView):
     POST: 更新招聘标准
     """
     
-    # 默认标准文件路径（用于向后兼容）
-    CRITERIA_FILE = 'data/recruitment_criteria.json'
+    # 默认标准文件路径（用于向后兼容）- 与原版路径一致
+    CRITERIA_FILE = os.path.join('apps', 'position_settings', 'migrations', 'recruitment_criteria.json')
     
     def handle_get(self, request):
         """获取招聘标准。"""
-        # 首先尝试从数据库获取
-        criteria = PositionCriteria.objects.filter(is_active=True).first()
-        
-        if criteria:
-            return APIResponse.success(data=criteria.to_dict())
-        
-        # 回退到文件
+        # 首先尝试从文件获取（与原版一致）
         file_path = os.path.join(settings.BASE_DIR, self.CRITERIA_FILE)
         
         if os.path.exists(file_path):
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                return APIResponse.success(data=data)
+                # 返回与原版完全一致的格式
+                return JsonResponse({'code': 200, 'message': '成功', 'data': data})
             except json.JSONDecodeError:
-                raise ValidationException("招聘标准文件格式错误")
+                return JsonResponse({'code': 500, 'message': '文件格式错误，非有效JSON'}, status=500)
             except Exception as e:
                 logger.error(f"Failed to read criteria file: {e}")
-                raise
+                return JsonResponse({'code': 500, 'message': f'服务器内部错误: {str(e)}'}, status=500)
+        
+        # 尝试从数据库获取
+        criteria = PositionCriteria.objects.filter(is_active=True).first()
+        if criteria:
+            return JsonResponse({'code': 200, 'message': '成功', 'data': criteria.to_dict()})
         
         # 返回默认标准
         default_criteria = self._get_default_criteria()
-        return APIResponse.success(data=default_criteria)
+        return JsonResponse({'code': 200, 'message': '成功', 'data': default_criteria})
     
     def handle_post(self, request):
         """更新招聘标准。"""
@@ -89,10 +90,8 @@ class RecruitmentCriteriaView(SafeAPIView):
         except Exception as e:
             logger.warning(f"Failed to save criteria to file: {e}")
         
-        return APIResponse.success(
-            message="招聘标准更新成功",
-            data=criteria.to_dict()
-        )
+        # 返回与原版一致的格式
+        return JsonResponse({'code': 200, 'message': '招聘标准更新成功', 'data': criteria.to_dict()})
     
     def _get_default_criteria(self):
         """获取默认招聘标准。"""
@@ -133,4 +132,5 @@ class PositionCriteriaListView(SafeAPIView):
             for c in criteria_list
         ]
         
-        return APIResponse.success(data=data)
+        # 返回与原版一致的格式
+        return JsonResponse({'code': 200, 'message': '成功', 'data': data})

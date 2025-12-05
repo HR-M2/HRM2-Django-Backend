@@ -1,7 +1,10 @@
 """
-视频分析API视图模块。
+视频分析API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
+from django.http import JsonResponse
+from rest_framework.response import Response
+from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import APIResponse
@@ -73,10 +76,9 @@ class VideoAnalysisView(SafeAPIView):
         if resume_data:
             response_data["resume_data_id"] = str(resume_data.id)
         
-        return APIResponse.created(
-            data=response_data,
-            message="视频数据接收成功，分析已在后台开始"
-        )
+        # 返回与原版一致的格式
+        response_data["message"] = "视频数据接收成功，分析已在后台开始"
+        return Response(response_data, status=status.HTTP_201_CREATED)
     
     def _start_analysis(self, video_analysis):
         """在后台启动视频分析。"""
@@ -127,7 +129,8 @@ class VideoAnalysisStatusView(SafeAPIView):
         if video_analysis.status == 'failed' and video_analysis.error_message:
             response_data["error_message"] = video_analysis.error_message
         
-        return APIResponse.success(response_data)
+        # 返回与原版一致的格式
+        return JsonResponse(response_data)
 
 
 class VideoAnalysisUpdateView(SafeAPIView):
@@ -171,10 +174,9 @@ class VideoAnalysisUpdateView(SafeAPIView):
         if hasattr(video_analysis, 'linked_resume_data') and video_analysis.linked_resume_data:
             response_data["resume_data_id"] = str(video_analysis.linked_resume_data.id)
         
-        return APIResponse.success(
-            data=response_data,
-            message="视频分析结果更新成功"
-        )
+        # 返回与原版一致的格式
+        response_data["message"] = "视频分析结果更新成功"
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class VideoAnalysisListView(SafeAPIView):
@@ -217,4 +219,10 @@ class VideoAnalysisListView(SafeAPIView):
             
             result.append(data)
         
-        return APIResponse.paginated(result, pagination['total'], pagination['page'], pagination['page_size'])
+        # 返回与原版完全一致的格式
+        return JsonResponse({
+            "videos": result,
+            "total": pagination['total'],
+            "page": pagination['page'],
+            "page_size": pagination['page_size']
+        })

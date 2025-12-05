@@ -1,11 +1,11 @@
 """
-最终推荐API视图模块。
+最终推荐API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import os
 import logging
 from urllib.parse import unquote
 from django.conf import settings
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import APIResponse
@@ -38,13 +38,15 @@ class InterviewEvaluationView(SafeAPIView):
         # 启动异步任务
         self._start_evaluation(task, group_id)
         
-        return APIResponse.success(
-            data={
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'message': '面试后评估任务已启动',
+            'data': {
                 'task_id': str(task.id),
                 'status': task.status
-            },
-            message="面试后评估任务已启动"
-        )
+            }
+        })
     
     def handle_get(self, request, task_id=None):
         """获取任务状态。"""
@@ -74,7 +76,11 @@ class InterviewEvaluationView(SafeAPIView):
         
         task.delete()
         
-        return APIResponse.success(message=f"任务 {task_id} 已成功删除")
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'message': f'任务 {task_id} 已成功删除'
+        })
     
     def _start_evaluation(self, task, group_id):
         """在后台启动评估。"""
@@ -170,7 +176,11 @@ class InterviewEvaluationView(SafeAPIView):
         elif task.status == 'failed':
             data['error_message'] = task.error_message
         
-        return APIResponse.success(data)
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'data': data
+        })
     
     def _get_latest_task_by_group(self, group_id):
         """获取简历组的最新任务。"""
@@ -179,7 +189,11 @@ class InterviewEvaluationView(SafeAPIView):
         ).order_by('-created_at').first()
         
         if not task:
-            return APIResponse.success(data=None)
+            # 返回与原版一致的格式
+            return JsonResponse({
+                'status': 'success',
+                'data': None
+            })
         
         data = {
             'task_id': str(task.id),
@@ -197,7 +211,11 @@ class InterviewEvaluationView(SafeAPIView):
         elif task.status == 'failed':
             data['error_message'] = task.error_message
         
-        return APIResponse.success(data)
+        # 返回与原版一致的格式
+        return JsonResponse({
+            'status': 'success',
+            'data': data
+        })
 
 
 class ReportDownloadView(SafeAPIView):

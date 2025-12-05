@@ -1,8 +1,8 @@
 """
-任务管理视图模块。
+任务管理视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import APIResponse
@@ -21,6 +21,9 @@ class TaskHistoryView(SafeAPIView):
     
     def handle_get(self, request):
         """获取任务历史，支持分页。"""
+        # 获取分页参数
+        page = int(request.GET.get('page', 1))
+        page_size = min(int(request.GET.get('page_size', 20)), 50)
         status_filter = request.GET.get('status')
         
         queryset = ResumeScreeningTask.objects.all().order_by('-created_at')
@@ -28,10 +31,14 @@ class TaskHistoryView(SafeAPIView):
         if status_filter:
             queryset = queryset.filter(status=status_filter)
         
-        items, pagination = paginate_queryset(queryset, request)
+        # 分页
+        total = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        tasks = queryset[start:end]
         
         result = []
-        for task in items:
+        for task in tasks:
             data = {
                 "task_id": str(task.id),
                 "status": task.status,
@@ -53,7 +60,13 @@ class TaskHistoryView(SafeAPIView):
             
             result.append(data)
         
-        return APIResponse.paginated(result, pagination['total'], pagination['page'], pagination['page_size'])
+        # 返回与原版一致的格式
+        return JsonResponse({
+            "tasks": result,
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        })
     
     def _get_reports(self, task):
         """获取任务的报告。"""
@@ -64,7 +77,7 @@ class TaskHistoryView(SafeAPIView):
             report_data = {
                 "report_id": str(report.id),
                 "report_filename": report.original_filename,
-                "download_url": f"/api/v1/screening/reports/{report.id}/download/",
+                "download_url": f"/resume-screening/reports/{report.id}/download/",
                 "resume_content": report.resume_content or ""
             }
             

@@ -1,7 +1,11 @@
 """
-简历数据管理视图模块。
+简历数据管理视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
+from django.http import JsonResponse
+from rest_framework.response import Response
+from rest_framework import status
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import APIResponse
 from apps.common.pagination import paginate_queryset
@@ -24,6 +28,8 @@ class ResumeDataView(SafeAPIView):
         """获取简历数据列表，支持过滤和分页。"""
         candidate_name = request.GET.get('candidate_name')
         position_title = request.GET.get('position_title')
+        page = int(request.GET.get('page', 1))
+        page_size = min(int(request.GET.get('page_size', 10)), 50)
         
         queryset = ResumeData.objects.all()
         
@@ -33,11 +39,14 @@ class ResumeDataView(SafeAPIView):
             queryset = queryset.filter(position_title__icontains=position_title)
         
         # 分页
-        items, pagination = paginate_queryset(queryset, request)
+        total = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        data_list = queryset[start:end]
         
-        # 构建响应
+        # 构建响应 - 与原版格式一致
         result = []
-        for data in items:
+        for data in data_list:
             item = {
                 "id": str(data.id),
                 "created_at": data.created_at.isoformat(),
@@ -55,12 +64,24 @@ class ResumeDataView(SafeAPIView):
                     "video_id": str(data.video_analysis.id),
                     "video_name": data.video_analysis.video_name,
                     "status": data.video_analysis.status,
+                    "fraud_score": data.video_analysis.fraud_score,
+                    "neuroticism_score": data.video_analysis.neuroticism_score,
+                    "extraversion_score": data.video_analysis.extraversion_score,
+                    "openness_score": data.video_analysis.openness_score,
+                    "agreeableness_score": data.video_analysis.agreeableness_score,
+                    "conscientiousness_score": data.video_analysis.conscientiousness_score,
                     "confidence_score": data.video_analysis.confidence_score,
                 }
             
             result.append(item)
         
-        return APIResponse.paginated(result, pagination['total'], pagination['page'], pagination['page_size'])
+        # 返回与原版完全一致的格式
+        return JsonResponse({
+            "results": result,
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        })
     
     def handle_post(self, request):
         """创建新的简历数据记录。"""
@@ -77,10 +98,11 @@ class ResumeDataView(SafeAPIView):
             resume_file_hash=generate_hash(resume_content)
         )
         
-        return APIResponse.created(
-            data={"id": str(resume_data.id)},
-            message="简历数据创建成功"
-        )
+        # 返回与原版一致的格式
+        return Response({
+            "id": str(resume_data.id),
+            "message": "简历数据创建成功"
+        }, status=status.HTTP_201_CREATED)
 
 
 class ResumeDataDetailView(SafeAPIView):
@@ -116,4 +138,5 @@ class ResumeDataDetailView(SafeAPIView):
             "video_analysis_id": str(resume_data.video_analysis.id) if resume_data.video_analysis else None,
         }
         
-        return APIResponse.success({"report": data})
+        # 返回与原版一致的格式
+        return JsonResponse({"report": data})
