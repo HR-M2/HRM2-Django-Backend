@@ -65,12 +65,23 @@ class BaseAgentManager:
         content_str = str(content).lower()
         return any(keyword in content_str for keyword in ['approve', 'terminate', '评审结束'])
     
+    # 筛选流程中的agent总数（用于进度计算）
+    TOTAL_AGENTS = 6  # User_Proxy -> Assistant -> HR_Expert -> Technical_Expert -> Project_Manager_Expert -> Critic
+    
     def update_task_speaker(self, speaker_name: str, step: int = None):
-        """更新任务的当前发言人信息。"""
+        """
+        更新任务的当前发言人信息。
+        
+        参数:
+            speaker_name: 当前发言的agent名称
+            step: 当前步骤数（1-6），会自动转换为百分比进度
+        """
         if self.current_task:
             self.current_task.current_speaker = speaker_name
             if step is not None:
-                self.current_task.progress = step
+                # 按agent总数计算百分比进度（0-100）
+                progress_percent = int((step / self.TOTAL_AGENTS) * 100)
+                self.current_task.progress = min(progress_percent, 99)  # 保留最后1%给完成状态
             self.current_task.save()
     
     def run_chat(self, initiator: autogen.Agent, message: str):

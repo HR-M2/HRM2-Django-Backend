@@ -172,19 +172,9 @@ class ReportService:
         from ..models import ResumeData
         from apps.common.utils import generate_hash
         
-        # 生成哈希用于去重
-        resume_hash = generate_hash(resume_content)
-        
-        # 检查是否存在
-        existing = ResumeData.objects.filter(resume_file_hash=resume_hash).first()
-        if existing:
-            # 更新现有记录
-            existing.screening_score = screening_result.get('scores', {})
-            existing.screening_summary = screening_result.get('summary', '')
-            existing.json_report_content = screening_result.get('json_content', '')
-            existing.task = task
-            existing.save()
-            return existing
+        # 生成哈希：内容 + 任务ID，确保每次筛选都是独立记录
+        # 这样同一份简历的不同筛选会产生不同哈希，不会被去重覆盖
+        resume_hash = generate_hash(f"{resume_content}_{task.id}")
         
         # 创建新记录
         resume_data = ResumeData.objects.create(
