@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
-from apps.common.response import APIResponse
 from apps.common.exceptions import ValidationException
 
 from ..models import ResumeScreeningTask, ScreeningReport, ResumeData
@@ -29,7 +28,10 @@ class ResumeScreeningView(SafeAPIView):
         # 验证输入
         serializer = ResumeScreeningInputSerializer(data=request.data)
         if not serializer.is_valid():
-            return APIResponse.validation_error(serializer.errors)
+            return Response(
+                {"error": "参数验证失败", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         try:
             # 解析输入数据
@@ -55,7 +57,10 @@ class ResumeScreeningView(SafeAPIView):
             }, status=status.HTTP_202_ACCEPTED)
             
         except ValidationException as e:
-            return APIResponse.validation_error(e.errors, e.message)
+            return Response(
+                {"error": e.message, "details": e.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
     def _start_screening_task(self, task, position_data, resumes_data):
         """在后台启动筛选任务。"""

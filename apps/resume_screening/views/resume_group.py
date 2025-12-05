@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
-from apps.common.response import APIResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.exceptions import ValidationException
 
@@ -180,7 +179,10 @@ class CreateResumeGroupView(SafeAPIView):
         """创建简历组。"""
         serializer = CreateResumeGroupSerializer(data=request.data)
         if not serializer.is_valid():
-            return APIResponse.validation_error(serializer.errors)
+            return Response(
+                {"error": "参数验证失败", "details": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         data = serializer.validated_data
         

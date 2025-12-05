@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
-from apps.common.response import APIResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.exceptions import ValidationException, NotFoundException
 

@@ -5,7 +5,6 @@ import logging
 from django.http import FileResponse, JsonResponse
 
 from apps.common.mixins import SafeAPIView
-from apps.common.response import APIResponse
 from apps.common.pagination import paginate_queryset
 
 from ..models import ResumeScreeningTask, ScreeningReport, ResumeData

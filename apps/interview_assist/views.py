@@ -9,7 +9,6 @@ from django.http import JsonResponse
 from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
-from apps.common.response import APIResponse
 from apps.common.exceptions import ValidationException, NotFoundException
 
 from .models import InterviewAssistSession, InterviewQARecord

@@ -3,7 +3,8 @@
 """
 import logging
 from rest_framework.views import APIView
-from .response import APIResponse
+from rest_framework.response import Response
+from rest_framework import status
 from .exceptions import APIException, NotFoundException
 
 logger = logging.getLogger(__name__)
@@ -46,27 +47,34 @@ class SafeAPIView(BaseAPIViewMixin, APIView):
         try:
             return super().dispatch(request, *args, **kwargs)
         except APIException as e:
-            return APIResponse.error(e.message, e.errors, e.status_code)
+            # 使用与原版 RecruitmentSystemAPI 一致的错误格式
+            return Response(
+                {"error": e.message},
+                status=e.status_code
+            )
         except Exception as e:
             logger.exception(f"未处理的异常: {e}")
-            return APIResponse.server_error()
+            return Response(
+                {"error": "服务器内部错误"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def get(self, request, *args, **kwargs):
         if hasattr(self, 'handle_get'):
             return self.handle_get(request, *args, **kwargs)
-        return APIResponse.error("Method not allowed", status_code=405)
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     def post(self, request, *args, **kwargs):
         if hasattr(self, 'handle_post'):
             return self.handle_post(request, *args, **kwargs)
-        return APIResponse.error("Method not allowed", status_code=405)
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     def put(self, request, *args, **kwargs):
         if hasattr(self, 'handle_put'):
             return self.handle_put(request, *args, **kwargs)
-        return APIResponse.error("Method not allowed", status_code=405)
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     def delete(self, request, *args, **kwargs):
         if hasattr(self, 'handle_delete'):
             return self.handle_delete(request, *args, **kwargs)
-        return APIResponse.error("Method not allowed", status_code=405)
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

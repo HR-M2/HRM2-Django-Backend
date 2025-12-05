@@ -8,7 +8,6 @@ from django.conf import settings
 from django.http import FileResponse, JsonResponse
 
 from apps.common.mixins import SafeAPIView
-from apps.common.response import APIResponse
 from apps.common.exceptions import ValidationException, NotFoundException
 
 from .models import InterviewEvaluationTask
