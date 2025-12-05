@@ -9,13 +9,6 @@ import uuid
 class PositionCriteria(models.Model):
     """岗位招聘标准模型 - 支持多岗位，每个岗位即为一个简历组"""
     
-    class Status(models.TextChoices):
-        PENDING = 'pending', '待分析'
-        INTERVIEW_ANALYSIS = 'interview_analysis', '面试分析中'
-        INTERVIEW_COMPLETED = 'interview_analysis_completed', '面试分析已完成'
-        COMPREHENSIVE = 'comprehensive_screening', '综合筛选中'
-        COMPLETED = 'completed', '已完成'
-    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
@@ -41,12 +34,6 @@ class PositionCriteria(models.Model):
     
     # 状态管理
     is_active = models.BooleanField(default=True, verbose_name="是否启用")
-    status = models.CharField(
-        max_length=30,
-        choices=Status.choices,
-        default=Status.PENDING,
-        verbose_name="筛选状态"
-    )
     
     # 简历数量缓存（便于快速查询）
     resume_count = models.IntegerField(default=0, verbose_name="简历数量")
@@ -58,7 +45,6 @@ class PositionCriteria(models.Model):
         verbose_name_plural = "岗位招聘标准"
         indexes = [
             models.Index(fields=['position']),
-            models.Index(fields=['status']),
             models.Index(fields=['is_active']),
         ]
     
@@ -77,7 +63,6 @@ class PositionCriteria(models.Model):
             "salary_range": [self.salary_min, self.salary_max],
             "project_requirements": self.project_requirements,
             "is_active": self.is_active,
-            "status": self.status,
             "resume_count": self.resume_count,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
