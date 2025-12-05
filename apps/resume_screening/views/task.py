@@ -16,6 +16,7 @@ class TaskHistoryView(SafeAPIView):
     """
     任务历史API
     GET: 获取历史任务列表
+    DELETE: 删除指定任务
     """
     
     def handle_get(self, request):
@@ -116,6 +117,28 @@ class TaskHistoryView(SafeAPIView):
             result.append(data)
         
         return result
+
+
+class TaskDeleteView(SafeAPIView):
+    """
+    删除任务API
+    DELETE: 删除指定任务
+    """
+    
+    def handle_delete(self, request, task_id):
+        """删除指定任务及其关联数据。"""
+        task = self.get_object_or_404(ResumeScreeningTask, id=task_id)
+        
+        # 删除关联的报告和简历数据（级联删除会自动处理）
+        task_id_str = str(task.id)
+        task.delete()
+        
+        logger.info(f"Deleted task {task_id_str}")
+        
+        return JsonResponse({
+            "message": "任务删除成功",
+            "task_id": task_id_str
+        })
 
 
 class ReportDownloadView(SafeAPIView):

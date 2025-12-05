@@ -8,7 +8,7 @@ from .resume_group import (
     RemoveResumeFromGroupView,
     SetGroupStatusView
 )
-from .task import TaskHistoryView, ReportDownloadView
+from .task import TaskHistoryView, TaskDeleteView, ReportDownloadView
 from .link import LinkResumeVideoView, UnlinkResumeVideoView
 
 __all__ = [
@@ -23,6 +23,7 @@ __all__ = [
     'RemoveResumeFromGroupView',
     'SetGroupStatusView',
     'TaskHistoryView',
+    'TaskDeleteView',
     'ReportDownloadView',
     'LinkResumeVideoView',
     'UnlinkResumeVideoView',

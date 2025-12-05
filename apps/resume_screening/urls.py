@@ -14,6 +14,7 @@ from .views import (
     RemoveResumeFromGroupView,
     SetGroupStatusView,
     TaskHistoryView,
+    TaskDeleteView,
     ReportDownloadView,
     LinkResumeVideoView,
     UnlinkResumeVideoView,
@@ -30,6 +31,9 @@ urlpatterns = [
     
     # 历史任务 - 原版路径: tasks-history/
     path('tasks-history/', TaskHistoryView.as_view(), name='task-history'),
+    
+    # 删除任务
+    path('tasks/<uuid:task_id>/', TaskDeleteView.as_view(), name='task-delete'),
     
     # 报告下载 - 原版路径: reports/<uuid:report_id>/download/
     path('reports/<uuid:report_id>/download/', ReportDownloadView.as_view(), name='report-download'),
