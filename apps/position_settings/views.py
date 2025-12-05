@@ -377,7 +377,7 @@ class PositionAIGenerateView(SafeAPIView):
     
     def handle_post(self, request):
         """根据用户输入生成岗位要求。"""
-        from .services import get_position_ai_service
+        from services.agents import get_position_ai_service
         
         data = request.data
         description = data.get('description', '')

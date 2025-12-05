@@ -1,15 +1,13 @@
 """
-岗位设置AI服务模块。
+岗位AI服务模块。
 提供AI生成岗位要求的功能。
 """
-import os
 import json
 import logging
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
-from dotenv import load_dotenv
 
-load_dotenv()
+from .llm_config import get_config_list, get_embedding_config
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +34,19 @@ class PositionAIService:
 """
     
     def __init__(self):
-        self.api_key = os.getenv('LLM_API_KEY', '')
-        self.base_url = os.getenv('LLM_BASE_URL', 'https://api.openai.com/v1')
-        self.model = os.getenv('LLM_MODEL', 'gpt-3.5-turbo')
-        self.temperature = float(os.getenv('LLM_TEMPERATURE', '0.7'))
-        self.timeout = int(os.getenv('LLM_TIMEOUT', '120'))
+        # 获取LLM配置
+        llm_config = get_config_list()[0]
+        self.api_key = llm_config.get('api_key', '')
+        self.base_url = llm_config.get('base_url', 'https://api.openai.com/v1')
+        self.model = llm_config.get('model', 'gpt-3.5-turbo')
+        self.temperature = llm_config.get('temperature', 0.7)
+        self.timeout = 120
         
-        # Embedding配置（如果未设置则使用LLM配置）
-        self.embedding_api_key = os.getenv('EMBEDDING_API_KEY') or self.api_key
-        self.embedding_base_url = os.getenv('EMBEDDING_BASE_URL') or self.base_url
-        self.embedding_model = os.getenv('EMBEDDING_MODEL', '')
+        # 获取Embedding配置
+        embedding_config = get_embedding_config()
+        self.embedding_api_key = embedding_config.get('api_key', '')
+        self.embedding_base_url = embedding_config.get('base_url', '')
+        self.embedding_model = embedding_config.get('model', '')
         
         self.client = OpenAI(
             api_key=self.api_key,

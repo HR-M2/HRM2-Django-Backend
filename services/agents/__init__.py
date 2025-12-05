@@ -1,11 +1,23 @@
 from .screening_agents import create_screening_agents, ScreeningAgentManager
 from .evaluation_agents import create_evaluation_agents, EvaluationAgentManager
 from .base import BaseAgentManager
+from .llm_config import get_llm_config, get_config_list, get_embedding_config, validate_llm_config, get_llm_status
+from .position_ai_service import PositionAIService, get_position_ai_service
 
 __all__ = [
+    # 代理相关
     'create_screening_agents',
     'create_evaluation_agents', 
     'BaseAgentManager',
     'ScreeningAgentManager',
     'EvaluationAgentManager',
+    # LLM配置
+    'get_llm_config',
+    'get_config_list',
+    'get_embedding_config',
+    'validate_llm_config',
+    'get_llm_status',
+    # 岗位AI服务
+    'PositionAIService',
+    'get_position_ai_service',
 ]

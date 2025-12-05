@@ -4,7 +4,7 @@
 import autogen
 from autogen import GroupChat, GroupChatManager
 from typing import List, Dict, Any, Callable, Optional
-from services.llm import get_llm_config
+from .llm_config import get_llm_config
 
 
 class BaseAgentManager:

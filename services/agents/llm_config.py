@@ -69,3 +69,20 @@ def get_llm_status() -> Dict[str, Any]:
         "api_key_configured": bool(config["api_key"]) and config["api_key"] != 'your-api-key-here',
         "temperature": config["temperature"],
     }
+
+
+def get_embedding_config() -> Dict[str, Any]:
+    """
+    获取Embedding模型配置。
+    
+    返回:
+        Embedding配置字典。
+    """
+    llm_api_key = os.getenv('LLM_API_KEY', '')
+    llm_base_url = os.getenv('LLM_BASE_URL', 'https://api.siliconflow.cn/v1')
+    
+    return {
+        "model": os.getenv('EMBEDDING_MODEL', ''),
+        "api_key": os.getenv('EMBEDDING_API_KEY') or llm_api_key,
+        "base_url": os.getenv('EMBEDDING_BASE_URL') or llm_base_url,
+    }

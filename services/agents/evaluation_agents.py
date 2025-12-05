@@ -4,7 +4,7 @@
 import autogen
 from autogen import AssistantAgent, UserProxyAgent, GroupChat
 from typing import Dict, Any, List, Tuple, Callable
-from services.llm import get_llm_config
+from .llm_config import get_llm_config
 from .base import BaseAgentManager
 
 
