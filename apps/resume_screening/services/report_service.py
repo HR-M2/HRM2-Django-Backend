@@ -172,9 +172,8 @@ class ReportService:
         from ..models import ResumeData
         from apps.common.utils import generate_hash
         
-        # 生成哈希：内容 + 任务ID，确保每次筛选都是独立记录
-        # 这样同一份简历的不同筛选会产生不同哈希，不会被去重覆盖
-        resume_hash = generate_hash(f"{resume_content}_{task.id}")
+        # 生成哈希：仅基于简历内容，相同内容的简历会有相同哈希值用于去重
+        resume_hash = generate_hash(resume_content)
         
         # 创建新记录
         resume_data = ResumeData.objects.create(
