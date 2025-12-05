@@ -132,7 +132,9 @@ class PositionCriteriaListView(SafeAPIView):
                         'id': str(r.id),
                         'candidate_name': r.candidate_name,
                         'position_title': r.position_title,
+                        'resume_content': r.resume_content,
                         'screening_score': r.screening_score,
+                        'screening_summary': r.screening_summary,
                         'created_at': r.created_at.isoformat() if r.created_at else None
                     }
                     for r in resumes
@@ -254,8 +256,6 @@ class PositionCriteriaDetailView(SafeAPIView):
             criteria.salary_max = data['salary_range'][1]
         if 'project_requirements' in data:
             criteria.project_requirements = data['project_requirements']
-        if 'status' in data:
-            criteria.status = data['status']
         
         criteria.save()
         
