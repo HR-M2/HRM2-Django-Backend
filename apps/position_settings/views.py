@@ -367,3 +367,47 @@ class PositionRemoveResumeView(SafeAPIView):
             })
         except ResumePositionAssignment.DoesNotExist:
             raise NotFoundException(f"该简历未分配到此岗位")
+
+
+class PositionAIGenerateView(SafeAPIView):
+    """
+    AI生成岗位要求API
+    POST: 根据描述和文档生成岗位要求
+    """
+    
+    def handle_post(self, request):
+        """根据用户输入生成岗位要求。"""
+        from .services import get_position_ai_service
+        
+        data = request.data
+        description = data.get('description', '')
+        documents = data.get('documents', [])
+        
+        if not description:
+            raise ValidationException("请提供岗位描述")
+        
+        try:
+            service = get_position_ai_service()
+            result = service.generate_position_requirements(
+                description=description,
+                documents=documents
+            )
+            
+            return JsonResponse({
+                'code': 200,
+                'message': '生成成功',
+                'data': result
+            })
+        except ValueError as e:
+            return JsonResponse({
+                'code': 400,
+                'message': str(e),
+                'data': None
+            }, status=400)
+        except Exception as e:
+            logger.error(f"AI generation failed: {e}")
+            return JsonResponse({
+                'code': 500,
+                'message': f'AI生成失败: {str(e)}',
+                'data': None
+            }, status=500)

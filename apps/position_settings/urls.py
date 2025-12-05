@@ -7,7 +7,8 @@ from .views import (
     PositionCriteriaListView,
     PositionCriteriaDetailView,
     PositionAssignResumesView,
-    PositionRemoveResumeView
+    PositionRemoveResumeView,
+    PositionAIGenerateView
 )
 
 app_name = 'position_settings'
@@ -23,6 +24,9 @@ urlpatterns = [
     # 简历分配 API
     path('positions/<uuid:position_id>/assign-resumes/', PositionAssignResumesView.as_view(), name='assign-resumes'),
     path('positions/<uuid:position_id>/remove-resume/<uuid:resume_id>/', PositionRemoveResumeView.as_view(), name='remove-resume'),
+    
+    # AI生成 API
+    path('ai/generate/', PositionAIGenerateView.as_view(), name='ai-generate'),
     
     # 保留旧的列表接口（向后兼容）
     path('list/', PositionCriteriaListView.as_view(), name='list'),
