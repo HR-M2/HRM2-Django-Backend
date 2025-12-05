@@ -10,6 +10,12 @@ from .resume_group import (
 )
 from .task import TaskHistoryView, TaskDeleteView, ReportDownloadView
 from .link import LinkResumeVideoView, UnlinkResumeVideoView
+from .resume_library import (
+    ResumeLibraryListView,
+    ResumeLibraryDetailView,
+    ResumeLibraryBatchDeleteView,
+    ResumeLibraryCheckHashView
+)
 
 __all__ = [
     'ResumeScreeningView',
@@ -27,4 +33,8 @@ __all__ = [
     'ReportDownloadView',
     'LinkResumeVideoView',
     'UnlinkResumeVideoView',
+    'ResumeLibraryListView',
+    'ResumeLibraryDetailView',
+    'ResumeLibraryBatchDeleteView',
+    'ResumeLibraryCheckHashView',
 ]

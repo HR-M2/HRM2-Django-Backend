@@ -18,6 +18,10 @@ from .views import (
     ReportDownloadView,
     LinkResumeVideoView,
     UnlinkResumeVideoView,
+    ResumeLibraryListView,
+    ResumeLibraryDetailView,
+    ResumeLibraryBatchDeleteView,
+    ResumeLibraryCheckHashView,
 )
 
 app_name = 'resume_screening'
@@ -55,4 +59,10 @@ urlpatterns = [
     # 视频关联 - 原版路径
     path('link-resume-to-video/', LinkResumeVideoView.as_view(), name='link-video'),
     path('unlink-resume-from-video/', UnlinkResumeVideoView.as_view(), name='unlink-video'),
+    
+    # 简历库 API
+    path('library/', ResumeLibraryListView.as_view(), name='library-list'),
+    path('library/<uuid:resume_id>/', ResumeLibraryDetailView.as_view(), name='library-detail'),
+    path('library/batch-delete/', ResumeLibraryBatchDeleteView.as_view(), name='library-batch-delete'),
+    path('library/check-hash/', ResumeLibraryCheckHashView.as_view(), name='library-check-hash'),
 ]
