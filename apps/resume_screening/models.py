@@ -17,7 +17,6 @@ class ResumeScreeningTask(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     status = models.CharField(
         max_length=20, 
         choices=Status.choices, 
@@ -93,7 +92,6 @@ class ResumeGroup(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     
     # 岗位信息
     position_title = models.CharField(max_length=255, verbose_name="岗位名称")
@@ -135,7 +133,6 @@ class ResumeData(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     
     # 岗位信息
     position_title = models.CharField(max_length=255, verbose_name="岗位名称")

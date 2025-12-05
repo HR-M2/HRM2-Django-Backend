@@ -20,7 +20,7 @@ class InterviewEvaluationTask(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     
     # 任务信息
-    group_id = models.CharField(max_length=64, verbose_name="简历组ID")
+    group_id = models.CharField(max_length=255, verbose_name="简历组ID")
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -45,3 +45,6 @@ class InterviewEvaluationTask(models.Model):
         ordering = ['-created_at']
         verbose_name = "面试评估任务"
         verbose_name_plural = "面试评估任务"
+    
+    def __str__(self):
+        return f"面试评估任务 {self.group_id} ({self.status})"

@@ -10,14 +10,12 @@ urlpatterns = [
     # 管理后台
     path('admin/', admin.site.urls),
     
-    # API端点
-    path('api/v1/', include([
-        path('positions/', include('apps.position_settings.urls')),
-        path('screening/', include('apps.resume_screening.urls')),
-        path('video/', include('apps.video_analysis.urls')),
-        path('interview/', include('apps.interview_assist.urls')),
-        path('recommend/', include('apps.final_recommend.urls')),
-    ])),
+    # API端点 - 与原版 RecruitmentSystemAPI 保持一致
+    path('position-settings/', include('apps.position_settings.urls')),
+    path('resume-screening/', include('apps.resume_screening.urls')),
+    path('video-analysis/', include('apps.video_analysis.urls')),
+    path('final-recommend/', include('apps.final_recommend.urls')),
+    path('interview-assist/', include('apps.interview_assist.urls')),
 ]
 
 # 开发环境下提供媒体文件服务

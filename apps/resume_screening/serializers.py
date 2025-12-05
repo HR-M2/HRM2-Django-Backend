@@ -11,11 +11,11 @@ class ResumeScreeningTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeScreeningTask
         fields = [
-            'id', 'created_at', 'updated_at', 'status', 
+            'id', 'created_at', 'status', 
             'progress', 'current_step', 'total_steps',
             'error_message', 'current_speaker', 'position_data'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at']
 
 
 class ScreeningReportSerializer(serializers.ModelSerializer):
@@ -36,11 +36,11 @@ class ResumeGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeGroup
         fields = [
-            'id', 'created_at', 'updated_at', 'position_title',
+            'id', 'created_at', 'position_title',
             'position_details', 'position_hash', 'group_name',
             'description', 'resume_count', 'status'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'position_hash', 'resume_count']
+        read_only_fields = ['id', 'created_at', 'position_hash', 'resume_count']
 
 
 class ResumeDataSerializer(serializers.ModelSerializer):
@@ -51,13 +51,13 @@ class ResumeDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeData
         fields = [
-            'id', 'created_at', 'updated_at', 'position_title',
+            'id', 'created_at', 'position_title',
             'position_details', 'candidate_name', 'resume_content',
             'screening_score', 'screening_summary', 'resume_file_hash',
             'report_md_file', 'report_json_file', 'json_report_content',
             'task', 'report', 'group', 'video_analysis_id'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'resume_file_hash']
+        read_only_fields = ['id', 'created_at', 'resume_file_hash']
     
     def get_video_analysis_id(self, obj):
         if obj.video_analysis:

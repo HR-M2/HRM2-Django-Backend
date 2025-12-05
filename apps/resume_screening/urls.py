@@ -1,5 +1,5 @@
 """
-简历筛选模块URL配置。
+简历筛选模块URL配置 - 与原版 RecruitmentSystemAPI 保持一致。
 """
 from django.urls import path
 from .views import (
@@ -22,28 +22,33 @@ from .views import (
 app_name = 'resume_screening'
 
 urlpatterns = [
-    # 筛选
-    path('', ResumeScreeningView.as_view(), name='screening'),
-    path('tasks/<uuid:task_id>/', ScreeningTaskStatusView.as_view(), name='task-status'),
-    path('tasks/', TaskHistoryView.as_view(), name='task-history'),
+    # 筛选 - 原版路径: screening/
+    path('screening/', ResumeScreeningView.as_view(), name='screening'),
     
-    # 报告
+    # 任务状态 - 原版路径: tasks/<uuid:task_id>/status/
+    path('tasks/<uuid:task_id>/status/', ScreeningTaskStatusView.as_view(), name='task-status'),
+    
+    # 历史任务 - 原版路径: tasks-history/
+    path('tasks-history/', TaskHistoryView.as_view(), name='task-history'),
+    
+    # 报告下载 - 原版路径: reports/<uuid:report_id>/download/
     path('reports/<uuid:report_id>/download/', ReportDownloadView.as_view(), name='report-download'),
-    path('reports/<uuid:resume_id>/', ResumeDataDetailView.as_view(), name='report-detail'),
+    
+    # 报告详情 - 原版路径: reports/<uuid:report_id>/detail/
+    path('reports/<uuid:report_id>/detail/', ResumeDataDetailView.as_view(), name='report-detail'),
     
     # 简历数据
     path('data/', ResumeDataView.as_view(), name='resume-data'),
-    path('data/<uuid:resume_id>/', ResumeDataDetailView.as_view(), name='resume-data-detail'),
     
-    # 简历组
-    path('groups/', ResumeGroupListView.as_view(), name='group-list'),
+    # 简历组 - 与原版路径一致
     path('groups/create/', CreateResumeGroupView.as_view(), name='group-create'),
-    path('groups/<uuid:group_id>/', ResumeGroupDetailView.as_view(), name='group-detail'),
     path('groups/add-resume/', AddResumeToGroupView.as_view(), name='group-add-resume'),
     path('groups/remove-resume/', RemoveResumeFromGroupView.as_view(), name='group-remove-resume'),
     path('groups/set-status/', SetGroupStatusView.as_view(), name='group-set-status'),
+    path('groups/<uuid:group_id>/', ResumeGroupDetailView.as_view(), name='group-detail'),
+    path('groups/', ResumeGroupListView.as_view(), name='group-list'),
     
-    # 视频关联
-    path('link-video/', LinkResumeVideoView.as_view(), name='link-video'),
-    path('unlink-video/', UnlinkResumeVideoView.as_view(), name='unlink-video'),
+    # 视频关联 - 原版路径
+    path('link-resume-to-video/', LinkResumeVideoView.as_view(), name='link-video'),
+    path('unlink-resume-from-video/', UnlinkResumeVideoView.as_view(), name='unlink-video'),
 ]

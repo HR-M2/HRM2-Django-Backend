@@ -1,5 +1,5 @@
 """
-标准化API响应工具模块。
+标准化API响应工具模块 - 与原版 RecruitmentSystemAPI 格式保持一致。
 """
 from typing import Any, Optional
 from rest_framework.response import Response
@@ -7,17 +7,17 @@ from rest_framework import status
 
 
 class APIResponse:
-    """标准化API响应构建器。"""
+    """标准化API响应构建器 - 使用 code 字段与原版兼容。"""
     
     @staticmethod
     def success(
         data: Any = None,
-        message: str = "操作成功",
+        message: str = "成功",
         status_code: int = status.HTTP_200_OK
     ) -> Response:
         """返回成功响应。"""
         return Response({
-            "status": "success",
+            "code": 200,
             "message": message,
             "data": data
         }, status=status_code)
@@ -25,12 +25,20 @@ class APIResponse:
     @staticmethod
     def created(data: Any = None, message: str = "创建成功") -> Response:
         """返回创建成功响应。"""
-        return APIResponse.success(data, message, status.HTTP_201_CREATED)
+        return Response({
+            "code": 201,
+            "message": message,
+            "data": data
+        }, status=status.HTTP_201_CREATED)
     
     @staticmethod
     def accepted(data: Any = None, message: str = "任务已提交") -> Response:
         """返回异步任务接受响应。"""
-        return APIResponse.success(data, message, status.HTTP_202_ACCEPTED)
+        return Response({
+            "code": 202,
+            "message": message,
+            "data": data
+        }, status=status.HTTP_202_ACCEPTED)
     
     @staticmethod
     def error(
@@ -40,7 +48,7 @@ class APIResponse:
     ) -> Response:
         """返回错误响应。"""
         response_data = {
-            "status": "error",
+            "code": status_code,
             "message": message
         }
         if errors:
@@ -72,7 +80,7 @@ class APIResponse:
     ) -> Response:
         """返回分页响应。"""
         return Response({
-            "status": "success",
+            "code": 200,
             "message": message,
             "data": {
                 "items": data,

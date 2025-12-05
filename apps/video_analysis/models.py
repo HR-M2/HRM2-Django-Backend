@@ -17,11 +17,10 @@ class VideoAnalysis(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     
     # 视频信息
     video_name = models.CharField(max_length=255, verbose_name="视频名称")
-    video_file = models.FileField(upload_to='videos/%Y/%m/%d/', verbose_name="视频文件")
+    video_file = models.FileField(upload_to='video_analysis/videos/%Y/%m/%d/', verbose_name="视频文件")
     file_size = models.BigIntegerField(null=True, blank=True, verbose_name="文件大小")
     
     # 候选人信息
@@ -63,13 +62,15 @@ class VideoAnalysis(models.Model):
     
     @property
     def analysis_result(self):
-        """将分析结果作为字典返回。"""
+        """将评分结果组合成字典格式返回"""
         return {
             "fraud_score": self.fraud_score,
             "neuroticism_score": self.neuroticism_score,
             "extraversion_score": self.extraversion_score,
             "openness_score": self.openness_score,
             "agreeableness_score": self.agreeableness_score,
-            "conscientiousness_score": self.conscientiousness_score,
-            "confidence_score": self.confidence_score,
+            "conscientiousness_score": self.conscientiousness_score
         }
+    
+    def __str__(self):
+        return f"{self.candidate_name} - {self.video_name}"
