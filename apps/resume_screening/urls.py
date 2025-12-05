@@ -22,6 +22,7 @@ from .views import (
     ResumeLibraryDetailView,
     ResumeLibraryBatchDeleteView,
     ResumeLibraryCheckHashView,
+    GenerateRandomResumesView,
 )
 
 app_name = 'resume_screening'
@@ -65,4 +66,7 @@ urlpatterns = [
     path('library/<uuid:resume_id>/', ResumeLibraryDetailView.as_view(), name='library-detail'),
     path('library/batch-delete/', ResumeLibraryBatchDeleteView.as_view(), name='library-batch-delete'),
     path('library/check-hash/', ResumeLibraryCheckHashView.as_view(), name='library-check-hash'),
+    
+    # 开发测试工具 API
+    path('dev/generate-resumes/', GenerateRandomResumesView.as_view(), name='dev-generate-resumes'),
 ]
