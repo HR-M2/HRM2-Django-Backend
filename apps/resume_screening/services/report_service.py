@@ -167,13 +167,19 @@ class ReportService:
             screening_result: 包含分数和报告的筛选结果
             
         返回:
-            ResumeData实例
+            tuple: (ResumeData实例, 是否为新创建)
         """
         from ..models import ResumeData
         from apps.common.utils import generate_hash
         
         # 生成哈希：仅基于简历内容，相同内容的简历会有相同哈希值用于去重
         resume_hash = generate_hash(resume_content)
+        
+        # 检查是否已存在相同哈希的简历
+        existing = ResumeData.objects.filter(resume_file_hash=resume_hash).first()
+        if existing:
+            logger.info(f"简历已存在（哈希: {resume_hash[:8]}...），跳过重复保存，返回现有记录")
+            return existing, False  # 返回现有记录，标记为非新建
         
         # 创建新记录
         resume_data = ResumeData.objects.create(
@@ -199,4 +205,4 @@ class ReportService:
             json_filename = f"{sanitize_filename(candidate_name)}.json"
             resume_data.report_json_file.save(json_filename, ContentFile(json_content.encode('utf-8')))
         
-        return resume_data
+        return resume_data, True  # 返回新创建的记录，标记为新建

@@ -37,14 +37,17 @@ def run_screening_task(self, task_id: str, position_data: dict, resumes_data: li
             run_chat=True
         )
         
-        # 保存结果
+        # 保存结果，跟踪重复简历
+        new_count = 0
+        duplicate_count = 0
+        
         for resume in resumes_data:
             candidate_name = extract_name_from_filename(resume['name'])
             result = results.get(candidate_name, {})
             
             if result:
                 # 保存到ResumeData
-                ReportService.save_resume_data(
+                resume_data, is_new = ReportService.save_resume_data(
                     task=task,
                     position_data=position_data,
                     candidate_name=candidate_name,
@@ -52,14 +55,22 @@ def run_screening_task(self, task_id: str, position_data: dict, resumes_data: li
                     screening_result=result
                 )
                 
-                # 保存报告
-                ReportService.save_report_to_model(
-                    task=task,
-                    candidate_name=candidate_name,
-                    md_content=result.get('md_content', ''),
-                    json_content=result.get('json_content', '{}'),
-                    resume_content=resume['content']
-                )
+                if is_new:
+                    new_count += 1
+                    # 只为新简历保存报告
+                    ReportService.save_report_to_model(
+                        task=task,
+                        candidate_name=candidate_name,
+                        md_content=result.get('md_content', ''),
+                        json_content=result.get('json_content', '{}'),
+                        resume_content=resume['content']
+                    )
+                else:
+                    duplicate_count += 1
+        
+        # 记录统计信息
+        if duplicate_count > 0:
+            logger.info(f"筛选完成: {new_count} 份新简历, {duplicate_count} 份重复简历已跳过")
         
         # 标记任务为已完成
         task.status = 'completed'

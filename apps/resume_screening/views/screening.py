@@ -95,19 +95,30 @@ class ResumeScreeningView(SafeAPIView):
                 run_chat=True
             )
             
-            # 保存结果
+            # 保存结果，跟踪重复简历
+            new_count = 0
+            duplicate_count = 0
+            
             for resume in resumes_data:
                 candidate_name = extract_name_from_filename(resume['name'])
                 result = results.get(candidate_name, {})
                 
                 if result:
-                    ReportService.save_resume_data(
+                    resume_data, is_new = ReportService.save_resume_data(
                         task=task,
                         position_data=position_data,
                         candidate_name=candidate_name,
                         resume_content=resume['content'],
                         screening_result=result
                     )
+                    if is_new:
+                        new_count += 1
+                    else:
+                        duplicate_count += 1
+            
+            # 记录统计信息
+            if duplicate_count > 0:
+                logger.info(f"筛选完成: {new_count} 份新简历, {duplicate_count} 份重复简历已跳过")
             
             task.status = 'completed'
             task.progress = 100
