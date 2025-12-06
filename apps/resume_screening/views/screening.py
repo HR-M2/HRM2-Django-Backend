@@ -63,22 +63,15 @@ class ResumeScreeningView(SafeAPIView):
             )
     
     def _start_screening_task(self, task, position_data, resumes_data):
-        """在后台启动筛选任务。"""
-        # 首先尝试使用Celery
-        try:
-            from ..tasks import run_screening_task
-            run_screening_task.delay(str(task.id), position_data, resumes_data)
-            logger.info(f"Started Celery task for screening {task.id}")
-        except Exception as e:
-            # 回退到线程
-            logger.warning(f"Celery not available, using thread: {e}")
-            import threading
-            thread = threading.Thread(
-                target=self._run_screening_sync,
-                args=(task, position_data, resumes_data)
-            )
-            thread.daemon = True
-            thread.start()
+        """在后台启动筛选任务（使用线程）。"""
+        import threading
+        thread = threading.Thread(
+            target=self._run_screening_sync,
+            args=(task, position_data, resumes_data)
+        )
+        thread.daemon = True
+        thread.start()
+        logger.info(f"Started thread for screening task {task.id}")
     
     def _run_screening_sync(self, task, position_data, resumes_data):
         """同步运行筛选（用于线程回退）。"""

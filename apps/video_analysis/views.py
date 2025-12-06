@@ -80,23 +80,18 @@ class VideoAnalysisView(SafeAPIView):
         return Response(response_data, status=status.HTTP_201_CREATED)
     
     def _start_analysis(self, video_analysis):
-        """在后台启动视频分析。"""
-        try:
-            from .tasks import analyze_video_task
-            analyze_video_task.delay(str(video_analysis.id))
-            logger.info(f"已启动视频分析Celery任务 {video_analysis.id}")
-        except Exception as e:
-            logger.warning(f"Celery不可用，使用线程: {e}")
-            import threading
-            import time
-            
-            def run_analysis():
-                time.sleep(1)  # 短暂延迟
-                VideoAnalysisService.analyze_video(str(video_analysis.id))
-            
-            thread = threading.Thread(target=run_analysis)
-            thread.daemon = True
-            thread.start()
+        """在后台启动视频分析（使用线程）。"""
+        import threading
+        import time
+        
+        def run_analysis():
+            time.sleep(1)  # 短暂延迟确保响应先返回
+            VideoAnalysisService.analyze_video(str(video_analysis.id))
+        
+        thread = threading.Thread(target=run_analysis)
+        thread.daemon = True
+        thread.start()
+        logger.info(f"Started thread for video analysis {video_analysis.id}")
 
 
 class VideoAnalysisStatusView(SafeAPIView):

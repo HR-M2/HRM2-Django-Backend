@@ -82,21 +82,16 @@ class InterviewEvaluationView(SafeAPIView):
         })
     
     def _start_evaluation(self, task, group_id):
-        """在后台启动评估。"""
-        try:
-            from .tasks import run_evaluation_task
-            run_evaluation_task.delay(str(task.id), group_id)
-            logger.info(f"Started Celery task for evaluation {task.id}")
-        except Exception as e:
-            logger.warning(f"Celery not available, using thread: {e}")
-            import threading
-            
-            def run_sync():
-                self._process_evaluation(task, group_id)
-            
-            thread = threading.Thread(target=run_sync)
-            thread.daemon = True
-            thread.start()
+        """在后台启动评估（使用线程）。"""
+        import threading
+        
+        def run_sync():
+            self._process_evaluation(task, group_id)
+        
+        thread = threading.Thread(target=run_sync)
+        thread.daemon = True
+        thread.start()
+        logger.info(f"Started thread for evaluation {task.id}")
     
     def _process_evaluation(self, task, group_id):
         """同步处理评估。"""
