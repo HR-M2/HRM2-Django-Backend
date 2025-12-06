@@ -199,7 +199,6 @@ FINAL_REPORT_PROMPT = """基于整场面试，生成最终评估报告。
 
 候选人: {candidate_name}
 职位: {job_title}
-面试官: {interviewer_name}
 HR备注: {hr_notes}
 
 ## 完整问答记录
@@ -250,24 +249,18 @@ HR备注: {hr_notes}
 
 class InterviewAssistAgent:
     """
-    面试助手Agent。
+    面试助手Agent（精简版）。
     提供基于LLM的面试问题生成、回答评估、追问建议和报告生成功能。
     """
     
-    def __init__(
-        self,
-        job_config: Dict = None,
-        company_config: Dict = None
-    ):
+    def __init__(self, job_config: Dict = None):
         """
         初始化面试助手Agent。
         
         参数:
             job_config: 职位配置
-            company_config: 公司配置
         """
         self.job_config = job_config or {}
-        self.company_config = company_config or {}
         
         # 获取LLM配置
         llm_config = get_config_list()[0]
@@ -676,7 +669,6 @@ class InterviewAssistAgent:
     def generate_final_report(
         self,
         candidate_name: str,
-        interviewer_name: str,
         qa_records: List[Dict],
         hr_notes: str = ""
     ) -> Dict[str, Any]:
@@ -685,8 +677,7 @@ class InterviewAssistAgent:
         
         参数:
             candidate_name: 候选人姓名
-            interviewer_name: 面试官姓名
-            qa_records: QA记录列表
+            qa_records: QA记录列表（来自 session.qa_records JSON）
             hr_notes: HR备注
             
         返回:
@@ -702,7 +693,6 @@ class InterviewAssistAgent:
         user_prompt = FINAL_REPORT_PROMPT.format(
             candidate_name=candidate_name,
             job_title=job_title,
-            interviewer_name=interviewer_name,
             hr_notes=hr_notes or "无",
             conversation_log=conversation_log
         )
@@ -732,22 +722,20 @@ class InterviewAssistAgent:
             return self._get_fallback_report(candidate_name, qa_records)
     
     def _format_conversation_log(self, qa_records: List[Dict]) -> str:
-        """格式化对话日志"""
+        """格式化对话日志（适配新的 JSON 格式）"""
         lines = []
         for qa in qa_records:
-            round_num = qa.get('round_number', 0)
+            round_num = qa.get('round', 0)
             question = qa.get('question', '')
             answer = qa.get('answer', '')
             evaluation = qa.get('evaluation', {})
-            score = evaluation.get('normalized_score', 0)
-            confidence = evaluation.get('confidence_level', 'unknown')
+            score = evaluation.get('normalized_score', 0) if evaluation else 0
+            confidence = evaluation.get('confidence_level', 'unknown') if evaluation else 'unknown'
             
             lines.append(f"### 第{round_num}轮")
             lines.append(f"**问题**: {question}")
             lines.append(f"**回答**: {answer}")
             lines.append(f"**评分**: {score}/100 (信心程度: {confidence})")
-            if qa.get('was_followed_up'):
-                lines.append("**标记**: 已追问")
             lines.append("")
         
         return "\n".join(lines)
@@ -793,10 +781,7 @@ class InterviewAssistAgent:
 _interview_assist_agent = None
 
 
-def get_interview_assist_agent(
-    job_config: Dict = None,
-    company_config: Dict = None
-) -> InterviewAssistAgent:
+def get_interview_assist_agent(job_config: Dict = None) -> InterviewAssistAgent:
     """
     获取InterviewAssistAgent实例。
     
@@ -804,12 +789,9 @@ def get_interview_assist_agent(
     """
     global _interview_assist_agent
     
-    if job_config or company_config:
+    if job_config:
         # 如果有新配置，创建新实例
-        return InterviewAssistAgent(
-            job_config=job_config,
-            company_config=company_config
-        )
+        return InterviewAssistAgent(job_config=job_config)
     
     if _interview_assist_agent is None:
         _interview_assist_agent = InterviewAssistAgent()
