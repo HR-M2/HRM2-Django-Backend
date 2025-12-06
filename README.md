@@ -42,9 +42,22 @@ HRM2-Django-Backend/
 │   ├── celery.py            # Celery 入口
 │   ├── wsgi.py / asgi.py
 ├── services/
-│   └── agents/              # Base Agent、筛选/评估 Agent、岗位 AI 服务等
-├── tests/                   # pytest 测试用例
-├── Docs/                    # 设计及 API 分析文档
+│   └── agents/
+│       ├── __init__.py          # Agent 导出
+│       ├── base.py              # Base Agent 基类
+│       ├── llm_config.py        # LLM 配置管理
+│       ├── screening_agents.py  # 简历筛选 Agent
+│       ├── evaluation_agents.py # 面试评估 Agent
+│       ├── interview_assist_agent.py  # 面试辅助 Agent（问题生成、问答记录、报告）
+│       ├── position_ai_service.py     # 岗位 AI 生成服务
+│       └── dev_tools_service.py       # 开发测试工具服务（生成假简历等）
+├── tests/
+│   ├── conftest.py          # pytest 夹具配置
+│   ├── test_resume_screening.py
+│   └── test_video_analysis.py
+├── Docs/
+│   ├── API分析报告.md       # API 分析文档
+│   └── 分析API.py           # API 分析脚本
 ├── run.py                   # 一键启动器（参数：env/port/host/migrate-only 等）
 ├── manage.py
 ├── requirements.txt         # 后端依赖
@@ -147,9 +160,9 @@ export DJANGO_SETTINGS_MODULE=config.settings.development
 | `apps.position_settings` | 支持多岗位 CRUD、简历分配、AI JD 生成；兼容旧版接口。 |
 | `apps.resume_screening` | 简历组管理、筛选任务、报告下载、简历库、开发测试工具 API。 |
 | `apps.video_analysis` | 面试视频上传、状态查询、结果回写。 |
-| `apps.interview_assist` | 面试会话管理、AI 生成问题、记录问答、生成报告。 |
+| `apps.interview_assist` | 面试会话管理、AI 生成问题（含兴趣点）、记录问答、生成候选提问、生成最终报告。 |
 | `apps.final_recommend` | 汇总面试结果，触发最终评估并生成报告。 |
-| `services/agents` | 面向岗位/筛选/评估的 Agent 封装，统一 LLM 调用。 |
+| `services/agents` | 面向岗位/筛选/评估/面试辅助的 Agent 封装，统一 LLM 调用，支持可配置模型与温度。 |
 
 ## 📡 API 端点
 
@@ -207,7 +220,7 @@ export DJANGO_SETTINGS_MODULE=config.settings.development
 | GET | `/sessions/<uuid:session_id>/` | 会话详情 |
 | DELETE | `/sessions/<uuid:session_id>/` | 结束会话 |
 | POST | `/sessions/<uuid:session_id>/generate-questions/` | 生成问答提纲 |
-| POST | `/sessions/<uuid:session_id>/record-qa/` | 记录问答内容 |
+| POST | `/sessions/<uuid:session_id>/record-qa/` | 记录问答并生成候选提问 |
 | POST | `/sessions/<uuid:session_id>/generate-report/` | 生成面试报告 |
 
 ### 最终推荐 `final-recommend/`
@@ -275,3 +288,11 @@ CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
 ## 📄 License
 
 MIT License
+
+---
+
+## 📝 更新日志
+
+- **2024-12**: 新增 `interview_assist` 面试辅助模块，支持 AI 生成问题池、记录问答生成候选提问、最终报告生成
+- **2024-12**: 新增 `dev_tools_service` 开发测试服务，支持批量生成模拟简历
+- **2024-12**: `services/agents` 重构，新增 `interview_assist_agent.py` 面试辅助 Agent
