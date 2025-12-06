@@ -12,7 +12,7 @@ from apps.common.mixins import SafeAPIView
 from apps.common.exceptions import ValidationException, NotFoundException
 
 from .models import InterviewAssistSession, InterviewQARecord
-from .services import InterviewAssistant
+from services.agents import InterviewAssistAgent
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ class GenerateQuestionsView(SafeAPIView):
         count_per_category = self.get_int_param(request, 'count_per_category', default=2)
         focus_on_resume = self.get_param(request, 'focus_on_resume', default=True)
         
-        assistant = InterviewAssistant(
+        assistant = InterviewAssistAgent(
             job_config=session.job_config,
             company_config=session.company_config
         )
@@ -215,7 +215,7 @@ class RecordQAView(SafeAPIView):
         session.current_round += 1
         round_number = session.current_round
         
-        assistant = InterviewAssistant(
+        assistant = InterviewAssistAgent(
             job_config=session.job_config,
             company_config=session.company_config
         )
@@ -338,7 +338,7 @@ class GenerateReportView(SafeAPIView):
             for r in qa_records
         ]
         
-        assistant = InterviewAssistant(
+        assistant = InterviewAssistAgent(
             job_config=session.job_config,
             company_config=session.company_config
         )
