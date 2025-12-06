@@ -25,9 +25,10 @@ RESUME_BASED_QUESTION_PROMPT = """基于以下简历内容，为面试官生成�
 职位要求: {job_requirements}
 
 # 要求
-1. 分析简历中的关键点，识别2-3个值得深入探讨的兴趣点
-2. 针对这些兴趣点生成{count}个高质量面试问题
-3. 问题应该：
+1. 分析简历中的关键点，识别{interest_point_count}个值得深入探讨的兴趣点
+2. 每个兴趣点要生成对应的面试问题
+3. 额外生成{count}个高质量面试问题
+4. 问题应该：
    - 针对简历中具体内容，避免泛泛而谈
    - 能有效验证候选人的真实能力
    - 难度适中（5-8分，满分10分）
@@ -36,8 +37,11 @@ RESUME_BASED_QUESTION_PROMPT = """基于以下简历内容，为面试官生成�
 # JSON返回格式
 {{
     "interest_points": [
-        {{"point": "兴趣点1", "reason": "为什么值得关注"}},
-        {{"point": "兴趣点2", "reason": "为什么值得关注"}}
+        {{
+            "content": "兴趣点的简短描述（如：在XX公司主导了微服务改造项目）",
+            "reason": "为什么这个点值得关注",
+            "question": "针对这个兴趣点的面试问题"
+        }}
     ],
     "questions": [
         {{
@@ -299,7 +303,15 @@ class InterviewAssistAgent:
                 temperature=temperature if temperature is not None else self.temperature,
             )
             
-            result_text = response.choices[0].message.content.strip()
+            # 检查响应是否有效
+            if not response or not response.choices:
+                raise ValueError("LLM 返回空响应")
+            
+            content = response.choices[0].message.content
+            if content is None:
+                raise ValueError("LLM 返回内容为空")
+            
+            result_text = content.strip()
             
             # 清理markdown代码块标记
             if result_text.startswith("```json"):
@@ -324,7 +336,8 @@ class InterviewAssistAgent:
     def generate_resume_based_questions(
         self,
         resume_content: str,
-        count: int = 3
+        count: int = 3,
+        interest_point_count: int = 2
     ) -> Dict[str, Any]:
         """
         根据简历内容生成针对性的面试问题。
@@ -332,6 +345,7 @@ class InterviewAssistAgent:
         参数:
             resume_content: 简历文本内容
             count: 要生成的问题数量
+            interest_point_count: 要生成的兴趣点数量（1-3）
             
         返回:
             包含问题和兴趣点的字典
@@ -355,7 +369,8 @@ class InterviewAssistAgent:
             job_title=job_title,
             job_description=job_description,
             job_requirements=job_requirements,
-            count=count
+            count=count,
+            interest_point_count=interest_point_count
         )
         
         try:
@@ -372,13 +387,21 @@ class InterviewAssistAgent:
                     "source": "resume_based"
                 })
             
-            # 处理兴趣点
+            # 处理兴趣点（新格式：包含 content 和 question）
             interest_points = []
-            for point in result.get('interest_points', []):
+            for point in result.get('interest_points', [])[:interest_point_count]:
                 if isinstance(point, dict):
-                    interest_points.append(point.get('point', ''))
+                    interest_points.append({
+                        "content": point.get('content', point.get('point', '')),
+                        "question": point.get('question', '请详细介绍这方面的经验'),
+                        "reason": point.get('reason', '')
+                    })
                 else:
-                    interest_points.append(str(point))
+                    interest_points.append({
+                        "content": str(point),
+                        "question": f"请详细介绍您在{str(point)}方面的经验",
+                        "reason": ""
+                    })
             
             return {
                 "questions": questions,
@@ -388,9 +411,9 @@ class InterviewAssistAgent:
         except Exception as e:
             logger.error(f"Failed to generate resume-based questions: {e}")
             # 返回备用问题
-            return self._get_fallback_resume_questions(count)
+            return self._get_fallback_resume_questions(count, interest_point_count)
     
-    def _get_fallback_resume_questions(self, count: int) -> Dict[str, Any]:
+    def _get_fallback_resume_questions(self, count: int, interest_point_count: int = 2) -> Dict[str, Any]:
         """获取备用的简历相关问题（LLM失败时使用）"""
         fallback_questions = [
             {
@@ -415,9 +438,28 @@ class InterviewAssistAgent:
                 "source": "resume_based"
             }
         ]
+        
+        fallback_interest_points = [
+            {
+                "content": "项目经验",
+                "question": "请详细介绍您最具代表性的项目经验",
+                "reason": "验证实际工作能力"
+            },
+            {
+                "content": "技术栈",
+                "question": "请介绍您最擅长的技术栈及实际应用案例",
+                "reason": "评估技术深度"
+            },
+            {
+                "content": "团队协作",
+                "question": "请描述您在团队中的角色和协作方式",
+                "reason": "评估协作能力"
+            }
+        ]
+        
         return {
             "questions": fallback_questions[:count],
-            "interest_points": ["项目经验", "技术能力"]
+            "interest_points": fallback_interest_points[:interest_point_count]
         }
     
     def generate_skill_based_questions(

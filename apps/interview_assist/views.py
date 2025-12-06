@@ -132,17 +132,22 @@ class GenerateQuestionsView(SafeAPIView):
         candidate_level = self.get_param(request, 'candidate_level', default='senior')
         count_per_category = self.get_int_param(request, 'count_per_category', default=2)
         focus_on_resume = self.get_param(request, 'focus_on_resume', default=True)
+        interest_point_count = self.get_int_param(request, 'interest_point_count', default=2)
+        
+        # 限制兴趣点数量在 1-3 之间
+        interest_point_count = max(1, min(3, interest_point_count))
         
         assistant = InterviewAssistAgent(job_config=session.job_config)
         
         all_questions = []
         interest_points = []
         
-        # 生成基于简历的问题
+        # 生成基于简历的问题和兴趣点
         if focus_on_resume and session.resume_data.resume_content:
             result = assistant.generate_resume_based_questions(
                 resume_content=session.resume_data.resume_content,
-                count=count_per_category
+                count=count_per_category,
+                interest_point_count=interest_point_count
             )
             all_questions.extend(result.get('questions', []))
             interest_points = result.get('interest_points', [])
@@ -158,13 +163,17 @@ class GenerateQuestionsView(SafeAPIView):
                 all_questions.extend(questions)
         
         # 不保存到数据库，直接返回
+        # 提取 resume_highlights（兼容旧格式）
+        resume_highlights = [p.get('content', '') if isinstance(p, dict) else str(p) for p in interest_points]
+        
         return JsonResponse({
             'status': 'success',
             'message': f'已生成{len(all_questions)}个候选问题',
             'data': {
                 'session_id': str(session.id),
                 'question_pool': all_questions,
-                'resume_highlights': interest_points
+                'resume_highlights': resume_highlights,
+                'interest_points': interest_points  # 新格式：包含 content 和 question
             }
         })
 
