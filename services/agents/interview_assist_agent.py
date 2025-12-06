@@ -199,6 +199,88 @@ FOLLOWUP_SUGGESTION_PROMPT = """基于候选人的回答，生成追问建议，
 请直接返回JSON，不要包含其他内容。
 """
 
+CANDIDATE_QUESTIONS_PROMPT = """基于当前面试上下文，为面试官生成下一步的候选提问。
+
+# 岗位信息
+职位: {job_title}
+职位要求: {job_requirements}
+
+# 简历摘要
+{resume_summary}
+
+# 已完成的面试对话
+{conversation_history}
+
+# 当前轮次
+问题: {current_question}
+候选人回答: {current_answer}
+
+# 第一步：分析候选人回答类型
+请先判断候选人的回答属于哪种类型：
+- clarification_request: 候选人请求澄清问题、要求举例、要求进一步说明
+- counter_question: 候选人反问面试官
+- off_topic: 候选人回答偏离主题
+- normal_answer: 候选人正常回答问题
+
+# 第二步：根据回答类型生成候选问题
+请生成 {followup_count} 个追问问题（source: followup）+ {alternative_count} 个候选问题（source: resume 或 job）：
+
+1. 如果是 clarification_request：
+   - 生成对原问题的补充说明，给出具体示例或进一步解释
+   - 或者换一种更具体、更有针对性的方式重新提问
+   - 例如："比如您在XX公司主导了微服务改造项目，您能否具体说说当时的情况？您能否分享一个具体的项目经验和数据？"
+
+2. 如果是 counter_question：
+   - 简要回答候选人的问题后，回归到原始的问题
+   - 例如："关于XXX，我理解的是……您能否分享一下您的看法？"
+
+3. 如果是 off_topic：
+   - 礼貌地将候选人回答带回正题
+   - 或者从候选人的回答中找出可以深入讨论的点
+
+4. 如果是 normal_answer：
+   - 针对回答中值得深入讨论的点进行追问
+   - 或者转向简历/岗位要求中尚未覆盖的重要领域
+   - 避免重复已问过的问题
+   - 难度适中，能有效验证候选人能力
+
+# JSON返回格式
+{{
+    "answer_type": "回答类型：clarification_request/counter_question/off_topic/normal_answer",
+    "candidate_questions": [
+        {{
+            "question": "基于当前回答的追问问题",
+            "purpose": "验证XX能力",
+            "expected_skills": ["技能1"],
+            "source": "followup"
+        }},
+        {{
+            "question": "基于简历的问题",
+            "purpose": "考察XX经验",
+            "expected_skills": ["技能2"],
+            "source": "resume"
+        }},
+        {{
+            "question": "基于岗位要求的问题",
+            "purpose": "确认XX匹配度",
+            "expected_skills": ["技能3"],
+            "source": "job"
+        }}
+    ]
+}}
+
+重要：
+- 必须根据候选人的实际回答内容生成问题，不要忽略候选人的反馈
+- question 字段必须是完整的、可直接向候选人提出的问题
+- purpose 字段是简短的标签（5-10字）
+- source 字段用于区分问题来源：
+  * followup: 基于当前回答的追问（显示为"追问建议"）
+  * resume: 基于简历内容的问题（显示为"候选问题"）
+  * job: 基于岗位要求的问题（显示为"候选问题"）
+
+请直接返回JSON，不要包含其他内容。
+"""
+
 FINAL_REPORT_PROMPT = """基于整场面试，生成最终评估报告。
 
 候选人: {candidate_name}
@@ -782,6 +864,101 @@ class InterviewAssistAgent:
         
         return "\n".join(lines)
     
+    def generate_candidate_questions(
+        self,
+        current_question: str,
+        current_answer: str,
+        conversation_history: List[Dict] = None,
+        resume_summary: str = "",
+        followup_count: int = 2,
+        alternative_count: int = 3
+    ) -> List[Dict[str, Any]]:
+        """
+        根据面试上下文生成候选提问。
+        
+        参数:
+            current_question: 当前问题
+            current_answer: 候选人当前回答
+            conversation_history: 历史对话记录
+            resume_summary: 简历摘要
+            followup_count: 追问问题数量
+            alternative_count: 候选问题数量
+            
+        返回:
+            候选问题列表
+        """
+        job_title = self.job_config.get('title', '未指定职位')
+        job_requirements = json.dumps(
+            self.job_config.get('requirements', {}),
+            ensure_ascii=False,
+            indent=2
+        )
+        
+        # 格式化历史对话
+        history_text = ""
+        if conversation_history:
+            for i, qa in enumerate(conversation_history, 1):
+                history_text += f"第{i}轮:\n"
+                history_text += f"  问: {qa.get('question', '')}\n"
+                history_text += f"  答: {qa.get('answer', '')}\n\n"
+        else:
+            history_text = "（这是第一个问题）"
+        
+        system_prompt = "你是一位资深的面试官，擅长根据候选人的回答和简历背景，设计有针对性的后续问题。"
+        
+        total_count = followup_count + alternative_count
+        user_prompt = CANDIDATE_QUESTIONS_PROMPT.format(
+            job_title=job_title,
+            job_requirements=job_requirements,
+            resume_summary=resume_summary or "（未提供简历摘要）",
+            conversation_history=history_text,
+            current_question=current_question,
+            current_answer=current_answer,
+            followup_count=followup_count,
+            alternative_count=alternative_count
+        )
+        
+        try:
+            result = self._call_llm(system_prompt, user_prompt, temperature=0.7)
+            
+            questions = []
+            for q in result.get('candidate_questions', [])[:total_count]:
+                questions.append({
+                    "question": q.get("question", ""),
+                    "purpose": q.get("purpose", ""),
+                    "expected_skills": q.get("expected_skills", []),
+                    "source": q.get("source", "followup")
+                })
+            
+            return questions
+            
+        except Exception as e:
+            logger.error(f"Failed to generate candidate questions: {e}")
+            return self._get_fallback_candidate_questions(current_answer)
+    
+    def _get_fallback_candidate_questions(self, answer: str) -> List[Dict[str, Any]]:
+        """备用候选问题（LLM失败时使用）"""
+        return [
+            {
+                "question": "能否举一个具体的例子来说明？",
+                "purpose": "验证经验真实性",
+                "expected_skills": ["实践经验"],
+                "source": "followup"
+            },
+            {
+                "question": "在这个过程中遇到的最大挑战是什么？",
+                "purpose": "考察问题解决能力",
+                "expected_skills": ["问题解决"],
+                "source": "followup"
+            },
+            {
+                "question": "如果重新做这个决定，您会有什么不同的选择？",
+                "purpose": "考察反思能力",
+                "expected_skills": ["反思能力"],
+                "source": "followup"
+            }
+        ]
+
     def _get_fallback_report(self, candidate_name: str, qa_records: List[Dict]) -> Dict[str, Any]:
         """备用报告生成"""
         # 计算平均分

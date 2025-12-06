@@ -185,7 +185,7 @@ class RecordQAView(SafeAPIView):
     """
     
     def handle_post(self, request, session_id):
-        """记录问答并获取评估。"""
+        """记录问答并生成候选提问。"""
         session = self.get_object_or_404(InterviewAssistSession, id=session_id)
         
         if session.is_completed:
@@ -193,59 +193,69 @@ class RecordQAView(SafeAPIView):
         
         question_data = self.get_param(request, 'question', default={})
         answer_data = self.get_param(request, 'answer', default={})
+        skip_evaluation = self.get_param(request, 'skip_evaluation', default=True)  # 默认跳过评估
+        followup_count = self.get_int_param(request, 'followup_count', default=2)  # 追问问题数量
+        alternative_count = self.get_int_param(request, 'alternative_count', default=3)  # 候选问题数量
         
         if not question_data.get('content') or not answer_data.get('content'):
             raise ValidationException("缺少问题或回答内容")
         
         assistant = InterviewAssistAgent(job_config=session.job_config)
         
-        # 评估回答
-        evaluation = assistant.evaluate_answer(
-            question=question_data['content'],
-            answer=answer_data['content'],
-            target_skills=question_data.get('expected_skills', []),
-            difficulty=question_data.get('difficulty', 5)
-        )
+        # 获取简历摘要
+        resume_summary = ""
+        if session.resume_data:
+            resume_summary = f"""候选人: {session.resume_data.candidate_name}
+应聘岗位: {session.resume_data.position_title}
+简历内容摘要: {session.resume_data.resume_content[:1000] if session.resume_data.resume_content else '无'}"""
         
-        # 生成追问建议（临时返回，不保存）
-        followup_suggestions = []
-        followup_recommendation = {
-            'should_followup': evaluation.get('should_followup', False),
-            'reason': evaluation.get('followup_reason', ''),
-            'suggested_followups': []
-        }
+        # 获取历史对话记录
+        conversation_history = session.qa_records or []
         
-        if evaluation.get('should_followup'):
-            result = assistant.generate_followup_suggestions(
-                original_question=question_data['content'],
+        # 可选：评估回答
+        evaluation = None
+        if not skip_evaluation:
+            evaluation = assistant.evaluate_answer(
+                question=question_data['content'],
                 answer=answer_data['content'],
-                evaluation=evaluation,
-                target_skill=question_data.get('expected_skills', [''])[0] if question_data.get('expected_skills') else None
+                target_skills=question_data.get('expected_skills', []),
+                difficulty=question_data.get('difficulty', 5)
             )
-            followup_suggestions = result.get('followup_suggestions', [])
-            followup_recommendation['suggested_followups'] = followup_suggestions
-            followup_recommendation['hr_hint'] = result.get('hr_hint', '')
+        
+        # 核心：生成候选提问（基于上下文、简历、岗位要求）
+        candidate_questions = assistant.generate_candidate_questions(
+            current_question=question_data['content'],
+            current_answer=answer_data['content'],
+            conversation_history=conversation_history,
+            resume_summary=resume_summary,
+            followup_count=followup_count,
+            alternative_count=alternative_count
+        )
         
         # 添加问答记录到会话（使用 JSON 存储）
         session.add_qa_record(
             question=question_data['content'],
             answer=answer_data['content'],
-            evaluation=evaluation
+            evaluation=evaluation  # 可能为 None
         )
         session.save()
         
         round_number = session.current_round
         
         # 生成HR提示
-        hr_hints = self._generate_hr_hints(evaluation)
+        hr_hints = []
+        if evaluation:
+            hr_hints = self._generate_hr_hints(evaluation)
+        else:
+            hr_hints = ["请根据候选问题继续提问"]
         
         return JsonResponse({
             'status': 'success',
-            'message': '问答已记录，评估完成',
+            'message': '问答已记录，候选问题已生成',
             'data': {
                 'round_number': round_number,
-                'evaluation': evaluation,
-                'followup_recommendation': followup_recommendation,
+                'evaluation': evaluation,  # 可能为 None
+                'candidate_questions': candidate_questions,  # 新增：LLM生成的候选问题
                 'hr_action_hints': hr_hints
             }
         })
