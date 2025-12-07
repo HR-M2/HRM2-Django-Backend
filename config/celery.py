@@ -2,10 +2,15 @@
 招聘系统API项目的Celery配置。
 """
 import os
+from dotenv import load_dotenv
 from celery import Celery
 
-# 为Celery程序设置默认的Django配置模块
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+# 加载 .env 文件
+load_dotenv()
+
+# 根据 DJANGO_ENV 环境变量选择配置，默认使用开发环境
+env = os.getenv('DJANGO_ENV', 'development')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'config.settings.{env}')
 
 app = Celery('recruitment_api')
 

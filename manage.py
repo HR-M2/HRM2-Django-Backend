@@ -2,11 +2,17 @@
 """Django管理任务的命令行工具。"""
 import os
 import sys
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
 
 
 def main():
     """运行管理任务。"""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development')
+    # 根据 DJANGO_ENV 环境变量选择配置，默认使用开发环境
+    env = os.getenv('DJANGO_ENV', 'development')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'config.settings.{env}')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
