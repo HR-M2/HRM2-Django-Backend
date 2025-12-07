@@ -73,33 +73,58 @@ class SessionView(SafeAPIView):
         }, status=201)
     
     def handle_get(self, request, session_id=None):
-        """获取会话详情。"""
-        if not session_id:
-            raise ValidationException("缺少会话ID")
+        """获取会话详情或列表。"""
+        # 如果有 session_id，返回单个会话详情
+        if session_id:
+            session = self.get_object_or_404(InterviewAssistSession, id=session_id)
+            
+            response_data = {
+                'session_id': str(session.id),
+                'candidate_name': session.resume_data.candidate_name,
+                'position_title': session.job_config.get('title', ''),
+                'current_round': session.current_round,
+                'qa_count': len(session.qa_records) if session.qa_records else 0,
+                'is_completed': session.is_completed,
+                'created_at': session.created_at.isoformat(),
+                'updated_at': session.updated_at.isoformat()
+            }
+            
+            if session.is_completed and session.final_report:
+                response_data['has_final_report'] = True
+                response_data['final_report_summary'] = session.final_report.get(
+                    'overall_assessment', {}
+                ).get('summary', '')
+            
+            return JsonResponse({
+                'status': 'success',
+                'data': response_data
+            })
         
-        session = self.get_object_or_404(InterviewAssistSession, id=session_id)
+        # 如果有 resume_id 参数，返回该简历的所有会话
+        resume_id = request.GET.get('resume_id')
+        if resume_id:
+            sessions = InterviewAssistSession.objects.filter(
+                resume_data_id=resume_id
+            ).order_by('-created_at')
+            
+            data = []
+            for session in sessions:
+                session_data = {
+                    'id': str(session.id),
+                    'resume_data_id': str(session.resume_data_id),
+                    'qa_records': session.qa_records or [],
+                    'created_at': session.created_at.isoformat(),
+                }
+                if session.final_report:
+                    session_data['final_report'] = session.final_report
+                data.append(session_data)
+            
+            return JsonResponse({
+                'status': 'success',
+                'data': data
+            })
         
-        response_data = {
-            'session_id': str(session.id),
-            'candidate_name': session.resume_data.candidate_name,
-            'position_title': session.job_config.get('title', ''),
-            'current_round': session.current_round,
-            'qa_count': len(session.qa_records) if session.qa_records else 0,
-            'is_completed': session.is_completed,
-            'created_at': session.created_at.isoformat(),
-            'updated_at': session.updated_at.isoformat()
-        }
-        
-        if session.is_completed and session.final_report:
-            response_data['has_final_report'] = True
-            response_data['final_report_summary'] = session.final_report.get(
-                'overall_assessment', {}
-            ).get('summary', '')
-        
-        return JsonResponse({
-            'status': 'success',
-            'data': response_data
-        })
+        raise ValidationException("缺少会话ID或简历ID参数")
     
     def handle_delete(self, request, session_id=None):
         """删除会话。"""
