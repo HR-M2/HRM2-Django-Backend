@@ -6,6 +6,50 @@ from django.utils import timezone
 import uuid
 
 
+class CandidateComprehensiveAnalysis(models.Model):
+    """
+    单人综合分析结果模型。
+    
+    保存基于 Rubric 量表的多维度评估结果。
+    """
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    
+    # 关联简历
+    resume_data = models.ForeignKey(
+        'resume_screening.ResumeData',
+        on_delete=models.CASCADE,
+        related_name='comprehensive_analyses',
+        verbose_name="关联简历"
+    )
+    
+    # 评估结果
+    final_score = models.FloatField(verbose_name="综合得分")
+    recommendation_level = models.CharField(max_length=50, verbose_name="推荐等级")
+    recommendation_label = models.CharField(max_length=50, verbose_name="推荐标签")
+    recommendation_action = models.TextField(verbose_name="建议行动")
+    
+    # 各维度评分详情（JSON）
+    dimension_scores = models.JSONField(default=dict, verbose_name="维度评分详情")
+    
+    # 综合报告文本
+    comprehensive_report = models.TextField(verbose_name="综合分析报告")
+    
+    # 输入数据快照（便于追溯）
+    input_data_snapshot = models.JSONField(default=dict, verbose_name="输入数据快照")
+    
+    class Meta:
+        db_table = 'candidate_comprehensive_analyses'
+        ordering = ['-created_at']
+        verbose_name = "候选人综合分析"
+        verbose_name_plural = "候选人综合分析"
+    
+    def __str__(self):
+        return f"{self.resume_data.candidate_name} 综合分析 ({self.recommendation_label})"
+
+
 class InterviewEvaluationTask(models.Model):
     """面试后评估任务模型"""
     
