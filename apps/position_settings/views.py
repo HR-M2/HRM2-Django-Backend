@@ -135,6 +135,8 @@ class PositionCriteriaListView(SafeAPIView):
                         'resume_content': r.resume_content,
                         'screening_score': r.screening_score,
                         'screening_summary': r.screening_summary,
+                        'report_md_url': r.report_md_file.url if r.report_md_file else None,
+                        'report_json_url': r.report_json_file.url if r.report_json_file else None,
                         'created_at': r.created_at.isoformat() if r.created_at else None
                     }
                     for r in resumes
@@ -213,9 +215,11 @@ class PositionCriteriaDetailView(SafeAPIView):
                     'id': str(r.id),
                     'candidate_name': r.candidate_name,
                     'position_title': r.position_title,
-                    'resume_content': r.resume_content[:200] + '...' if r.resume_content and len(r.resume_content) > 200 else r.resume_content,
+                    'resume_content': r.resume_content,
                     'screening_score': r.screening_score,
                     'screening_summary': r.screening_summary,
+                    'report_md_url': r.report_md_file.url if r.report_md_file else None,
+                    'report_json_url': r.report_json_file.url if r.report_json_file else None,
                     'created_at': r.created_at.isoformat() if r.created_at else None
                 }
                 for r in resumes
