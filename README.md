@@ -161,7 +161,7 @@ export DJANGO_SETTINGS_MODULE=config.settings.development
 | `apps.resume_screening` | 简历组管理、筛选任务、报告下载、简历库、开发测试工具 API。 |
 | `apps.video_analysis` | 面试视频上传、状态查询、结果回写。 |
 | `apps.interview_assist` | 面试会话管理、AI 生成问题（含兴趣点）、记录问答、生成候选提问、生成最终报告。 |
-| `apps.final_recommend` | 汇总面试结果，触发最终评估并生成报告。 |
+| `apps.final_recommend` | 单人综合分析、多维度评估（Rubric量表）、生成综合报告与录用建议。 |
 | `services/agents` | 面向岗位/筛选/评估/面试辅助的 Agent 封装，统一 LLM 调用，支持可配置模型与温度。 |
 
 ## 📡 API 端点
@@ -217,7 +217,7 @@ export DJANGO_SETTINGS_MODULE=config.settings.development
 | 方法 | 路径 | 说明 |
 | ---- | ---- | ---- |
 | POST | `/sessions/` | 创建会话 |
-| GET | `/sessions/<uuid:session_id>/` | 会话详情 |
+| GET | `/sessions/<uuid:session_id>/` | 会话详情（支持 ?resume_id= 按简历查询） |
 | DELETE | `/sessions/<uuid:session_id>/` | 结束会话 |
 | POST | `/sessions/<uuid:session_id>/generate-questions/` | 生成问答提纲 |
 | POST | `/sessions/<uuid:session_id>/record-qa/` | 记录问答并生成候选提问 |
@@ -231,6 +231,8 @@ export DJANGO_SETTINGS_MODULE=config.settings.development
 | GET | `/interview-evaluation/<uuid:task_id>/` | 查询任务状态/结果 |
 | DELETE | `/interview-evaluation/<uuid:task_id>/delete/` | 删除任务 |
 | GET | `/download-report/<path:file_path>` | 下载评估报告 |
+| POST | `/comprehensive-analysis/` | 单人综合分析（整合简历、初筛、面试数据） |
+| GET | `/comprehensive-analysis/?resume_id=<uuid>` | 获取历史分析结果 |
 
 > 统一入口 `config/urls.py` 还暴露 `/admin/`（Django Admin）与调试工具栏（开发环境）。
 
@@ -293,6 +295,9 @@ MIT License
 
 ## 📝 更新日志
 
-- **2024-12**: 新增 `interview_assist` 面试辅助模块，支持 AI 生成问题池、记录问答生成候选提问、最终报告生成
-- **2024-12**: 新增 `dev_tools_service` 开发测试服务，支持批量生成模拟简历
-- **2024-12**: `services/agents` 重构，新增 `interview_assist_agent.py` 面试辅助 Agent
+- **2025-12**: 新增 `interview_assist` 面试辅助模块，支持 AI 生成问题池、记录问答生成候选提问、最终报告生成
+- **2025-12**: 新增 `dev_tools_service` 开发测试服务，支持批量生成模拟简历
+- **2025-12**: `services/agents` 重构，新增 `interview_assist_agent.py` 面试辅助 Agent
+- **2025-12**: 新增 `CandidateComprehensiveAnalyzer` 单人综合分析器，基于 Rubric 量表多维度评估
+- **2025-12**: `final_recommend` 新增综合分析 API，支持保存与查询历史分析结果
+- **2025-12**: `interview_assist` 支持按 resume_id 查询面试会话列表
