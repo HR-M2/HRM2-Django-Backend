@@ -93,7 +93,7 @@ python manage.py migrate
 **测试运行Gunicorn（项目目录下）**
 
 ```
-gunicorn --bind 0.0.0.0:5000 config.wsgi:application
+gunicorn --bind 0.0.0.0:8000 config.wsgi:application
 ```
 
 测试成功，就停止进程。
@@ -120,7 +120,7 @@ WorkingDirectory=/root/RecruitmentSys/backend
 ExecStart=/root/.pyenv/versions/HRM2venv/bin/gunicorn \
 --access-logfile - \
 --workers 3 \
---bind 0.0.0.0:5000 \
+--bind 0.0.0.0:8000 \
 config.wsgi:application
 
 Restart=always
@@ -159,7 +159,7 @@ sudo systemctl enable HRM2
 
 ```nginx
 	location ~ ^/(position-settings|resume-screening|video-analysis|final-recommend|interview-assist|media)/ {
-        proxy_pass http://127.0.0.1:5000;
+        proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
