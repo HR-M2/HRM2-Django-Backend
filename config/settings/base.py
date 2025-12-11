@@ -31,6 +31,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
 ]
 
 LOCAL_APPS = [
@@ -104,6 +105,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # REST框架配置
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
@@ -115,6 +117,50 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'apps.common.pagination.StandardPagination',
     'PAGE_SIZE': 10,
     'EXCEPTION_HANDLER': 'apps.common.exceptions.custom_exception_handler',
+}
+
+# drf-spectacular API文档配置
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'HR招聘系统 API',
+    'DESCRIPTION': '''
+智能招聘管理系统后端API文档
+
+## 功能模块
+- **岗位设置** - 岗位标准管理、简历分配
+- **简历筛选** - 简历上传与AI初筛
+- **视频分析** - 面试视频分析（预留）
+- **面试辅助** - AI面试问答助手
+- **最终推荐** - 候选人综合评估
+    ''',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    
+    # Swagger UI 设置
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': False,  # 隐藏操作ID，更简洁
+        'filter': True,  # 启用搜索过滤
+        'docExpansion': 'list',  # 默认展开到列表级别
+        'tagsSorter': 'alpha',  # 标签按字母排序
+        'operationsSorter': 'method',  # 操作按方法排序
+    },
+    
+    # 按URL路径自动分组标签
+    'TAGS': [
+        {'name': 'position-settings', 'description': '岗位设置 - 岗位标准管理与简历分配'},
+        {'name': 'resume-screening', 'description': '简历筛选 - 简历上传与AI初筛分析'},
+        {'name': 'video-analysis', 'description': '视频分析 - 面试视频分析（预留）'},
+        {'name': 'interview-assist', 'description': '面试辅助 - AI面试问答助手'},
+        {'name': 'final-recommend', 'description': '最终推荐 - 候选人综合评估分析'},
+    ],
+    
+    # 钩子函数：过滤和自动分配标签
+    'PREPROCESSING_HOOKS': ['config.spectacular_hooks.preprocess_exclude_path'],
+    'POSTPROCESSING_HOOKS': ['config.spectacular_hooks.custom_postprocessing_hook'],
+    
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SORT_OPERATIONS': False,
 }
 
 # CORS跨域配置

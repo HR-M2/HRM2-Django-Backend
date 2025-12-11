@@ -94,7 +94,7 @@ def run_migrations(settings_module):
 
 
 def generate_api_docs():
-    """生成 API 文档"""
+    """生成 API 文档（基于 drf-spectacular）"""
     print("\n📄 生成 API 文档...")
     docs_script = BASE_DIR / 'Docs' / '生成API文档.py'
     
@@ -107,14 +107,16 @@ def generate_api_docs():
             [sys.executable, str(docs_script)],
             capture_output=True,
             text=True,
-            cwd=BASE_DIR / 'Docs'
+            cwd=BASE_DIR
         )
         
         if result.returncode == 0:
             # 从输出中提取端点数量
             for line in result.stdout.split('\n'):
                 if 'API端点' in line:
-                    print(f"✅ {line.strip()}")
+                    # 移除可能的重复 emoji
+                    clean_line = line.strip().lstrip('✅').strip()
+                    print(f"✅ {clean_line}")
                     break
             else:
                 print("✅ API 文档已更新")

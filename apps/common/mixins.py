@@ -37,10 +37,41 @@ class BaseAPIViewMixin:
             raise NotFoundException(f"{model_name}不存在")
 
 
-class SafeAPIView(BaseAPIViewMixin, APIView):
+class SafeAPIViewMeta(type):
+    """
+    SafeAPIView的元类，用于动态设置http_method_names。
+    只暴露子类实际实现的handle_xxx方法对应的HTTP方法。
+    """
+    def __new__(mcs, name, bases, namespace):
+        cls = super().__new__(mcs, name, bases, namespace)
+        
+        # 跳过基类本身
+        if name == 'SafeAPIView':
+            return cls
+        
+        # 根据handle_xxx方法动态设置允许的HTTP方法
+        allowed_methods = ['options', 'head']  # 默认允许的方法
+        method_map = {
+            'handle_get': 'get',
+            'handle_post': 'post',
+            'handle_put': 'put',
+            'handle_patch': 'patch',
+            'handle_delete': 'delete',
+        }
+        
+        for handle_method, http_method in method_map.items():
+            if handle_method in namespace:
+                allowed_methods.append(http_method)
+        
+        cls.http_method_names = allowed_methods
+        return cls
+
+
+class SafeAPIView(BaseAPIViewMixin, APIView, metaclass=SafeAPIViewMeta):
     """
     内置异常处理的API视图。
     子类应实现handle_get、handle_post等方法。
+    只有实现了对应handle_xxx方法的HTTP方法才会在API文档中显示。
     """
     
     def dispatch(self, request, *args, **kwargs):
@@ -72,6 +103,11 @@ class SafeAPIView(BaseAPIViewMixin, APIView):
     def put(self, request, *args, **kwargs):
         if hasattr(self, 'handle_put'):
             return self.handle_put(request, *args, **kwargs)
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def patch(self, request, *args, **kwargs):
+        if hasattr(self, 'handle_patch'):
+            return self.handle_patch(request, *args, **kwargs)
         return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     def delete(self, request, *args, **kwargs):

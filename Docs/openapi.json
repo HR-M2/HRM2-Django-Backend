@@ -1,0 +1,1519 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HR招聘系统 API",
+    "version": "1.0.0",
+    "description": "\n智能招聘管理系统后端API文档\n\n## 功能模块\n- **岗位设置** - 岗位标准管理、简历分配\n- **简历筛选** - 简历上传与AI初筛\n- **视频分析** - 面试视频分析（预留）\n- **面试辅助** - AI面试问答助手\n- **最终推荐** - 候选人综合评估\n    "
+  },
+  "paths": {
+    "/position-settings/": {
+      "get": {
+        "operationId": "position_settings_retrieve",
+        "description": "招聘标准API\nGET: 获取当前招聘标准\nPOST: 更新招聘标准",
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "position_settings_create",
+        "description": "招聘标准API\nGET: 获取当前招聘标准\nPOST: 更新招聘标准",
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/position-settings/positions/": {
+      "get": {
+        "operationId": "position_settings_positions_retrieve",
+        "description": "岗位标准列表API\nGET: 获取所有岗位标准列表\nPOST: 创建新岗位",
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "position_settings_positions_create",
+        "description": "岗位标准列表API\nGET: 获取所有岗位标准列表\nPOST: 创建新岗位",
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/position-settings/positions/{position_id}/": {
+      "get": {
+        "operationId": "position_settings_positions_retrieve_2",
+        "description": "单个岗位API\nGET: 获取岗位详情\nPUT: 更新岗位\nDELETE: 删除岗位（软删除）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "position_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "put": {
+        "operationId": "position_settings_positions_update",
+        "description": "单个岗位API\nGET: 获取岗位详情\nPUT: 更新岗位\nDELETE: 删除岗位（软删除）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "position_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "position_settings_positions_destroy",
+        "description": "单个岗位API\nGET: 获取岗位详情\nPUT: 更新岗位\nDELETE: 删除岗位（软删除）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "position_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/position-settings/positions/{position_id}/assign-resumes/": {
+      "post": {
+        "operationId": "position_settings_positions_assign_resumes_create",
+        "description": "岗位简历分配API\nPOST: 将简历分配到岗位",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "position_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/position-settings/positions/{position_id}/remove-resume/{resume_id}/": {
+      "delete": {
+        "operationId": "position_settings_positions_remove_resume_destroy",
+        "description": "从岗位移除简历API\nDELETE: 从岗位移除指定简历",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "position_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/position-settings/ai/generate/": {
+      "post": {
+        "operationId": "position_settings_ai_generate_create",
+        "description": "AI生成岗位要求API\nPOST: 根据描述和文档生成岗位要求",
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/position-settings/list/": {
+      "get": {
+        "operationId": "position_settings_list_retrieve",
+        "description": "岗位标准列表API\nGET: 获取所有岗位标准列表\nPOST: 创建新岗位",
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "position_settings_list_create",
+        "description": "岗位标准列表API\nGET: 获取所有岗位标准列表\nPOST: 创建新岗位",
+        "tags": [
+          "position-settings"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/screening/": {
+      "post": {
+        "operationId": "resume_screening_screening_create",
+        "description": "简历初筛API\nPOST: 提交简历筛选任务",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/tasks/{task_id}/status/": {
+      "get": {
+        "operationId": "resume_screening_tasks_status_retrieve",
+        "description": "查询筛选任务状态API\nGET: 获取任务状态和结果",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/tasks-history/": {
+      "get": {
+        "operationId": "resume_screening_tasks_history_retrieve",
+        "description": "任务历史API\nGET: 获取历史任务列表\nDELETE: 删除指定任务",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/tasks/{task_id}/": {
+      "delete": {
+        "operationId": "resume_screening_tasks_destroy",
+        "description": "删除任务API\nDELETE: 删除指定任务",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/reports/{report_id}/download/": {
+      "get": {
+        "operationId": "resume_screening_reports_download_retrieve",
+        "description": "报告下载API\nGET: 下载筛选报告\n\n支持两种方式：\n1. 如果有 md_file，直接返回文件\n2. 如果没有文件，从数据库的 ResumeData 动态生成 Markdown 报告",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/reports/{report_id}/detail/": {
+      "get": {
+        "operationId": "resume_screening_reports_detail_retrieve",
+        "description": "简历数据详情API\nGET: 获取简历数据详情",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/data/": {
+      "get": {
+        "operationId": "resume_screening_data_retrieve",
+        "description": "简历数据管理API\nGET: 获取简历数据列表\nPOST: 创建新的简历数据",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "resume_screening_data_create",
+        "description": "简历数据管理API\nGET: 获取简历数据列表\nPOST: 创建新的简历数据",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/groups/create/": {
+      "post": {
+        "operationId": "resume_screening_groups_create_create",
+        "description": "创建简历组API\nPOST: 创建新的简历组",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/groups/add-resume/": {
+      "post": {
+        "operationId": "resume_screening_groups_add_resume_create",
+        "description": "添加简历到组API\nPOST: 向简历组添加简历",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/groups/remove-resume/": {
+      "post": {
+        "operationId": "resume_screening_groups_remove_resume_create",
+        "description": "从组中移除简历API\nPOST: 从简历组移除简历",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/groups/set-status/": {
+      "post": {
+        "operationId": "resume_screening_groups_set_status_create",
+        "description": "设置简历组状态API\nPOST: 更新简历组状态",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/groups/{group_id}/": {
+      "get": {
+        "operationId": "resume_screening_groups_retrieve_2",
+        "description": "简历组详情API\nGET: 获取简历组详情",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/groups/": {
+      "get": {
+        "operationId": "resume_screening_groups_retrieve",
+        "description": "简历组列表API\nGET: 获取简历组列表",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/link-resume-to-video/": {
+      "post": {
+        "operationId": "resume_screening_link_resume_to_video_create",
+        "description": "关联简历与视频API\nPOST: 建立简历与视频分析的关联",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/unlink-resume-from-video/": {
+      "post": {
+        "operationId": "resume_screening_unlink_resume_from_video_create",
+        "description": "解除简历与视频关联API\nPOST: 解除简历与视频分析的关联",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/library/": {
+      "get": {
+        "operationId": "resume_screening_library_retrieve",
+        "description": "简历库列表API\nGET: 获取简历库列表（支持分页和筛选）\nPOST: 上传简历到简历库",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "resume_screening_library_create",
+        "description": "简历库列表API\nGET: 获取简历库列表（支持分页和筛选）\nPOST: 上传简历到简历库",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/library/{resume_id}/": {
+      "get": {
+        "operationId": "resume_screening_library_retrieve_2",
+        "description": "简历库详情API\nGET: 获取简历详情\nPUT: 更新简历信息\nDELETE: 删除简历",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "put": {
+        "operationId": "resume_screening_library_update",
+        "description": "简历库详情API\nGET: 获取简历详情\nPUT: 更新简历信息\nDELETE: 删除简历",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "resume_screening_library_destroy",
+        "description": "简历库详情API\nGET: 获取简历详情\nPUT: 更新简历信息\nDELETE: 删除简历",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/library/batch-delete/": {
+      "post": {
+        "operationId": "resume_screening_library_batch_delete_create",
+        "description": "批量删除简历",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/library/check-hash/": {
+      "post": {
+        "operationId": "resume_screening_library_check_hash_create",
+        "description": "检查简历哈希值是否已存在",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/dev/generate-resumes/": {
+      "post": {
+        "operationId": "resume_screening_dev_generate_resumes_create",
+        "description": "生成随机简历API\nPOST: 根据岗位要求生成随机简历并添加到简历库",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/dev/force-screening-error/": {
+      "get": {
+        "operationId": "resume_screening_dev_force_screening_error_retrieve",
+        "description": "强制简历筛选任务失败测试钩子\nPOST: 通过环境变量控制是否强制筛选任务失败",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "resume_screening_dev_force_screening_error_create",
+        "description": "强制简历筛选任务失败测试钩子\nPOST: 通过环境变量控制是否强制筛选任务失败",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/resume-screening/dev/reset-test-state/": {
+      "post": {
+        "operationId": "resume_screening_dev_reset_test_state_create",
+        "description": "重置简历筛选测试状态\nPOST: 清除所有测试相关的缓存和状态",
+        "tags": [
+          "resume-screening"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/video-analysis/": {
+      "post": {
+        "operationId": "video_analysis_create",
+        "description": "视频分析API\nPOST: 上传视频并开始分析",
+        "tags": [
+          "video-analysis"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/video-analysis/{video_id}/status/": {
+      "get": {
+        "operationId": "video_analysis_status_retrieve",
+        "description": "视频分析状态API\nGET: 获取视频分析状态和结果",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "video_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "video-analysis"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/video-analysis/{video_id}/update/": {
+      "post": {
+        "operationId": "video_analysis_update_create",
+        "description": "视频分析结果更新API\nPOST: 更新视频分析结果",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "video_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "video-analysis"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/video-analysis/list/": {
+      "get": {
+        "operationId": "video_analysis_list_retrieve",
+        "description": "视频分析列表API\nGET: 获取视频分析列表",
+        "tags": [
+          "video-analysis"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/final-recommend/comprehensive-analysis/{resume_id}/": {
+      "get": {
+        "operationId": "final_recommend_comprehensive_analysis_retrieve",
+        "description": "单人综合分析API\nPOST: 对单个候选人进行综合分析\nGET: 获取候选人的分析历史",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "final-recommend"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "final_recommend_comprehensive_analysis_create",
+        "description": "单人综合分析API\nPOST: 对单个候选人进行综合分析\nGET: 获取候选人的分析历史",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "final-recommend"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/interview-assist/sessions/": {
+      "get": {
+        "operationId": "interview_assist_sessions_retrieve",
+        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "interview_assist_sessions_create",
+        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "interview_assist_sessions_destroy",
+        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/interview-assist/sessions/{session_id}/": {
+      "get": {
+        "operationId": "interview_assist_sessions_retrieve_2",
+        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "post": {
+        "operationId": "interview_assist_sessions_create_2",
+        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "interview_assist_sessions_destroy_2",
+        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/interview-assist/sessions/{session_id}/generate-questions/": {
+      "post": {
+        "operationId": "interview_assist_sessions_generate_questions_create",
+        "description": "生成问题API\nPOST: 生成候选问题（临时生成，不保存到数据库）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/interview-assist/sessions/{session_id}/record-qa/": {
+      "post": {
+        "operationId": "interview_assist_sessions_record_qa_create",
+        "description": "记录问答API\nPOST: 记录问答并获取评估",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/interview-assist/sessions/{session_id}/generate-report/": {
+      "post": {
+        "operationId": "interview_assist_sessions_generate_report_create",
+        "description": "生成报告API\nPOST: 生成最终报告",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "interview-assist"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "position-settings",
+      "description": "岗位设置 - 岗位标准管理与简历分配"
+    },
+    {
+      "name": "resume-screening",
+      "description": "简历筛选 - 简历上传与AI初筛分析"
+    },
+    {
+      "name": "video-analysis",
+      "description": "视频分析 - 面试视频分析（预留）"
+    },
+    {
+      "name": "interview-assist",
+      "description": "面试辅助 - AI面试问答助手"
+    },
+    {
+      "name": "final-recommend",
+      "description": "最终推荐 - 候选人综合评估分析"
+    }
+  ]
+}
