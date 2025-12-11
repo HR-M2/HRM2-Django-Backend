@@ -33,6 +33,7 @@ drf-spectacular>=0.27.0
 # Development
 pytest>=7.4.0
 pytest-django>=4.5.0
+hypothesis>=6.0.0
 black>=23.0.0
 flake8>=6.1.0
 isort>=5.12.0

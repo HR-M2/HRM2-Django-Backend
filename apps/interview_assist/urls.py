@@ -1,5 +1,7 @@
 """
-面试辅助模块URL配置 - 与原版 RecruitmentSystemAPI 保持一致。
+面试辅助模块URL配置。
+
+目标路径: /api/interviews/
 """
 from django.urls import path
 from .views import (
@@ -12,16 +14,18 @@ from .views import (
 app_name = 'interview_assist'
 
 urlpatterns = [
-    # 会话管理 - 原版路径
-    path('sessions/', SessionView.as_view(), name='session-create'),
+    # 会话列表和创建 - GET列表, POST创建
+    path('sessions/', SessionView.as_view(), name='session-list'),
+    
+    # 会话详情 - GET/PUT/DELETE
     path('sessions/<uuid:session_id>/', SessionView.as_view(), name='session-detail'),
     
-    # 问题生成 - 原版路径: generate-questions/
-    path('sessions/<uuid:session_id>/generate-questions/', GenerateQuestionsView.as_view(), name='generate-questions'),
+    # 生成问题 - POST生成面试问题
+    path('sessions/<uuid:session_id>/questions/', GenerateQuestionsView.as_view(), name='questions'),
     
-    # 记录问答 - 原版路径: record-qa/
-    path('sessions/<uuid:session_id>/record-qa/', RecordQAView.as_view(), name='record-qa'),
+    # 记录问答 - POST记录面试问答
+    path('sessions/<uuid:session_id>/qa/', RecordQAView.as_view(), name='qa'),
     
-    # 生成报告 - 原版路径: generate-report/
-    path('sessions/<uuid:session_id>/generate-report/', GenerateReportView.as_view(), name='generate-report'),
+    # 生成报告 - POST生成面试报告
+    path('sessions/<uuid:session_id>/report/', GenerateReportView.as_view(), name='report'),
 ]

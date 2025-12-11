@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-class APIResponse:
-    """标准化API响应构建器 - 使用 code 字段与原版兼容。"""
+class ApiResponse:
+    """统一API响应包装器 - 提供标准化的响应格式。"""
     
     @staticmethod
     def success(
@@ -42,53 +42,52 @@ class APIResponse:
     
     @staticmethod
     def error(
+        code: int = status.HTTP_400_BAD_REQUEST,
         message: str = "操作失败",
-        errors: Any = None,
-        status_code: int = status.HTTP_400_BAD_REQUEST
+        data: Any = None
     ) -> Response:
         """返回错误响应。"""
-        response_data = {
-            "code": status_code,
-            "message": message
-        }
-        if errors:
-            response_data["errors"] = errors
-        return Response(response_data, status=status_code)
+        return Response({
+            "code": code,
+            "message": message,
+            "data": data
+        }, status=code)
     
     @staticmethod
     def not_found(message: str = "资源不存在") -> Response:
         """返回未找到响应。"""
-        return APIResponse.error(message, status_code=status.HTTP_404_NOT_FOUND)
+        return ApiResponse.error(code=status.HTTP_404_NOT_FOUND, message=message)
     
     @staticmethod
     def validation_error(errors: Any, message: str = "参数验证失败") -> Response:
         """返回验证错误响应。"""
-        return APIResponse.error(message, errors, status.HTTP_400_BAD_REQUEST)
+        return ApiResponse.error(code=status.HTTP_400_BAD_REQUEST, message=message, data=errors)
     
     @staticmethod
     def server_error(message: str = "服务器内部错误") -> Response:
         """返回服务器错误响应。"""
-        return APIResponse.error(message, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return ApiResponse.error(code=status.HTTP_500_INTERNAL_SERVER_ERROR, message=message)
     
     @staticmethod
     def paginated(
-        data: list,
+        items: list,
         total: int,
         page: int,
         page_size: int,
-        message: str = "查询成功"
+        message: str = "success"
     ) -> Response:
         """返回分页响应。"""
         return Response({
             "code": 200,
             "message": message,
             "data": {
-                "items": data,
-                "pagination": {
-                    "total": total,
-                    "page": page,
-                    "page_size": page_size,
-                    "total_pages": (total + page_size - 1) // page_size
-                }
+                "items": items,
+                "total": total,
+                "page": page,
+                "page_size": page_size
             }
         }, status=status.HTTP_200_OK)
+
+
+# 向后兼容别名
+APIResponse = ApiResponse

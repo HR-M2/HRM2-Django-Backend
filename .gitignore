@@ -20,6 +20,12 @@ wheels/
 .installed.cfg
 *.egg
 
+# Cache
+*.cache
+.cache/
+pip-log.txt
+pip-delete-this-directory.txt
+
 # Django
 *.log
 local_settings.py
@@ -47,6 +53,13 @@ ENV/
 htmlcov/
 .tox/
 .pytest_cache/
+.hypothesis/
+*.cover
+*.py,cover
+coverage.xml
+nosetests.xml
+test-results/
+junit.xml
 
 # Celery
 celerybeat-schedule

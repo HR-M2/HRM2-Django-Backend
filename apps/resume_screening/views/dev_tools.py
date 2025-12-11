@@ -7,7 +7,7 @@ from django.http import JsonResponse
 
 from apps.common.mixins import SafeAPIView
 from apps.common.exceptions import ValidationException
-from apps.resume_screening.models import ResumeLibrary
+from apps.resume_library.models import ResumeLibrary
 
 logger = logging.getLogger(__name__)
 

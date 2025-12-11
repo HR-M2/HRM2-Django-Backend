@@ -1,9 +1,11 @@
 """
-岗位设置模块URL配置 - 支持多岗位CRUD和简历分配。
+岗位设置模块URL配置。
+
+目标路径: /api/positions/
+支持岗位CRUD、简历分配和AI生成功能。
 """
 from django.urls import path
 from .views import (
-    RecruitmentCriteriaView, 
     PositionCriteriaListView,
     PositionCriteriaDetailView,
     PositionAssignResumesView,
@@ -14,20 +16,18 @@ from .views import (
 app_name = 'position_settings'
 
 urlpatterns = [
-    # 原版路径 - 保持向后兼容（获取/更新默认岗位）
-    path('', RecruitmentCriteriaView.as_view(), name='criteria'),
+    # 岗位列表和创建 - GET列表, POST创建
+    path('', PositionCriteriaListView.as_view(), name='list'),
     
-    # 多岗位管理 API
-    path('positions/', PositionCriteriaListView.as_view(), name='positions-list'),
-    path('positions/<uuid:position_id>/', PositionCriteriaDetailView.as_view(), name='position-detail'),
+    # 岗位详情 - GET/PUT/DELETE
+    path('<uuid:position_id>/', PositionCriteriaDetailView.as_view(), name='detail'),
     
-    # 简历分配 API
-    path('positions/<uuid:position_id>/assign-resumes/', PositionAssignResumesView.as_view(), name='assign-resumes'),
-    path('positions/<uuid:position_id>/remove-resume/<uuid:resume_id>/', PositionRemoveResumeView.as_view(), name='remove-resume'),
+    # 简历分配 - POST分配简历到岗位
+    path('<uuid:position_id>/resumes/', PositionAssignResumesView.as_view(), name='resumes'),
     
-    # AI生成 API
+    # 移除简历 - DELETE从岗位移除指定简历
+    path('<uuid:position_id>/resumes/<uuid:resume_id>/', PositionRemoveResumeView.as_view(), name='remove-resume'),
+    
+    # AI生成 - POST根据描述生成岗位要求
     path('ai/generate/', PositionAIGenerateView.as_view(), name='ai-generate'),
-    
-    # 保留旧的列表接口（向后兼容）
-    path('list/', PositionCriteriaListView.as_view(), name='list'),
 ]

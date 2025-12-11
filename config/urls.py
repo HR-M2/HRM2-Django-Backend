@@ -22,12 +22,13 @@ urlpatterns = [
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
-    # API端点 - 与原版 RecruitmentSystemAPI 保持一致
-    path('position-settings/', include('apps.position_settings.urls')),
-    path('resume-screening/', include('apps.resume_screening.urls')),
-    path('video-analysis/', include('apps.video_analysis.urls')),
-    path('final-recommend/', include('apps.final_recommend.urls')),
-    path('interview-assist/', include('apps.interview_assist.urls')),
+    # API端点 - 统一 /api/ 前缀
+    path('api/positions/', include('apps.position_settings.urls')),
+    path('api/library/', include('apps.resume_library.urls')),
+    path('api/screening/', include('apps.resume_screening.urls')),
+    path('api/videos/', include('apps.video_analysis.urls')),
+    path('api/recommend/', include('apps.final_recommend.urls')),
+    path('api/interviews/', include('apps.interview_assist.urls')),
 ]
 
 # 开发环境下提供媒体文件服务

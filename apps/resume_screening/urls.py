@@ -1,5 +1,8 @@
 """
-简历筛选模块URL配置 - 与原版 RecruitmentSystemAPI 保持一致。
+简历筛选模块URL配置。
+
+目标路径: /api/screening/
+注意：简历库相关API已迁移到 apps.resume_library 模块（/api/library/）
 """
 from django.urls import path
 from .views import (
@@ -18,10 +21,6 @@ from .views import (
     ReportDownloadView,
     LinkResumeVideoView,
     UnlinkResumeVideoView,
-    ResumeLibraryListView,
-    ResumeLibraryDetailView,
-    ResumeLibraryBatchDeleteView,
-    ResumeLibraryCheckHashView,
     GenerateRandomResumesView,
     ForceScreeningErrorView,
     ResetScreeningTestStateView,
@@ -30,50 +29,45 @@ from .views import (
 app_name = 'resume_screening'
 
 urlpatterns = [
-    # 筛选 - 原版路径: screening/
-    path('screening/', ResumeScreeningView.as_view(), name='screening'),
+    # 提交筛选 - POST提交筛选任务
+    path('', ResumeScreeningView.as_view(), name='submit'),
     
-    # 任务状态 - 原版路径: tasks/<uuid:task_id>/status/
+    # 任务列表 - GET获取历史任务
+    path('tasks/', TaskHistoryView.as_view(), name='task-list'),
+    
+    # 任务详情 - GET获取状态, DELETE删除任务
+    path('tasks/<uuid:task_id>/', TaskDeleteView.as_view(), name='task-detail'),
+    
+    # 任务状态 - GET获取任务实时状态
     path('tasks/<uuid:task_id>/status/', ScreeningTaskStatusView.as_view(), name='task-status'),
     
-    # 历史任务 - 原版路径: tasks-history/
-    path('tasks-history/', TaskHistoryView.as_view(), name='task-history'),
+    # 报告 - GET获取报告详情
+    path('reports/<uuid:report_id>/', ResumeDataDetailView.as_view(), name='report'),
     
-    # 删除任务
-    path('tasks/<uuid:task_id>/', TaskDeleteView.as_view(), name='task-delete'),
-    
-    # 报告下载 - 原版路径: reports/<uuid:report_id>/download/
+    # 报告下载 - GET下载报告文件
     path('reports/<uuid:report_id>/download/', ReportDownloadView.as_view(), name='report-download'),
     
-    # 报告详情 - 原版路径: reports/<uuid:report_id>/detail/
-    path('reports/<uuid:report_id>/detail/', ResumeDataDetailView.as_view(), name='report-detail'),
+    # 简历数据 - GET获取筛选后的简历数据
+    path('data/', ResumeDataView.as_view(), name='data'),
     
-    # 简历数据
-    path('data/', ResumeDataView.as_view(), name='resume-data'),
-    
-    # 简历组 - 与原版路径一致
+    # 简历组 - GET列表, POST创建
+    path('groups/', ResumeGroupListView.as_view(), name='group-list'),
     path('groups/create/', CreateResumeGroupView.as_view(), name='group-create'),
+    
+    # 简历组详情 - GET/DELETE
+    path('groups/<uuid:group_id>/', ResumeGroupDetailView.as_view(), name='group-detail'),
+    
+    # 简历组操作
     path('groups/add-resume/', AddResumeToGroupView.as_view(), name='group-add-resume'),
     path('groups/remove-resume/', RemoveResumeFromGroupView.as_view(), name='group-remove-resume'),
     path('groups/set-status/', SetGroupStatusView.as_view(), name='group-set-status'),
-    path('groups/<uuid:group_id>/', ResumeGroupDetailView.as_view(), name='group-detail'),
-    path('groups/', ResumeGroupListView.as_view(), name='group-list'),
     
-    # 视频关联 - 原版路径
-    path('link-resume-to-video/', LinkResumeVideoView.as_view(), name='link-video'),
-    path('unlink-resume-from-video/', UnlinkResumeVideoView.as_view(), name='unlink-video'),
+    # 视频关联
+    path('videos/link/', LinkResumeVideoView.as_view(), name='video-link'),
+    path('videos/unlink/', UnlinkResumeVideoView.as_view(), name='video-unlink'),
     
-    # 简历库 API
-    path('library/', ResumeLibraryListView.as_view(), name='library-list'),
-    path('library/<uuid:resume_id>/', ResumeLibraryDetailView.as_view(), name='library-detail'),
-    path('library/batch-delete/', ResumeLibraryBatchDeleteView.as_view(), name='library-batch-delete'),
-    path('library/check-hash/', ResumeLibraryCheckHashView.as_view(), name='library-check-hash'),
-    
-    # 开发测试工具 API
-    # AI生成简历测试
-    path('dev/generate-resumes/', GenerateRandomResumesView.as_view(), name='dev-generate-resumes'),
-    # 开启强制返回筛选错误错误
-    path('dev/force-screening-error/', ForceScreeningErrorView.as_view(), name='dev-force-error'),
-    # 关闭强制返回筛选错误
-    path('dev/reset-test-state/', ResetScreeningTestStateView.as_view(), name='dev-reset-state'),
+    # 开发测试工具
+    path('dev/generate-resumes/', GenerateRandomResumesView.as_view(), name='dev-generate'),
+    path('dev/force-error/', ForceScreeningErrorView.as_view(), name='dev-force-error'),
+    path('dev/reset-state/', ResetScreeningTestStateView.as_view(), name='dev-reset-state'),
 ]

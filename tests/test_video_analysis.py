@@ -93,14 +93,16 @@ class VideoAnalysisAPITest(TestCase):
             status='completed'
         )
         
-        response = self.client.get('/api/v1/video/list/')
+        response = self.client.get('/api/videos/')
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(data['status'], 'success')
+        # 视频列表返回格式包含 videos, total, page, page_size
+        self.assertIn('videos', data)
+        self.assertIn('total', data)
     
     def test_get_video_status_not_found(self):
         """测试获取不存在的视频状态。"""
-        response = self.client.get('/api/v1/video/00000000-0000-0000-0000-000000000000/')
+        response = self.client.get('/api/videos/00000000-0000-0000-0000-000000000000/status/')
         
         self.assertEqual(response.status_code, 404)

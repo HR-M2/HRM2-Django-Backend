@@ -37,6 +37,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'apps.common',
     'apps.position_settings',
+    'apps.resume_library',  # 简历库模块（独立）
     'apps.resume_screening',
     'apps.video_analysis',
     'apps.interview_assist',

@@ -100,7 +100,7 @@ class ResumeScreeningAPITest(TestCase):
         }
         
         response = self.client.post(
-            '/api/v1/screening/',
+            '/api/screening/',
             data=json.dumps(data),
             content_type='application/json'
         )
@@ -109,7 +109,7 @@ class ResumeScreeningAPITest(TestCase):
     
     def test_get_task_status_not_found(self):
         """测试获取不存在的任务状态。"""
-        response = self.client.get('/api/v1/screening/tasks/00000000-0000-0000-0000-000000000000/')
+        response = self.client.get('/api/screening/tasks/00000000-0000-0000-0000-000000000000/status/')
         
         self.assertEqual(response.status_code, 404)
 
