@@ -503,39 +503,3 @@ class CandidateComprehensiveAnalyzer:
 {recommendation['action']}"""
 
 
-# ============ 保留旧版兼容接口 ============
-
-class EvaluationAgentManager:
-    """
-    旧版评估代理管理器（保留兼容）。
-    建议使用新的 CandidateComprehensiveAnalyzer。
-    """
-    
-    def __init__(self, criteria: Dict[str, Any]):
-        self.criteria = criteria
-        self.analyzer = CandidateComprehensiveAnalyzer(job_config=criteria)
-    
-    def run_single_candidate_analysis(
-        self,
-        candidate_name: str,
-        resume_content: str,
-        screening_report: Dict,
-        interview_records: List[Dict],
-        interview_report: Dict,
-        video_analysis: Optional[Dict] = None,
-        progress_callback: Optional[callable] = None
-    ) -> Dict[str, Any]:
-        """
-        运行单人综合分析。
-        
-        这是新的推荐接口。
-        """
-        return self.analyzer.analyze(
-            candidate_name=candidate_name,
-            resume_content=resume_content,
-            screening_report=screening_report,
-            interview_records=interview_records,
-            interview_report=interview_report,
-            video_analysis=video_analysis,
-            progress_callback=progress_callback
-        )

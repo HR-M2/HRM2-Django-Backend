@@ -60,5 +60,4 @@ Thumbs.db
 CODEBUDDY.md
 
 # Documentation files (except README)
-docs/
 !docs/README.md

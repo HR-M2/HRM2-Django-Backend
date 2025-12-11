@@ -849,6 +849,8 @@ class InterviewAssistAgent:
         """格式化对话日志（适配新的 JSON 格式）"""
         lines = []
         for qa in qa_records:
+            if qa is None:
+                continue
             round_num = qa.get('round', 0)
             question = qa.get('question', '')
             answer = qa.get('answer', '')
@@ -961,10 +963,11 @@ class InterviewAssistAgent:
 
     def _get_fallback_report(self, candidate_name: str, qa_records: List[Dict]) -> Dict[str, Any]:
         """备用报告生成"""
-        # 计算平均分
+        # 计算平均分（过滤掉 None 值）
         scores = [
             qa.get('evaluation', {}).get('normalized_score', 50)
             for qa in qa_records
+            if qa is not None
         ]
         avg_score = sum(scores) / len(scores) if scores else 50
         

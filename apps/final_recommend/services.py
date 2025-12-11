@@ -5,7 +5,8 @@ import logging
 import json
 from typing import Dict, List, Any, Tuple, Callable
 
-from services.agents import EvaluationAgentManager
+# 注意: EvaluationAgentManager 已废弃并删除，批量评估功能不再支持
+# 请使用 CandidateComprehensiveAnalyzer 进行单人综合分析
 
 logger = logging.getLogger(__name__)
 
@@ -137,48 +138,6 @@ class EvaluationService:
         
         return "\n".join(infos)
     
-    @classmethod
-    def run_evaluation(
-        cls,
-        group_id: str,
-        progress_callback: Callable = None
-    ) -> Tuple[List[Dict], List[str]]:
-        """
-        运行面试后评估流程。
-        
-        参数:
-            group_id: 简历组ID
-            progress_callback: 进度更新回调函数
-            
-        返回:
-            元组 (消息列表, 发言者列表)
-        """
-        # 加载数据
-        criteria = cls.load_recruitment_criteria()
-        candidates_data = cls.load_candidates_data(group_id)
-        big_five_scores, fraud_scores = cls.load_personality_data(group_id)
-        
-        if not candidates_data:
-            raise ValueError("没有找到候选人数据")
-        
-        # 生成候选人信息
-        candidate_info = cls.generate_candidate_info(
-            candidates_data, big_five_scores, fraud_scores
-        )
-        
-        # 创建并运行代理管理器
-        manager = EvaluationAgentManager(criteria)
-        manager.setup()
-        
-        # 设置进度回调
-        if progress_callback:
-            original_update = manager.update_task_speaker
-            def wrapped_update(speaker_name: str, step: int = None):
-                original_update(speaker_name, step)
-                progress_callback(speaker_name, step or 0)
-            manager.update_task_speaker = wrapped_update
-        
-        # 运行评估
-        messages = manager.run_evaluation(candidate_info, len(candidates_data))
-        
-        return messages, manager.speakers
+    # run_evaluation 方法已废弃并删除
+    # 批量评估功能不再支持，请使用 CandidateComprehensiveAnalyzer 进行单人综合分析
+    # 参见: apps/final_recommend/views.py 中的 CandidateComprehensiveAnalysisView

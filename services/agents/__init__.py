@@ -1,7 +1,6 @@
 from .screening_agents import create_screening_agents, ScreeningAgentManager
 from .evaluation_agents import (
     CandidateComprehensiveAnalyzer,
-    EvaluationAgentManager,
     RUBRIC_SCALES,
     EVALUATION_DIMENSIONS,
     RECOMMENDATION_LEVELS
@@ -19,7 +18,6 @@ __all__ = [
     'ScreeningAgentManager',
     # 综合分析评估
     'CandidateComprehensiveAnalyzer',
-    'EvaluationAgentManager',
     'RUBRIC_SCALES',
     'EVALUATION_DIMENSIONS',
     'RECOMMENDATION_LEVELS',

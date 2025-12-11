@@ -51,7 +51,12 @@ class CandidateComprehensiveAnalysis(models.Model):
 
 
 class InterviewEvaluationTask(models.Model):
-    """面试后评估任务模型"""
+    """
+    面试后评估任务模型。
+    
+    [已废弃] 此模型用于已废弃的批量评估功能，保留仅为数据库兼容性。
+    新功能请使用 CandidateComprehensiveAnalysis 模型进行单人综合分析。
+    """
     
     class Status(models.TextChoices):
         PENDING = 'pending', '等待处理'
