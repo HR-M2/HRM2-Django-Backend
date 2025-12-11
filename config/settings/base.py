@@ -147,13 +147,14 @@ SPECTACULAR_SETTINGS = {
         'operationsSorter': 'method',  # 操作按方法排序
     },
     
-    # 按URL路径自动分组标签
+    # 按URL路径自动分组标签（与 /api/ 前缀路径对应）
     'TAGS': [
-        {'name': 'position-settings', 'description': '岗位设置 - 岗位标准管理与简历分配'},
-        {'name': 'resume-screening', 'description': '简历筛选 - 简历上传与AI初筛分析'},
-        {'name': 'video-analysis', 'description': '视频分析 - 面试视频分析（预留）'},
-        {'name': 'interview-assist', 'description': '面试辅助 - AI面试问答助手'},
-        {'name': 'final-recommend', 'description': '最终推荐 - 候选人综合评估分析'},
+        {'name': 'positions', 'description': '岗位设置 - 岗位标准管理与简历分配'},
+        {'name': 'library', 'description': '简历库 - 简历存储与管理'},
+        {'name': 'screening', 'description': '简历筛选 - 简历AI初筛分析'},
+        {'name': 'videos', 'description': '视频分析 - 面试视频分析（预留）'},
+        {'name': 'interviews', 'description': '面试辅助 - AI面试问答助手'},
+        {'name': 'recommend', 'description': '最终推荐 - 候选人综合评估分析'},
     ],
     
     # 钩子函数：过滤和自动分配标签

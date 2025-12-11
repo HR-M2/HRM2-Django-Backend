@@ -5,9 +5,9 @@
 """
 import logging
 from django.db import models
-from django.http import JsonResponse
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
 
 from .models import ResumeLibrary
@@ -70,16 +70,12 @@ class LibraryListView(SafeAPIView):
                 'content_preview': resume.content[:200] + '...' if len(resume.content) > 200 else resume.content
             })
         
-        return JsonResponse({
-            'code': 200,
-            'message': '成功',
-            'data': {
-                'items': result,
-                'total': total,
-                'page': page,
-                'page_size': page_size
-            }
-        })
+        return ApiResponse.paginated(
+            items=result,
+            total=total,
+            page=page,
+            page_size=page_size
+        )
     
     def handle_post(self, request):
         """上传简历到简历库（支持批量上传）。"""
@@ -113,16 +109,15 @@ class LibraryListView(SafeAPIView):
             else:
                 skipped.append({'filename': filename, 'reason': error})
         
-        return JsonResponse({
-            'code': 200,
-            'message': f'成功上传 {len(uploaded)} 份简历，跳过 {len(skipped)} 份',
-            'data': {
+        return ApiResponse.success(
+            data={
                 'uploaded': uploaded,
                 'skipped': skipped,
                 'uploaded_count': len(uploaded),
                 'skipped_count': len(skipped)
-            }
-        })
+            },
+            message=f'成功上传 {len(uploaded)} 份简历，跳过 {len(skipped)} 份'
+        )
 
 
 class LibraryDetailView(SafeAPIView):
@@ -140,23 +135,19 @@ class LibraryDetailView(SafeAPIView):
         if not resume:
             raise NotFoundException("简历不存在")
         
-        return JsonResponse({
-            'code': 200,
-            'message': '成功',
-            'data': {
-                'id': str(resume.id),
-                'filename': resume.filename,
-                'file_hash': resume.file_hash,
-                'file_size': resume.file_size,
-                'file_type': resume.file_type,
-                'content': resume.content,
-                'candidate_name': resume.candidate_name,
-                'is_screened': resume.is_screened,
-                'is_assigned': resume.is_assigned,
-                'notes': resume.notes,
-                'created_at': resume.created_at.isoformat(),
-                'updated_at': resume.updated_at.isoformat()
-            }
+        return ApiResponse.success(data={
+            'id': str(resume.id),
+            'filename': resume.filename,
+            'file_hash': resume.file_hash,
+            'file_size': resume.file_size,
+            'file_type': resume.file_type,
+            'content': resume.content,
+            'candidate_name': resume.candidate_name,
+            'is_screened': resume.is_screened,
+            'is_assigned': resume.is_assigned,
+            'notes': resume.notes,
+            'created_at': resume.created_at.isoformat(),
+            'updated_at': resume.updated_at.isoformat()
         })
     
     def handle_put(self, request, id):
@@ -175,21 +166,17 @@ class LibraryDetailView(SafeAPIView):
         
         resume.save()
         
-        return JsonResponse({
-            'code': 200,
-            'message': '更新成功',
-            'data': {'id': str(resume.id)}
-        })
+        return ApiResponse.success(
+            data={'id': str(resume.id)},
+            message='更新成功'
+        )
     
     def handle_delete(self, request, id):
         """删除简历。"""
         if not LibraryService.delete_resume(str(id)):
             raise NotFoundException("简历不存在")
         
-        return JsonResponse({
-            'code': 200,
-            'message': '删除成功'
-        })
+        return ApiResponse.success(message='删除成功')
 
 
 class LibraryBatchDeleteView(SafeAPIView):
@@ -208,13 +195,10 @@ class LibraryBatchDeleteView(SafeAPIView):
         
         deleted_count = LibraryService.batch_delete(resume_ids)
         
-        return JsonResponse({
-            'code': 200,
-            'message': f'成功删除 {deleted_count} 份简历',
-            'data': {
-                'deleted_count': deleted_count
-            }
-        })
+        return ApiResponse.success(
+            data={'deleted_count': deleted_count},
+            message=f'成功删除 {deleted_count} 份简历'
+        )
 
 
 class LibraryCheckHashView(SafeAPIView):
@@ -234,11 +218,7 @@ class LibraryCheckHashView(SafeAPIView):
         result = LibraryService.check_hashes_exist(hashes)
         existing_count = sum(1 for v in result.values() if v)
         
-        return JsonResponse({
-            'code': 200,
-            'message': '成功',
-            'data': {
-                'exists': result,
-                'existing_count': existing_count
-            }
+        return ApiResponse.success(data={
+            'exists': result,
+            'existing_count': existing_count
         })

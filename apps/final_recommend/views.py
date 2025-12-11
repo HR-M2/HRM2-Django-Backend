@@ -4,9 +4,9 @@
 注意: 批量评估功能（InterviewEvaluationView）已废弃并移除。
 """
 import logging
-from django.http import JsonResponse
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
 
 from .models import CandidateComprehensiveAnalysis
@@ -38,28 +38,22 @@ class CandidateComprehensiveAnalysisView(SafeAPIView):
         ).order_by('-created_at').first()
         
         if not analysis:
-            return JsonResponse({
-                'status': 'success',
-                'data': None
-            })
+            return ApiResponse.success(data=None)
         
-        return JsonResponse({
-            'status': 'success',
-            'data': {
-                'id': str(analysis.id),
-                'resume_id': str(analysis.resume_data_id),
-                'candidate_name': analysis.resume_data.candidate_name,
-                'final_score': analysis.final_score,
-                'recommendation': {
-                    'level': analysis.recommendation_level,
-                    'label': analysis.recommendation_label,
-                    'action': analysis.recommendation_action,
-                    'score': analysis.final_score
-                },
-                'dimension_scores': analysis.dimension_scores,
-                'comprehensive_report': analysis.comprehensive_report,
-                'created_at': analysis.created_at.isoformat()
-            }
+        return ApiResponse.success(data={
+            'id': str(analysis.id),
+            'resume_id': str(analysis.resume_data_id),
+            'candidate_name': analysis.resume_data.candidate_name,
+            'final_score': analysis.final_score,
+            'recommendation': {
+                'level': analysis.recommendation_level,
+                'label': analysis.recommendation_label,
+                'action': analysis.recommendation_action,
+                'score': analysis.final_score
+            },
+            'dimension_scores': analysis.dimension_scores,
+            'comprehensive_report': analysis.comprehensive_report,
+            'created_at': analysis.created_at.isoformat()
         })
     
     def handle_post(self, request, resume_id):
@@ -133,10 +127,8 @@ class CandidateComprehensiveAnalysisView(SafeAPIView):
                 }
             )
             
-            return JsonResponse({
-                'status': 'success',
-                'message': '综合分析完成',
-                'data': {
+            return ApiResponse.success(
+                data={
                     'id': str(analysis.id),
                     'resume_id': str(resume.id),
                     'candidate_name': resume.candidate_name,
@@ -145,8 +137,9 @@ class CandidateComprehensiveAnalysisView(SafeAPIView):
                     'dimension_scores': result['dimension_scores'],
                     'comprehensive_report': result['comprehensive_report'],
                     'created_at': analysis.created_at.isoformat()
-                }
-            })
+                },
+                message='综合分析完成'
+            )
             
         except Exception as e:
             logger.error(f"综合分析失败: {e}", exc_info=True)

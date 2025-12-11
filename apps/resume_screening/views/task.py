@@ -2,9 +2,10 @@
 任务管理视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
 
 from ..models import ResumeScreeningTask, ScreeningReport, ResumeData
@@ -64,7 +65,7 @@ class TaskHistoryView(SafeAPIView):
             result.append(data)
         
         # 返回与原版一致的格式
-        return JsonResponse({
+        return ApiResponse.success(data={
             "tasks": result,
             "total": total,
             "page": page,
@@ -138,10 +139,10 @@ class TaskDeleteView(SafeAPIView):
         
         logger.info(f"Deleted task {task_id_str}")
         
-        return JsonResponse({
-            "message": "任务删除成功",
-            "task_id": task_id_str
-        })
+        return ApiResponse.success(
+            data={"task_id": task_id_str},
+            message="任务删除成功"
+        )
 
 
 class ReportDownloadView(SafeAPIView):
@@ -192,7 +193,7 @@ class ReportDownloadView(SafeAPIView):
                 return response
         
         # 都找不到，返回404
-        return JsonResponse({"error": "报告不存在"}, status=404)
+        return ApiResponse.not_found(message="报告不存在")
     
     def _generate_markdown_report(self, resume_data: ResumeData) -> str:
         """从 ResumeData 生成 Markdown 报告内容。"""

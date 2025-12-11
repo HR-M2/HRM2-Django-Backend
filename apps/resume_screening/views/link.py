@@ -2,10 +2,9 @@
 简历-视频关联视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
-from rest_framework.response import Response
-from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
 
 from ..models import ResumeData
@@ -50,13 +49,15 @@ class LinkResumeVideoView(SafeAPIView):
         resume_data.save()
         
         # 返回与原版一致的格式
-        return Response({
-            "message": "简历数据与视频分析记录关联成功",
-            "resume_data_id": str(resume_data.id),
-            "video_analysis_id": str(video_analysis.id),
-            "candidate_name": resume_data.candidate_name,
-            "video_name": video_analysis.video_name
-        }, status=status.HTTP_200_OK)
+        return ApiResponse.success(
+            data={
+                "resume_data_id": str(resume_data.id),
+                "video_analysis_id": str(video_analysis.id),
+                "candidate_name": resume_data.candidate_name,
+                "video_name": video_analysis.video_name
+            },
+            message="简历数据与视频分析记录关联成功"
+        )
 
 
 class UnlinkResumeVideoView(SafeAPIView):
@@ -89,10 +90,12 @@ class UnlinkResumeVideoView(SafeAPIView):
         resume_data.save()
         
         # 返回与原版一致的格式
-        return Response({
-            "message": "简历数据与视频分析记录解除关联成功",
-            "resume_data_id": str(resume_data.id),
-            "disconnected_video_id": video_id,
-            "candidate_name": resume_data.candidate_name,
-            "video_name": video_name
-        }, status=status.HTTP_200_OK)
+        return ApiResponse.success(
+            data={
+                "resume_data_id": str(resume_data.id),
+                "disconnected_video_id": video_id,
+                "candidate_name": resume_data.candidate_name,
+                "video_name": video_name
+            },
+            message="简历数据与视频分析记录解除关联成功"
+        )

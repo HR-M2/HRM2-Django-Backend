@@ -32,11 +32,12 @@ django.setup()
 # ========== 配置区域 ==========
 # 模块中文名称映射（与 SPECTACULAR_SETTINGS['TAGS'] 对应）
 TAG_TITLES = {
-    'position-settings': '岗位设置',
-    'resume-screening': '简历筛选',
-    'video-analysis': '视频分析',
-    'interview-assist': '面试辅助',
-    'final-recommend': '最终推荐',
+    'positions': '岗位设置',
+    'library': '简历库',
+    'screening': '简历筛选',
+    'videos': '视频分析',
+    'interviews': '面试辅助',
+    'recommend': '最终推荐',
 }
 
 # HTTP方法顺序和样式
@@ -62,12 +63,14 @@ def get_openapi_schema():
 
 def extract_tag_from_path(path):
     """从路径提取标签"""
+    # 新的 /api/ 前缀路径映射
     tag_mapping = {
-        '/position-settings/': 'position-settings',
-        '/resume-screening/': 'resume-screening',
-        '/video-analysis/': 'video-analysis',
-        '/interview-assist/': 'interview-assist',
-        '/final-recommend/': 'final-recommend',
+        '/api/positions/': 'positions',
+        '/api/library/': 'library',
+        '/api/screening/': 'screening',
+        '/api/videos/': 'videos',
+        '/api/interviews/': 'interviews',
+        '/api/recommend/': 'recommend',
     }
     for prefix, tag in tag_mapping.items():
         if path.startswith(prefix):

@@ -3,11 +3,9 @@
 """
 import logging
 from django.conf import settings
-from django.http import JsonResponse
-from rest_framework.response import Response
-from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
 
 from ..models import ResumeScreeningTask, ScreeningReport, ResumeData
@@ -28,9 +26,9 @@ class ResumeScreeningView(SafeAPIView):
         # 验证输入
         serializer = ResumeScreeningInputSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {"error": "参数验证失败", "details": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
+            return ApiResponse.validation_error(
+                errors=serializer.errors,
+                message="参数验证失败"
             )
         
         try:
@@ -62,16 +60,18 @@ class ResumeScreeningView(SafeAPIView):
             self._start_screening_task(task, position_data, resumes_data)
             
             # 返回与原版一致的格式
-            return Response({
-                "status": "submitted",
-                "message": "简历筛选任务已提交，正在后台处理",
-                "task_id": str(task.id)
-            }, status=status.HTTP_202_ACCEPTED)
+            return ApiResponse.accepted(
+                data={
+                    "status": "submitted",
+                    "task_id": str(task.id)
+                },
+                message="简历筛选任务已提交，正在后台处理"
+            )
             
         except ValidationException as e:
-            return Response(
-                {"error": e.message, "details": e.errors},
-                status=status.HTTP_400_BAD_REQUEST
+            return ApiResponse.validation_error(
+                errors=e.errors,
+                message=e.message
             )
     
     def _start_screening_task(self, task, position_data, resumes_data):
@@ -193,7 +193,7 @@ class ScreeningTaskStatusView(SafeAPIView):
             response_data['error_message'] = task.error_message
         
         # 返回与原版一致的格式
-        return JsonResponse(response_data)
+        return ApiResponse.success(data=response_data)
     
     def _get_reports(self, task):
         """获取任务的报告。"""

@@ -10,10 +10,18 @@ def preprocess_exclude_path(endpoints):
     """
     filtered = []
     
+    # 需要排除的路径前缀（API文档和管理后台）
+    excluded_prefixes = (
+        '/admin/',
+        '/api/schema/',
+        '/api/docs/',
+        '/api/redoc/',
+    )
+    
     for endpoint in endpoints:
         path = endpoint[0]
-        # 跳过 admin 和 api/ 等非业务接口
-        if path.startswith('/admin/') or path.startswith('/api/'):
+        # 跳过 admin 和 API 文档接口
+        if path.startswith(excluded_prefixes):
             continue
         filtered.append(endpoint)
     
@@ -24,13 +32,14 @@ def custom_postprocessing_hook(result, generator, request, public):
     """
     后处理钩子：根据URL路径自动为操作分配标签。
     """
-    # 标签映射
+    # 标签映射（新的 /api/ 前缀路径）
     tag_mapping = {
-        '/position-settings/': 'position-settings',
-        '/resume-screening/': 'resume-screening',
-        '/video-analysis/': 'video-analysis',
-        '/interview-assist/': 'interview-assist',
-        '/final-recommend/': 'final-recommend',
+        '/api/positions/': 'positions',
+        '/api/library/': 'library',
+        '/api/screening/': 'screening',
+        '/api/videos/': 'videos',
+        '/api/interviews/': 'interviews',
+        '/api/recommend/': 'recommend',
     }
     
     paths = result.get('paths', {})

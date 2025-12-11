@@ -3,9 +3,9 @@
 提供开发辅助API，如生成随机简历等。
 """
 import logging
-from django.http import JsonResponse
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
 from apps.resume_library.models import ResumeLibrary
 
@@ -71,17 +71,16 @@ class GenerateRandomResumesView(SafeAPIView):
                     'candidate_name': library_entry.candidate_name
                 })
             
-            return JsonResponse({
-                'code': 200,
-                'message': f'成功生成 {len(added_resumes)} 份简历',
-                'data': {
+            return ApiResponse.success(
+                data={
                     'added': added_resumes,
                     'skipped': skipped_resumes,
                     'added_count': len(added_resumes),
                     'skipped_count': len(skipped_resumes),
                     'requested_count': count
-                }
-            })
+                },
+                message=f'成功生成 {len(added_resumes)} 份简历'
+            )
             
         except Exception as e:
             logger.error(f"Failed to generate resumes: {e}")
@@ -111,16 +110,15 @@ class ForceScreeningErrorView(SafeAPIView):
         }, timeout=3600)  # 1小时后过期
         
         status_text = "启用" if force_error else "禁用"
-        return JsonResponse({
-            'code': 200,
-            'message': f'已{status_text}强制筛选任务失败测试钩子',
-            'data': {
+        return ApiResponse.success(
+            data={
                 'force_error': force_error,
                 'error_message': error_message,
                 'error_type': error_type,
                 'expires_in': 3600  # 秒
-            }
-        })
+            },
+            message=f'已{status_text}强制筛选任务失败测试钩子'
+        )
     
     def handle_get(self, request):
         """查询当前强制错误状态"""
@@ -129,24 +127,20 @@ class ForceScreeningErrorView(SafeAPIView):
         error_config = cache.get('test_force_screening_error')
         
         if not error_config or not error_config.get('active', False):
-            return JsonResponse({
-                'code': 200,
-                'message': '当前未启用强制错误钩子',
-                'data': {
-                    'active': False
-                }
-            })
+            return ApiResponse.success(
+                data={'active': False},
+                message='当前未启用强制错误钩子'
+            )
         
-        return JsonResponse({
-            'code': 200,
-            'message': '当前已启用强制错误钩子',
-            'data': {
+        return ApiResponse.success(
+            data={
                 'active': True,
                 'error_message': error_config.get('message'),
                 'error_type': error_config.get('type'),
                 'remaining_seconds': cache.ttl('test_force_screening_error')
-            }
-        })
+            },
+            message='当前已启用强制错误钩子'
+        )
 
 
 class ResetScreeningTestStateView(SafeAPIView):
@@ -162,7 +156,4 @@ class ResetScreeningTestStateView(SafeAPIView):
         # 清除强制错误标志
         cache.delete('test_force_screening_error')
         
-        return JsonResponse({
-            'code': 200,
-            'message': '已重置所有简历筛选测试状态'
-        })
+        return ApiResponse.success(message='已重置所有简历筛选测试状态')

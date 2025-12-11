@@ -97,9 +97,12 @@ class VideoAnalysisAPITest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        # 统一响应格式: {'code': 200, 'message': '...', 'data': {...}}
+        self.assertEqual(data['code'], 200)
+        self.assertIn('data', data)
         # 视频列表返回格式包含 videos, total, page, page_size
-        self.assertIn('videos', data)
-        self.assertIn('total', data)
+        self.assertIn('videos', data['data'])
+        self.assertIn('total', data['data'])
     
     def test_get_video_status_not_found(self):
         """测试获取不存在的视频状态。"""

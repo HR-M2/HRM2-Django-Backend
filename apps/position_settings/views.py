@@ -5,9 +5,8 @@ import os
 import json
 import logging
 from django.conf import settings
-from django.http import JsonResponse
-
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
 
 from .models import PositionCriteria
@@ -35,21 +34,21 @@ class RecruitmentCriteriaView(SafeAPIView):
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 # 返回与原版完全一致的格式
-                return JsonResponse({'code': 200, 'message': '成功', 'data': data})
+                return ApiResponse.success(data=data)
             except json.JSONDecodeError:
-                return JsonResponse({'code': 500, 'message': '文件格式错误，非有效JSON'}, status=500)
+                return ApiResponse.server_error(message='文件格式错误，非有效JSON')
             except Exception as e:
                 logger.error(f"Failed to read criteria file: {e}")
-                return JsonResponse({'code': 500, 'message': f'服务器内部错误: {str(e)}'}, status=500)
+                return ApiResponse.server_error(message=f'服务器内部错误: {str(e)}')
         
         # 尝试从数据库获取
         criteria = PositionCriteria.objects.filter(is_active=True).first()
         if criteria:
-            return JsonResponse({'code': 200, 'message': '成功', 'data': criteria.to_dict()})
+            return ApiResponse.success(data=criteria.to_dict())
         
         # 返回默认标准
         default_criteria = self._get_default_criteria()
-        return JsonResponse({'code': 200, 'message': '成功', 'data': default_criteria})
+        return ApiResponse.success(data=default_criteria)
     
     def handle_post(self, request):
         """更新招聘标准。"""
@@ -90,7 +89,7 @@ class RecruitmentCriteriaView(SafeAPIView):
             logger.warning(f"Failed to save criteria to file: {e}")
         
         # 返回与原版一致的格式
-        return JsonResponse({'code': 200, 'message': '招聘标准更新成功', 'data': criteria.to_dict()})
+        return ApiResponse.success(data=criteria.to_dict(), message='招聘标准更新成功')
     
     def _get_default_criteria(self):
         """获取默认招聘标准。"""
@@ -143,13 +142,9 @@ class PositionCriteriaListView(SafeAPIView):
                 ]
             data.append(item)
         
-        return JsonResponse({
-            'code': 200, 
-            'message': '成功', 
-            'data': {
-                'positions': data,
-                'total': len(data)
-            }
+        return ApiResponse.success(data={
+            'positions': data,
+            'total': len(data)
         })
     
     def handle_post(self, request):
@@ -182,11 +177,7 @@ class PositionCriteriaListView(SafeAPIView):
             is_active=True
         )
         
-        return JsonResponse({
-            'code': 201, 
-            'message': '岗位创建成功', 
-            'data': criteria.to_dict()
-        }, status=201)
+        return ApiResponse.created(data=criteria.to_dict(), message='岗位创建成功')
 
 
 class PositionCriteriaDetailView(SafeAPIView):
@@ -225,7 +216,7 @@ class PositionCriteriaDetailView(SafeAPIView):
                 for r in resumes
             ]
         
-        return JsonResponse({'code': 200, 'message': '成功', 'data': data})
+        return ApiResponse.success(data=data)
     
     def handle_put(self, request, position_id):
         """更新岗位。"""
@@ -263,7 +254,7 @@ class PositionCriteriaDetailView(SafeAPIView):
         
         criteria.save()
         
-        return JsonResponse({'code': 200, 'message': '岗位更新成功', 'data': criteria.to_dict()})
+        return ApiResponse.success(data=criteria.to_dict(), message='岗位更新成功')
     
     def handle_delete(self, request, position_id):
         """删除岗位（软删除）。"""
@@ -275,7 +266,7 @@ class PositionCriteriaDetailView(SafeAPIView):
         criteria.is_active = False
         criteria.save()
         
-        return JsonResponse({'code': 200, 'message': '岗位已删除'})
+        return ApiResponse.success(message='岗位已删除')
 
 
 class PositionAssignResumesView(SafeAPIView):
@@ -323,16 +314,15 @@ class PositionAssignResumesView(SafeAPIView):
         # 更新简历数量
         position.update_resume_count()
         
-        return JsonResponse({
-            'code': 200,
-            'message': f'成功分配 {assigned_count} 份简历，跳过 {skipped_count} 份已分配简历',
-            'data': {
+        return ApiResponse.success(
+            data={
                 'position_id': str(position.id),
                 'assigned_count': assigned_count,
                 'skipped_count': skipped_count,
                 'total_resumes': position.resume_count
-            }
-        })
+            },
+            message=f'成功分配 {assigned_count} 份简历，跳过 {skipped_count} 份已分配简历'
+        )
 
 
 class PositionRemoveResumeView(SafeAPIView):
@@ -360,15 +350,14 @@ class PositionRemoveResumeView(SafeAPIView):
             # 更新简历数量
             position.update_resume_count()
             
-            return JsonResponse({
-                'code': 200,
-                'message': '简历已从岗位移除',
-                'data': {
+            return ApiResponse.success(
+                data={
                     'position_id': str(position.id),
                     'resume_id': str(resume_id),
                     'total_resumes': position.resume_count
-                }
-            })
+                },
+                message='简历已从岗位移除'
+            )
         except ResumePositionAssignment.DoesNotExist:
             raise NotFoundException(f"该简历未分配到此岗位")
 
@@ -397,21 +386,9 @@ class PositionAIGenerateView(SafeAPIView):
                 documents=documents
             )
             
-            return JsonResponse({
-                'code': 200,
-                'message': '生成成功',
-                'data': result
-            })
+            return ApiResponse.success(data=result, message='生成成功')
         except ValueError as e:
-            return JsonResponse({
-                'code': 400,
-                'message': str(e),
-                'data': None
-            }, status=400)
+            return ApiResponse.error(code=400, message=str(e))
         except Exception as e:
             logger.error(f"AI generation failed: {e}")
-            return JsonResponse({
-                'code': 500,
-                'message': f'AI生成失败: {str(e)}',
-                'data': None
-            }, status=500)
+            return ApiResponse.server_error(message=f'AI生成失败: {str(e)}')

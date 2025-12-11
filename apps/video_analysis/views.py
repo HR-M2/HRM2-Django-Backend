@@ -2,11 +2,9 @@
 视频分析API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
-from django.http import JsonResponse
-from rest_framework.response import Response
-from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.exceptions import ValidationException, NotFoundException
 
@@ -76,8 +74,10 @@ class VideoAnalysisView(SafeAPIView):
             response_data["resume_data_id"] = str(resume_data.id)
         
         # 返回与原版一致的格式
-        response_data["message"] = "视频数据接收成功，分析已在后台开始"
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        return ApiResponse.created(
+            data=response_data,
+            message="视频数据接收成功，分析已在后台开始"
+        )
     
     def _start_analysis(self, video_analysis):
         """在后台启动视频分析（使用线程）。"""
@@ -124,7 +124,7 @@ class VideoAnalysisStatusView(SafeAPIView):
             response_data["error_message"] = video_analysis.error_message
         
         # 返回与原版一致的格式
-        return JsonResponse(response_data)
+        return ApiResponse.success(data=response_data)
 
 
 class VideoAnalysisUpdateView(SafeAPIView):
@@ -169,8 +169,10 @@ class VideoAnalysisUpdateView(SafeAPIView):
             response_data["resume_data_id"] = str(video_analysis.linked_resume_data.id)
         
         # 返回与原版一致的格式
-        response_data["message"] = "视频分析结果更新成功"
-        return Response(response_data, status=status.HTTP_200_OK)
+        return ApiResponse.success(
+            data=response_data,
+            message="视频分析结果更新成功"
+        )
 
 
 class VideoAnalysisListView(SafeAPIView):
@@ -214,7 +216,7 @@ class VideoAnalysisListView(SafeAPIView):
             result.append(data)
         
         # 返回与原版完全一致的格式
-        return JsonResponse({
+        return ApiResponse.success(data={
             "videos": result,
             "total": pagination['total'],
             "page": pagination['page'],

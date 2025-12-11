@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-11 15:48:14
+> **生成时间**: 2025-12-12 01:12:04
 
 智能招聘管理系统后端API文档
 
@@ -16,15 +16,16 @@
 
 ## 概览
 
-共 **54** 个API端点，分布在 **5** 个模块中。
+共 **50** 个API端点，分布在 **6** 个模块中。
 
 ## 目录
 
-- [岗位设置](#position-settings) (12个接口)
-- [简历筛选](#resume-screening) (27个接口)
-- [视频分析](#video-analysis) (4个接口)
-- [最终推荐](#final-recommend) (2个接口)
-- [面试辅助](#interview-assist) (9个接口)
+- [岗位设置](#positions) (8个接口)
+- [简历库](#library) (7个接口)
+- [简历筛选](#screening) (20个接口)
+- [视频分析](#videos) (4个接口)
+- [最终推荐](#recommend) (2个接口)
+- [面试辅助](#interviews) (9个接口)
 
 ---
 
@@ -34,80 +35,81 @@
 
 | 方法 | 路径 | 说明 |
 |:-----|:-----|:-----|
-| 🟢 GET | /position-settings/ | position_settings_retrieve |
-| 🟡 POST | /position-settings/ | position_settings_create |
-| 🟡 POST | /position-settings/ai/generate/ | position_settings_ai_generate_create |
-| 🟢 GET | /position-settings/list/ | position_settings_list_retrieve |
-| 🟡 POST | /position-settings/list/ | position_settings_list_create |
-| 🟢 GET | /position-settings/positions/ | position_settings_positions_retrieve |
-| 🟡 POST | /position-settings/positions/ | position_settings_positions_create |
-| 🟢 GET | /position-settings/positions/`{position_id}`/ | position_settings_positions_retrieve_2 |
-| 🟠 PUT | /position-settings/positions/`{position_id}`/ | position_settings_positions_update |
-| 🔴 DELETE | /position-settings/positions/`{position_id}`/ | position_settings_positions_destroy |
-| 🟡 POST | /position-settings/positions/`{position_id}`/assign-resumes/ | position_settings_positions_assign_resumes_create |
-| 🔴 DELETE | /position-settings/positions/`{position_id}`/remove-resume/`{resume_id}`/ | position_settings_positions_remove_resume_destroy |
+| 🟢 GET | /api/positions/ | positions_retrieve |
+| 🟡 POST | /api/positions/ | positions_create |
+| 🟡 POST | /api/positions/ai/generate/ | positions_ai_generate_create |
+| 🟢 GET | /api/positions/`{position_id}`/ | positions_retrieve_2 |
+| 🟠 PUT | /api/positions/`{position_id}`/ | positions_update |
+| 🔴 DELETE | /api/positions/`{position_id}`/ | positions_destroy |
+| 🟡 POST | /api/positions/`{position_id}`/resumes/ | positions_resumes_create |
+| 🔴 DELETE | /api/positions/`{position_id}`/resumes/`{resume_id}`/ | positions_resumes_destroy |
+
+### 简历库
+
+| 方法 | 路径 | 说明 |
+|:-----|:-----|:-----|
+| 🟢 GET | /api/library/ | library_retrieve |
+| 🟡 POST | /api/library/ | library_create |
+| 🟡 POST | /api/library/batch-delete/ | library_batch_delete_create |
+| 🟡 POST | /api/library/check-hash/ | library_check_hash_create |
+| 🟢 GET | /api/library/`{id}`/ | library_retrieve_2 |
+| 🟠 PUT | /api/library/`{id}`/ | library_update |
+| 🔴 DELETE | /api/library/`{id}`/ | library_destroy |
 
 ### 简历筛选
 
 | 方法 | 路径 | 说明 |
 |:-----|:-----|:-----|
-| 🟢 GET | /resume-screening/data/ | resume_screening_data_retrieve |
-| 🟡 POST | /resume-screening/data/ | resume_screening_data_create |
-| 🟢 GET | /resume-screening/dev/force-screening-error/ | resume_screening_dev_force_screening_error_retrieve |
-| 🟡 POST | /resume-screening/dev/force-screening-error/ | resume_screening_dev_force_screening_error_create |
-| 🟡 POST | /resume-screening/dev/generate-resumes/ | resume_screening_dev_generate_resumes_create |
-| 🟡 POST | /resume-screening/dev/reset-test-state/ | resume_screening_dev_reset_test_state_create |
-| 🟢 GET | /resume-screening/groups/ | resume_screening_groups_retrieve |
-| 🟡 POST | /resume-screening/groups/add-resume/ | resume_screening_groups_add_resume_create |
-| 🟡 POST | /resume-screening/groups/create/ | resume_screening_groups_create_create |
-| 🟡 POST | /resume-screening/groups/remove-resume/ | resume_screening_groups_remove_resume_create |
-| 🟡 POST | /resume-screening/groups/set-status/ | resume_screening_groups_set_status_create |
-| 🟢 GET | /resume-screening/groups/`{group_id}`/ | resume_screening_groups_retrieve_2 |
-| 🟢 GET | /resume-screening/library/ | resume_screening_library_retrieve |
-| 🟡 POST | /resume-screening/library/ | resume_screening_library_create |
-| 🟡 POST | /resume-screening/library/batch-delete/ | resume_screening_library_batch_delete_create |
-| 🟡 POST | /resume-screening/library/check-hash/ | resume_screening_library_check_hash_create |
-| 🟢 GET | /resume-screening/library/`{resume_id}`/ | resume_screening_library_retrieve_2 |
-| 🟠 PUT | /resume-screening/library/`{resume_id}`/ | resume_screening_library_update |
-| 🔴 DELETE | /resume-screening/library/`{resume_id}`/ | resume_screening_library_destroy |
-| 🟡 POST | /resume-screening/link-resume-to-video/ | resume_screening_link_resume_to_video_create |
-| 🟢 GET | /resume-screening/reports/`{report_id}`/detail/ | resume_screening_reports_detail_retrieve |
-| 🟢 GET | /resume-screening/reports/`{report_id}`/download/ | resume_screening_reports_download_retrieve |
-| 🟡 POST | /resume-screening/screening/ | resume_screening_screening_create |
-| 🟢 GET | /resume-screening/tasks-history/ | resume_screening_tasks_history_retrieve |
-| 🔴 DELETE | /resume-screening/tasks/`{task_id}`/ | resume_screening_tasks_destroy |
-| 🟢 GET | /resume-screening/tasks/`{task_id}`/status/ | resume_screening_tasks_status_retrieve |
-| 🟡 POST | /resume-screening/unlink-resume-from-video/ | resume_screening_unlink_resume_from_video_create |
+| 🟡 POST | /api/screening/ | screening_create |
+| 🟢 GET | /api/screening/data/ | screening_data_retrieve |
+| 🟡 POST | /api/screening/data/ | screening_data_create |
+| 🟢 GET | /api/screening/dev/force-error/ | screening_dev_force_error_retrieve |
+| 🟡 POST | /api/screening/dev/force-error/ | screening_dev_force_error_create |
+| 🟡 POST | /api/screening/dev/generate-resumes/ | screening_dev_generate_resumes_create |
+| 🟡 POST | /api/screening/dev/reset-state/ | screening_dev_reset_state_create |
+| 🟢 GET | /api/screening/groups/ | screening_groups_retrieve |
+| 🟡 POST | /api/screening/groups/add-resume/ | screening_groups_add_resume_create |
+| 🟡 POST | /api/screening/groups/create/ | screening_groups_create_create |
+| 🟡 POST | /api/screening/groups/remove-resume/ | screening_groups_remove_resume_create |
+| 🟡 POST | /api/screening/groups/set-status/ | screening_groups_set_status_create |
+| 🟢 GET | /api/screening/groups/`{group_id}`/ | screening_groups_retrieve_2 |
+| 🟢 GET | /api/screening/reports/`{report_id}`/ | screening_reports_retrieve |
+| 🟢 GET | /api/screening/reports/`{report_id}`/download/ | screening_reports_download_retrieve |
+| 🟢 GET | /api/screening/tasks/ | screening_tasks_retrieve |
+| 🔴 DELETE | /api/screening/tasks/`{task_id}`/ | screening_tasks_destroy |
+| 🟢 GET | /api/screening/tasks/`{task_id}`/status/ | screening_tasks_status_retrieve |
+| 🟡 POST | /api/screening/videos/link/ | screening_videos_link_create |
+| 🟡 POST | /api/screening/videos/unlink/ | screening_videos_unlink_create |
 
 ### 视频分析
 
 | 方法 | 路径 | 说明 |
 |:-----|:-----|:-----|
-| 🟡 POST | /video-analysis/ | video_analysis_create |
-| 🟢 GET | /video-analysis/list/ | video_analysis_list_retrieve |
-| 🟢 GET | /video-analysis/`{video_id}`/status/ | video_analysis_status_retrieve |
-| 🟡 POST | /video-analysis/`{video_id}`/update/ | video_analysis_update_create |
+| 🟢 GET | /api/videos/ | videos_retrieve |
+| 🟡 POST | /api/videos/upload/ | videos_upload_create |
+| 🟡 POST | /api/videos/`{video_id}`/ | videos_create |
+| 🟢 GET | /api/videos/`{video_id}`/status/ | videos_status_retrieve |
 
 ### 最终推荐
 
 | 方法 | 路径 | 说明 |
 |:-----|:-----|:-----|
-| 🟢 GET | /final-recommend/comprehensive-analysis/`{resume_id}`/ | final_recommend_comprehensive_analysis_retrieve |
-| 🟡 POST | /final-recommend/comprehensive-analysis/`{resume_id}`/ | final_recommend_comprehensive_analysis_create |
+| 🟢 GET | /api/recommend/analysis/`{resume_id}`/ | recommend_analysis_retrieve |
+| 🟡 POST | /api/recommend/analysis/`{resume_id}`/ | recommend_analysis_create |
 
 ### 面试辅助
 
 | 方法 | 路径 | 说明 |
 |:-----|:-----|:-----|
-| 🟢 GET | /interview-assist/sessions/ | interview_assist_sessions_retrieve |
-| 🟡 POST | /interview-assist/sessions/ | interview_assist_sessions_create |
-| 🔴 DELETE | /interview-assist/sessions/ | interview_assist_sessions_destroy |
-| 🟢 GET | /interview-assist/sessions/`{session_id}`/ | interview_assist_sessions_retrieve_2 |
-| 🟡 POST | /interview-assist/sessions/`{session_id}`/ | interview_assist_sessions_create_2 |
-| 🔴 DELETE | /interview-assist/sessions/`{session_id}`/ | interview_assist_sessions_destroy_2 |
-| 🟡 POST | /interview-assist/sessions/`{session_id}`/generate-questions/ | interview_assist_sessions_generate_questions_create |
-| 🟡 POST | /interview-assist/sessions/`{session_id}`/generate-report/ | interview_assist_sessions_generate_report_create |
-| 🟡 POST | /interview-assist/sessions/`{session_id}`/record-qa/ | interview_assist_sessions_record_qa_create |
+| 🟢 GET | /api/interviews/sessions/ | interviews_sessions_retrieve |
+| 🟡 POST | /api/interviews/sessions/ | interviews_sessions_create |
+| 🔴 DELETE | /api/interviews/sessions/ | interviews_sessions_destroy |
+| 🟢 GET | /api/interviews/sessions/`{session_id}`/ | interviews_sessions_retrieve_2 |
+| 🟡 POST | /api/interviews/sessions/`{session_id}`/ | interviews_sessions_create_2 |
+| 🔴 DELETE | /api/interviews/sessions/`{session_id}`/ | interviews_sessions_destroy_2 |
+| 🟡 POST | /api/interviews/sessions/`{session_id}`/qa/ | interviews_sessions_qa_create |
+| 🟡 POST | /api/interviews/sessions/`{session_id}`/questions/ | interviews_sessions_questions_create |
+| 🟡 POST | /api/interviews/sessions/`{session_id}`/report/ | interviews_sessions_report_create |
 
 ---
 
@@ -115,23 +117,11 @@
 
 ### 岗位设置
 
-#### 🟢 GET `/position-settings/`
+#### 🟢 GET `/api/positions/`
 
-招聘标准API
-GET: 获取当前招聘标准
-POST: 更新招聘标准
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/position-settings/`
-
-招聘标准API
-GET: 获取当前招聘标准
-POST: 更新招聘标准
+岗位标准列表API
+GET: 获取所有岗位标准列表
+POST: 创建新岗位
 
 **响应**:
 
@@ -139,7 +129,19 @@ POST: 更新招聘标准
 
 ---
 
-#### 🟡 POST `/position-settings/ai/generate/`
+#### 🟡 POST `/api/positions/`
+
+岗位标准列表API
+GET: 获取所有岗位标准列表
+POST: 创建新岗位
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟡 POST `/api/positions/ai/generate/`
 
 AI生成岗位要求API
 POST: 根据描述和文档生成岗位要求
@@ -150,55 +152,7 @@ POST: 根据描述和文档生成岗位要求
 
 ---
 
-#### 🟢 GET `/position-settings/list/`
-
-岗位标准列表API
-GET: 获取所有岗位标准列表
-POST: 创建新岗位
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/position-settings/list/`
-
-岗位标准列表API
-GET: 获取所有岗位标准列表
-POST: 创建新岗位
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/position-settings/positions/`
-
-岗位标准列表API
-GET: 获取所有岗位标准列表
-POST: 创建新岗位
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/position-settings/positions/`
-
-岗位标准列表API
-GET: 获取所有岗位标准列表
-POST: 创建新岗位
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/position-settings/positions/{position_id}/`
+#### 🟢 GET `/api/positions/{position_id}/`
 
 单个岗位API
 GET: 获取岗位详情
@@ -215,7 +169,7 @@ DELETE: 删除岗位（软删除）
 
 ---
 
-#### 🟠 PUT `/position-settings/positions/{position_id}/`
+#### 🟠 PUT `/api/positions/{position_id}/`
 
 单个岗位API
 GET: 获取岗位详情
@@ -232,7 +186,7 @@ DELETE: 删除岗位（软删除）
 
 ---
 
-#### 🔴 DELETE `/position-settings/positions/{position_id}/`
+#### 🔴 DELETE `/api/positions/{position_id}/`
 
 单个岗位API
 GET: 获取岗位详情
@@ -249,7 +203,7 @@ DELETE: 删除岗位（软删除）
 
 ---
 
-#### 🟡 POST `/position-settings/positions/{position_id}/assign-resumes/`
+#### 🟡 POST `/api/positions/{position_id}/resumes/`
 
 岗位简历分配API
 POST: 将简历分配到岗位
@@ -264,7 +218,7 @@ POST: 将简历分配到岗位
 
 ---
 
-#### 🔴 DELETE `/position-settings/positions/{position_id}/remove-resume/{resume_id}/`
+#### 🔴 DELETE `/api/positions/{position_id}/resumes/{resume_id}/`
 
 从岗位移除简历API
 DELETE: 从岗位移除指定简历
@@ -280,9 +234,126 @@ DELETE: 从岗位移除指定简历
 
 ---
 
+### 简历库
+
+#### 🟢 GET `/api/library/`
+
+简历库列表API。
+
+GET: 获取简历库列表（支持分页和筛选）
+POST: 上传简历到简历库
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟡 POST `/api/library/`
+
+简历库列表API。
+
+GET: 获取简历库列表（支持分页和筛选）
+POST: 上传简历到简历库
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟡 POST `/api/library/batch-delete/`
+
+批量删除简历API。
+
+POST: 批量删除简历
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟡 POST `/api/library/check-hash/`
+
+检查简历哈希值是否已存在API。
+
+POST: 检查哈希值列表
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟢 GET `/api/library/{id}/`
+
+简历库详情API。
+
+GET: 获取简历详情
+PUT: 更新简历信息
+DELETE: 删除简历
+
+**参数**:
+
+  - `id` (string, path, 必填): 
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟠 PUT `/api/library/{id}/`
+
+简历库详情API。
+
+GET: 获取简历详情
+PUT: 更新简历信息
+DELETE: 删除简历
+
+**参数**:
+
+  - `id` (string, path, 必填): 
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🔴 DELETE `/api/library/{id}/`
+
+简历库详情API。
+
+GET: 获取简历详情
+PUT: 更新简历信息
+DELETE: 删除简历
+
+**参数**:
+
+  - `id` (string, path, 必填): 
+
+**响应**:
+
+  - `204`: No response body
+
+---
+
 ### 简历筛选
 
-#### 🟢 GET `/resume-screening/data/`
+#### 🟡 POST `/api/screening/`
+
+简历初筛API
+POST: 提交简历筛选任务
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟢 GET `/api/screening/data/`
 
 简历数据管理API
 GET: 获取简历数据列表
@@ -294,7 +365,7 @@ POST: 创建新的简历数据
 
 ---
 
-#### 🟡 POST `/resume-screening/data/`
+#### 🟡 POST `/api/screening/data/`
 
 简历数据管理API
 GET: 获取简历数据列表
@@ -306,7 +377,7 @@ POST: 创建新的简历数据
 
 ---
 
-#### 🟢 GET `/resume-screening/dev/force-screening-error/`
+#### 🟢 GET `/api/screening/dev/force-error/`
 
 强制简历筛选任务失败测试钩子
 POST: 通过环境变量控制是否强制筛选任务失败
@@ -317,7 +388,7 @@ POST: 通过环境变量控制是否强制筛选任务失败
 
 ---
 
-#### 🟡 POST `/resume-screening/dev/force-screening-error/`
+#### 🟡 POST `/api/screening/dev/force-error/`
 
 强制简历筛选任务失败测试钩子
 POST: 通过环境变量控制是否强制筛选任务失败
@@ -328,7 +399,7 @@ POST: 通过环境变量控制是否强制筛选任务失败
 
 ---
 
-#### 🟡 POST `/resume-screening/dev/generate-resumes/`
+#### 🟡 POST `/api/screening/dev/generate-resumes/`
 
 生成随机简历API
 POST: 根据岗位要求生成随机简历并添加到简历库
@@ -339,7 +410,7 @@ POST: 根据岗位要求生成随机简历并添加到简历库
 
 ---
 
-#### 🟡 POST `/resume-screening/dev/reset-test-state/`
+#### 🟡 POST `/api/screening/dev/reset-state/`
 
 重置简历筛选测试状态
 POST: 清除所有测试相关的缓存和状态
@@ -350,7 +421,7 @@ POST: 清除所有测试相关的缓存和状态
 
 ---
 
-#### 🟢 GET `/resume-screening/groups/`
+#### 🟢 GET `/api/screening/groups/`
 
 简历组列表API
 GET: 获取简历组列表
@@ -361,7 +432,7 @@ GET: 获取简历组列表
 
 ---
 
-#### 🟡 POST `/resume-screening/groups/add-resume/`
+#### 🟡 POST `/api/screening/groups/add-resume/`
 
 添加简历到组API
 POST: 向简历组添加简历
@@ -372,7 +443,7 @@ POST: 向简历组添加简历
 
 ---
 
-#### 🟡 POST `/resume-screening/groups/create/`
+#### 🟡 POST `/api/screening/groups/create/`
 
 创建简历组API
 POST: 创建新的简历组
@@ -383,7 +454,7 @@ POST: 创建新的简历组
 
 ---
 
-#### 🟡 POST `/resume-screening/groups/remove-resume/`
+#### 🟡 POST `/api/screening/groups/remove-resume/`
 
 从组中移除简历API
 POST: 从简历组移除简历
@@ -394,7 +465,7 @@ POST: 从简历组移除简历
 
 ---
 
-#### 🟡 POST `/resume-screening/groups/set-status/`
+#### 🟡 POST `/api/screening/groups/set-status/`
 
 设置简历组状态API
 POST: 更新简历组状态
@@ -405,7 +476,7 @@ POST: 更新简历组状态
 
 ---
 
-#### 🟢 GET `/resume-screening/groups/{group_id}/`
+#### 🟢 GET `/api/screening/groups/{group_id}/`
 
 简历组详情API
 GET: 获取简历组详情
@@ -420,113 +491,7 @@ GET: 获取简历组详情
 
 ---
 
-#### 🟢 GET `/resume-screening/library/`
-
-简历库列表API
-GET: 获取简历库列表（支持分页和筛选）
-POST: 上传简历到简历库
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/resume-screening/library/`
-
-简历库列表API
-GET: 获取简历库列表（支持分页和筛选）
-POST: 上传简历到简历库
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/resume-screening/library/batch-delete/`
-
-批量删除简历
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/resume-screening/library/check-hash/`
-
-检查简历哈希值是否已存在
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/resume-screening/library/{resume_id}/`
-
-简历库详情API
-GET: 获取简历详情
-PUT: 更新简历信息
-DELETE: 删除简历
-
-**参数**:
-
-  - `resume_id` (string, path, 必填): 
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟠 PUT `/resume-screening/library/{resume_id}/`
-
-简历库详情API
-GET: 获取简历详情
-PUT: 更新简历信息
-DELETE: 删除简历
-
-**参数**:
-
-  - `resume_id` (string, path, 必填): 
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🔴 DELETE `/resume-screening/library/{resume_id}/`
-
-简历库详情API
-GET: 获取简历详情
-PUT: 更新简历信息
-DELETE: 删除简历
-
-**参数**:
-
-  - `resume_id` (string, path, 必填): 
-
-**响应**:
-
-  - `204`: No response body
-
----
-
-#### 🟡 POST `/resume-screening/link-resume-to-video/`
-
-关联简历与视频API
-POST: 建立简历与视频分析的关联
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/resume-screening/reports/{report_id}/detail/`
+#### 🟢 GET `/api/screening/reports/{report_id}/`
 
 简历数据详情API
 GET: 获取简历数据详情
@@ -541,7 +506,7 @@ GET: 获取简历数据详情
 
 ---
 
-#### 🟢 GET `/resume-screening/reports/{report_id}/download/`
+#### 🟢 GET `/api/screening/reports/{report_id}/download/`
 
 报告下载API
 GET: 下载筛选报告
@@ -560,18 +525,7 @@ GET: 下载筛选报告
 
 ---
 
-#### 🟡 POST `/resume-screening/screening/`
-
-简历初筛API
-POST: 提交简历筛选任务
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/resume-screening/tasks-history/`
+#### 🟢 GET `/api/screening/tasks/`
 
 任务历史API
 GET: 获取历史任务列表
@@ -583,7 +537,7 @@ DELETE: 删除指定任务
 
 ---
 
-#### 🔴 DELETE `/resume-screening/tasks/{task_id}/`
+#### 🔴 DELETE `/api/screening/tasks/{task_id}/`
 
 删除任务API
 DELETE: 删除指定任务
@@ -598,7 +552,7 @@ DELETE: 删除指定任务
 
 ---
 
-#### 🟢 GET `/resume-screening/tasks/{task_id}/status/`
+#### 🟢 GET `/api/screening/tasks/{task_id}/status/`
 
 查询筛选任务状态API
 GET: 获取任务状态和结果
@@ -613,7 +567,18 @@ GET: 获取任务状态和结果
 
 ---
 
-#### 🟡 POST `/resume-screening/unlink-resume-from-video/`
+#### 🟡 POST `/api/screening/videos/link/`
+
+关联简历与视频API
+POST: 建立简历与视频分析的关联
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟡 POST `/api/screening/videos/unlink/`
 
 解除简历与视频关联API
 POST: 解除简历与视频分析的关联
@@ -626,18 +591,7 @@ POST: 解除简历与视频分析的关联
 
 ### 视频分析
 
-#### 🟡 POST `/video-analysis/`
-
-视频分析API
-POST: 上传视频并开始分析
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/video-analysis/list/`
+#### 🟢 GET `/api/videos/`
 
 视频分析列表API
 GET: 获取视频分析列表
@@ -648,14 +602,10 @@ GET: 获取视频分析列表
 
 ---
 
-#### 🟢 GET `/video-analysis/{video_id}/status/`
+#### 🟡 POST `/api/videos/upload/`
 
-视频分析状态API
-GET: 获取视频分析状态和结果
-
-**参数**:
-
-  - `video_id` (string, path, 必填): 
+视频分析API
+POST: 上传视频并开始分析
 
 **响应**:
 
@@ -663,7 +613,7 @@ GET: 获取视频分析状态和结果
 
 ---
 
-#### 🟡 POST `/video-analysis/{video_id}/update/`
+#### 🟡 POST `/api/videos/{video_id}/`
 
 视频分析结果更新API
 POST: 更新视频分析结果
@@ -678,9 +628,24 @@ POST: 更新视频分析结果
 
 ---
 
+#### 🟢 GET `/api/videos/{video_id}/status/`
+
+视频分析状态API
+GET: 获取视频分析状态和结果
+
+**参数**:
+
+  - `video_id` (string, path, 必填): 
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
 ### 最终推荐
 
-#### 🟢 GET `/final-recommend/comprehensive-analysis/{resume_id}/`
+#### 🟢 GET `/api/recommend/analysis/{resume_id}/`
 
 单人综合分析API
 POST: 对单个候选人进行综合分析
@@ -696,7 +661,7 @@ GET: 获取候选人的分析历史
 
 ---
 
-#### 🟡 POST `/final-recommend/comprehensive-analysis/{resume_id}/`
+#### 🟡 POST `/api/recommend/analysis/{resume_id}/`
 
 单人综合分析API
 POST: 对单个候选人进行综合分析
@@ -714,7 +679,7 @@ GET: 获取候选人的分析历史
 
 ### 面试辅助
 
-#### 🟢 GET `/interview-assist/sessions/`
+#### 🟢 GET `/api/interviews/sessions/`
 
 面试会话API
 POST: 创建会话
@@ -727,7 +692,7 @@ DELETE: 结束会话
 
 ---
 
-#### 🟡 POST `/interview-assist/sessions/`
+#### 🟡 POST `/api/interviews/sessions/`
 
 面试会话API
 POST: 创建会话
@@ -740,7 +705,7 @@ DELETE: 结束会话
 
 ---
 
-#### 🔴 DELETE `/interview-assist/sessions/`
+#### 🔴 DELETE `/api/interviews/sessions/`
 
 面试会话API
 POST: 创建会话
@@ -753,7 +718,7 @@ DELETE: 结束会话
 
 ---
 
-#### 🟢 GET `/interview-assist/sessions/{session_id}/`
+#### 🟢 GET `/api/interviews/sessions/{session_id}/`
 
 面试会话API
 POST: 创建会话
@@ -770,7 +735,7 @@ DELETE: 结束会话
 
 ---
 
-#### 🟡 POST `/interview-assist/sessions/{session_id}/`
+#### 🟡 POST `/api/interviews/sessions/{session_id}/`
 
 面试会话API
 POST: 创建会话
@@ -787,7 +752,7 @@ DELETE: 结束会话
 
 ---
 
-#### 🔴 DELETE `/interview-assist/sessions/{session_id}/`
+#### 🔴 DELETE `/api/interviews/sessions/{session_id}/`
 
 面试会话API
 POST: 创建会话
@@ -804,7 +769,22 @@ DELETE: 结束会话
 
 ---
 
-#### 🟡 POST `/interview-assist/sessions/{session_id}/generate-questions/`
+#### 🟡 POST `/api/interviews/sessions/{session_id}/qa/`
+
+记录问答API
+POST: 记录问答并获取评估
+
+**参数**:
+
+  - `session_id` (string, path, 必填): 
+
+**响应**:
+
+  - `200`: No response body
+
+---
+
+#### 🟡 POST `/api/interviews/sessions/{session_id}/questions/`
 
 生成问题API
 POST: 生成候选问题（临时生成，不保存到数据库）
@@ -819,25 +799,10 @@ POST: 生成候选问题（临时生成，不保存到数据库）
 
 ---
 
-#### 🟡 POST `/interview-assist/sessions/{session_id}/generate-report/`
+#### 🟡 POST `/api/interviews/sessions/{session_id}/report/`
 
 生成报告API
 POST: 生成最终报告
-
-**参数**:
-
-  - `session_id` (string, path, 必填): 
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/interview-assist/sessions/{session_id}/record-qa/`
-
-记录问答API
-POST: 记录问答并获取评估
 
 **参数**:
 

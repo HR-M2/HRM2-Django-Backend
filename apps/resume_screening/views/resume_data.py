@@ -2,11 +2,9 @@
 简历数据管理视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
-from django.http import JsonResponse
-from rest_framework.response import Response
-from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.utils import generate_hash
 
@@ -75,7 +73,7 @@ class ResumeDataView(SafeAPIView):
             result.append(item)
         
         # 返回与原版完全一致的格式
-        return JsonResponse({
+        return ApiResponse.success(data={
             "results": result,
             "total": total,
             "page": page,
@@ -98,10 +96,10 @@ class ResumeDataView(SafeAPIView):
         )
         
         # 返回与原版一致的格式
-        return Response({
-            "id": str(resume_data.id),
-            "message": "简历数据创建成功"
-        }, status=status.HTTP_201_CREATED)
+        return ApiResponse.created(
+            data={"id": str(resume_data.id)},
+            message="简历数据创建成功"
+        )
 
 
 class ResumeDataDetailView(SafeAPIView):
@@ -138,4 +136,4 @@ class ResumeDataDetailView(SafeAPIView):
         }
         
         # 返回与原版一致的格式
-        return JsonResponse({"report": data})
+        return ApiResponse.success(data={"report": data})

@@ -2,11 +2,9 @@
 简历组管理视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
 """
 import logging
-from django.http import JsonResponse
-from rest_framework.response import Response
-from rest_framework import status
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.exceptions import ValidationException
 
@@ -68,7 +66,7 @@ class ResumeGroupListView(SafeAPIView):
             groups_data.append(group_data)
         
         # 返回与原版完全一致的格式
-        return JsonResponse({
+        return ApiResponse.success(data={
             "groups": groups_data,
             "total": total,
             "page": page,
@@ -159,7 +157,7 @@ class ResumeGroupDetailView(SafeAPIView):
             group_data["resumes"] = resumes
         
         # 返回与原版完全一致的格式
-        return JsonResponse({
+        return ApiResponse.success(data={
             "group": group_data,
             "summary": {
                 "total_resumes": resume_count,
@@ -179,9 +177,9 @@ class CreateResumeGroupView(SafeAPIView):
         """创建简历组。"""
         serializer = CreateResumeGroupSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {"error": "参数验证失败", "details": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
+            return ApiResponse.validation_error(
+                errors=serializer.errors,
+                message="参数验证失败"
             )
         
         data = serializer.validated_data
@@ -193,12 +191,14 @@ class CreateResumeGroupView(SafeAPIView):
         )
         
         # 返回与原版一致的格式
-        return Response({
-            "message": "简历组创建成功",
-            "group_id": str(group.id),
-            "group_name": group.group_name,
-            "resume_count": group.resume_count
-        }, status=status.HTTP_201_CREATED)
+        return ApiResponse.created(
+            data={
+                "group_id": str(group.id),
+                "group_name": group.group_name,
+                "resume_count": group.resume_count
+            },
+            message="简历组创建成功"
+        )
 
 
 class AddResumeToGroupView(SafeAPIView):
@@ -215,12 +215,14 @@ class AddResumeToGroupView(SafeAPIView):
         group = GroupService.add_resume_to_group(group_id, resume_data_id)
         
         # 返回与原版一致的格式
-        return Response({
-            "message": "简历成功添加到简历组",
-            "group_id": str(group.id),
-            "group_name": group.group_name,
-            "resume_count": group.resume_count
-        }, status=status.HTTP_200_OK)
+        return ApiResponse.success(
+            data={
+                "group_id": str(group.id),
+                "group_name": group.group_name,
+                "resume_count": group.resume_count
+            },
+            message="简历成功添加到简历组"
+        )
 
 
 class RemoveResumeFromGroupView(SafeAPIView):
@@ -237,12 +239,14 @@ class RemoveResumeFromGroupView(SafeAPIView):
         group = GroupService.remove_resume_from_group(group_id, resume_data_id)
         
         # 返回与原版一致的格式
-        return Response({
-            "message": "简历成功从简历组中移除",
-            "group_id": str(group.id),
-            "group_name": group.group_name,
-            "resume_count": group.resume_count
-        }, status=status.HTTP_200_OK)
+        return ApiResponse.success(
+            data={
+                "group_id": str(group.id),
+                "group_name": group.group_name,
+                "resume_count": group.resume_count
+            },
+            message="简历成功从简历组中移除"
+        )
 
 
 class SetGroupStatusView(SafeAPIView):
@@ -259,9 +263,11 @@ class SetGroupStatusView(SafeAPIView):
         group = GroupService.update_group_status(group_id, status)
         
         # 返回与原版一致的格式
-        return Response({
-            "message": "简历组状态更新成功",
-            "group_id": str(group.id),
-            "group_name": group.group_name,
-            "status": group.status
-        }, status=status.HTTP_200_OK)
+        return ApiResponse.success(
+            data={
+                "group_id": str(group.id),
+                "group_name": group.group_name,
+                "status": group.status
+            },
+            message="简历组状态更新成功"
+        )

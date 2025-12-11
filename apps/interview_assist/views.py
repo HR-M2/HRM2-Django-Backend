@@ -4,9 +4,9 @@
 import logging
 from datetime import datetime
 from django.core.files.base import ContentFile
-from django.http import JsonResponse
 
 from apps.common.mixins import SafeAPIView
+from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
 
 from .models import InterviewAssistSession
@@ -60,17 +60,16 @@ class SessionView(SafeAPIView):
         if resume_data.screening_summary:
             resume_summary['screening_summary'] = resume_data.screening_summary[:200]
         
-        return JsonResponse({
-            'status': 'success',
-            'message': '面试辅助会话已创建',
-            'data': {
+        return ApiResponse.created(
+            data={
                 'session_id': str(session.id),
                 'candidate_name': resume_data.candidate_name,
                 'position_title': job_config.get('title', resume_data.position_title),
                 'created_at': session.created_at.isoformat(),
                 'resume_summary': resume_summary
-            }
-        }, status=201)
+            },
+            message='面试辅助会话已创建'
+        )
     
     def handle_get(self, request, session_id=None):
         """获取会话详情或列表。"""
@@ -95,10 +94,7 @@ class SessionView(SafeAPIView):
                     'overall_assessment', {}
                 ).get('summary', '')
             
-            return JsonResponse({
-                'status': 'success',
-                'data': response_data
-            })
+            return ApiResponse.success(data=response_data)
         
         # 如果有 resume_id 参数，返回该简历的所有会话
         resume_id = request.GET.get('resume_id')
@@ -119,10 +115,7 @@ class SessionView(SafeAPIView):
                     session_data['final_report'] = session.final_report
                 data.append(session_data)
             
-            return JsonResponse({
-                'status': 'success',
-                'data': data
-            })
+            return ApiResponse.success(data=data)
         
         raise ValidationException("缺少会话ID或简历ID参数")
     
@@ -134,10 +127,7 @@ class SessionView(SafeAPIView):
         session = self.get_object_or_404(InterviewAssistSession, id=session_id)
         session.delete()
         
-        return JsonResponse({
-            'status': 'success',
-            'message': '会话已删除'
-        })
+        return ApiResponse.success(message='会话已删除')
 
 
 class GenerateQuestionsView(SafeAPIView):
@@ -191,16 +181,15 @@ class GenerateQuestionsView(SafeAPIView):
         # 提取 resume_highlights（兼容旧格式）
         resume_highlights = [p.get('content', '') if isinstance(p, dict) else str(p) for p in interest_points]
         
-        return JsonResponse({
-            'status': 'success',
-            'message': f'已生成{len(all_questions)}个候选问题',
-            'data': {
+        return ApiResponse.success(
+            data={
                 'session_id': str(session.id),
                 'question_pool': all_questions,
                 'resume_highlights': resume_highlights,
                 'interest_points': interest_points  # 新格式：包含 content 和 question
-            }
-        })
+            },
+            message=f'已生成{len(all_questions)}个候选问题'
+        )
 
 
 class RecordQAView(SafeAPIView):
@@ -274,16 +263,15 @@ class RecordQAView(SafeAPIView):
         else:
             hr_hints = ["请根据候选问题继续提问"]
         
-        return JsonResponse({
-            'status': 'success',
-            'message': '问答已记录，候选问题已生成',
-            'data': {
+        return ApiResponse.success(
+            data={
                 'round_number': round_number,
                 'evaluation': evaluation,  # 可能为 None
                 'candidate_questions': candidate_questions,  # 新增：LLM生成的候选问题
                 'hr_action_hints': hr_hints
-            }
-        })
+            },
+            message='问答已记录，候选问题已生成'
+        )
     
     def _generate_hr_hints(self, evaluation: dict) -> list:
         """生成HR行动提示。"""
@@ -348,14 +336,13 @@ class GenerateReportView(SafeAPIView):
         
         session.save()
         
-        return JsonResponse({
-            'status': 'success',
-            'message': '评估报告生成成功',
-            'data': {
+        return ApiResponse.success(
+            data={
                 'report': report,
                 'report_file_url': session.report_file.url if session.report_file else None
-            }
-        })
+            },
+            message='评估报告生成成功'
+        )
     
     def _format_report(self, session, report: dict, qa_data: list = None) -> str:
         """将报告格式化为Markdown。"""
