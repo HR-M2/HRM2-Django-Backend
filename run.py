@@ -93,6 +93,37 @@ def run_migrations(settings_module):
         print(f"⚠️  迁移检查失败: {e}")
 
 
+def generate_api_docs():
+    """生成 API 文档"""
+    print("\n📄 生成 API 文档...")
+    docs_script = BASE_DIR / 'Docs' / '生成API文档.py'
+    
+    if not docs_script.exists():
+        print("   ⚠️ 未找到文档生成脚本，跳过")
+        return
+    
+    try:
+        result = subprocess.run(
+            [sys.executable, str(docs_script)],
+            capture_output=True,
+            text=True,
+            cwd=BASE_DIR / 'Docs'
+        )
+        
+        if result.returncode == 0:
+            # 从输出中提取端点数量
+            for line in result.stdout.split('\n'):
+                if 'API端点' in line:
+                    print(f"✅ {line.strip()}")
+                    break
+            else:
+                print("✅ API 文档已更新")
+        else:
+            print(f"   ⚠️ 生成失败: {result.stderr}")
+    except Exception as e:
+        print(f"   ⚠️ 生成失败: {e}")
+
+
 def start_server(host, port, settings_module, no_reload=False):
     """启动 Django 开发服务器"""
     os.environ['DJANGO_SETTINGS_MODULE'] = settings_module
@@ -180,6 +211,8 @@ def main():
             sys.exit(1)
         
         run_migrations(settings_module)
+        
+        generate_api_docs()
     
     # 仅迁移模式
     if args.migrate_only:
