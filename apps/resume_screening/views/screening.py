@@ -218,8 +218,8 @@ class ScreeningTaskStatusView(SafeAPIView):
                 "id": str(resume_data.id),
                 "candidate_name": resume_data.candidate_name,
                 "position_title": resume_data.position_title,
-                "scores": resume_data.screening_score,
-                "summary": resume_data.screening_summary,
+                "screening_score": resume_data.screening_score,
+                "screening_summary": resume_data.screening_summary,
                 "json_content": resume_data.json_report_content,
                 "resume_content": resume_data.resume_content,
                 "report_md_url": resume_data.report_md_file.url if resume_data.report_md_file else None,
@@ -229,7 +229,7 @@ class ScreeningTaskStatusView(SafeAPIView):
             # 如果存在则添加视频分析
             if resume_data.video_analysis:
                 data["video_analysis"] = {
-                    "video_id": str(resume_data.video_analysis.id),
+                    "id": str(resume_data.video_analysis.id),
                     "video_name": resume_data.video_analysis.video_name,
                     "status": resume_data.video_analysis.status,
                     "confidence_score": resume_data.video_analysis.confidence_score,

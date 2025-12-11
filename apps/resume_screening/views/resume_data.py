@@ -58,7 +58,7 @@ class ResumeDataView(SafeAPIView):
             # 如果存在则添加视频分析信息
             if data.video_analysis:
                 item["video_analysis"] = {
-                    "video_id": str(data.video_analysis.id),
+                    "id": str(data.video_analysis.id),
                     "video_name": data.video_analysis.video_name,
                     "status": data.video_analysis.status,
                     "fraud_score": data.video_analysis.fraud_score,
@@ -127,8 +127,8 @@ class ResumeDataDetailView(SafeAPIView):
             "created_at": resume_data.created_at.isoformat(),
             "candidate_name": resume_data.candidate_name,
             "position_title": resume_data.position_title,
-            "scores": scores,
-            "summary": resume_data.screening_summary,
+            "screening_score": scores,
+            "screening_summary": resume_data.screening_summary,
             "resume_content": resume_data.resume_content,
             "json_report_content": resume_data.json_report_content,
             "report_json_url": resume_data.report_json_file.url if resume_data.report_json_file else None,

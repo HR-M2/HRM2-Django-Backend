@@ -135,8 +135,8 @@ class ResumeGroupDetailView(SafeAPIView):
                     "id": str(resume.id),
                     "candidate_name": resume.candidate_name,
                     "position_title": resume.position_title,
-                    "scores": scores,
-                    "summary": resume.screening_summary,
+                    "screening_score": scores,
+                    "screening_summary": resume.screening_summary,
                     "json_content": resume.json_report_content,
                     "report_md_url": resume.report_md_file.url if resume.report_md_file else None,
                     "report_json_url": resume.report_json_file.url if resume.report_json_file else None,
@@ -144,7 +144,7 @@ class ResumeGroupDetailView(SafeAPIView):
                 
                 if resume.video_analysis:
                     resume_data["video_analysis"] = {
-                        "video_id": str(resume.video_analysis.id),
+                        "id": str(resume.video_analysis.id),
                         "video_name": resume.video_analysis.video_name,
                         "status": resume.video_analysis.status,
                         "analysis_result": resume.video_analysis.analysis_result,

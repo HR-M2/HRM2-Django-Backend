@@ -71,7 +71,7 @@ class CandidateComprehensiveAnalysisView(SafeAPIView):
         # 获取初筛报告
         screening_report = {
             "comprehensive_score": resume.screening_score.get("comprehensive_score") if resume.screening_score else None,
-            "summary": resume.screening_summary or ""
+            "screening_summary": resume.screening_summary or ""
         }
         
         # 获取面试会话和报告

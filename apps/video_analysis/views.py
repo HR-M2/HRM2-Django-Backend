@@ -62,7 +62,7 @@ class VideoAnalysisView(SafeAPIView):
         self._start_analysis(video_analysis)
         
         response_data = {
-            "video_id": str(video_analysis.id),
+            "id": str(video_analysis.id),
             "video_name": video_analysis.video_name,
             "candidate_name": video_analysis.candidate_name,
             "position_applied": video_analysis.position_applied,
@@ -73,7 +73,7 @@ class VideoAnalysisView(SafeAPIView):
         if resume_data:
             response_data["resume_data_id"] = str(resume_data.id)
         
-        # 返回与原版一致的格式
+        # 返回统一格式
         return ApiResponse.created(
             data=response_data,
             message="视频数据接收成功，分析已在后台开始"
@@ -105,7 +105,7 @@ class VideoAnalysisStatusView(SafeAPIView):
         video_analysis = self.get_object_or_404(VideoAnalysis, id=video_id)
         
         response_data = {
-            "video_id": str(video_analysis.id),
+            "id": str(video_analysis.id),
             "video_name": video_analysis.video_name,
             "candidate_name": video_analysis.candidate_name,
             "position_applied": video_analysis.position_applied,
@@ -160,7 +160,7 @@ class VideoAnalysisUpdateView(SafeAPIView):
         video_analysis = VideoAnalysisService.update_analysis_result(video_id, **scores)
         
         response_data = {
-            "video_id": str(video_analysis.id),
+            "id": str(video_analysis.id),
             "status": video_analysis.status,
             "analysis_result": video_analysis.analysis_result
         }
@@ -201,7 +201,7 @@ class VideoAnalysisListView(SafeAPIView):
         result = []
         for video in items:
             data = {
-                "video_id": str(video.id),
+                "id": str(video.id),
                 "video_name": video.video_name,
                 "candidate_name": video.candidate_name,
                 "position_applied": video.position_applied,
