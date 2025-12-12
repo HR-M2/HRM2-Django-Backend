@@ -6,7 +6,7 @@
 
 1. **模块化多应用架构**：岗位、筛选、视频、面试、推荐等模块独立又互通。
 2. **AI 能力内置**：`services/agents` 中封装多种 LLM Agent（岗位 JD 生成、筛选评估、面试辅助等）。
-3. **全链路自动化**：支持 Celery + Redis 异步任务，保留 threading 回退路径。
+3. **全链路自动化**：使用 threading 实现异步任务处理。
 4. **一键启动器**：`run.py` 提供环境检查、迁移与运行一站式体验。
 5. **覆蓋测试**：独立 `tests/` 目录与 `pytest` + `pytest-django` 配置，便于持续集成。
 
@@ -16,7 +16,7 @@
 | ---- | ---- |
 | 语言 | Python 3.11 |
 | Web 框架 | Django 5 + Django REST Framework |
-| 任务队列 | Celery 5 + Redis（可选） |
+| 异步处理 | Python threading |
 | 数据库 | 默认 SQLite（开发），可切换 MySQL / PostgreSQL |
 | AI/LLM | pyautogen, OpenAI SDK，自定义 Agent 封装 |
 | 其他 | django-cors-headers、channels (可选 WebSocket)、pytest/flake8/black/isort |
@@ -34,12 +34,11 @@ HRM2-Django-Backend/
 │   └── final_recommend/     # 面试评估与结果下载
 ├── config/
 │   ├── settings/
-│   │   ├── base.py          # 基础配置（日志、REST、Celery、CORS 等）
+│   │   ├── base.py          # 基础配置（日志、REST、CORS 等）
 │   │   ├── development.py   # 开发（SQLite + Debug Toolbar）
 │   │   ├── production.py
 │   │   └── testing.py
 │   ├── urls.py              # 五大模块 + admin 路由
-│   ├── celery.py            # Celery 入口
 │   ├── wsgi.py / asgi.py
 ├── services/
 │   └── agents/
@@ -71,7 +70,6 @@ HRM2-Django-Backend/
 
 - Python 3.11+
 - pip / virtualenv
-- Redis（启用 Celery 时需要）
 - MySQL 或 PostgreSQL（生产环境推荐，开发默认 SQLite）
 
 ## 🚀 快速开始
@@ -124,11 +122,6 @@ python run.py -h                     # 查看全部参数
    python manage.py runserver 0.0.0.0:8000
    ```
 
-5. **（可选）启动 Celery Worker**
-   ```bash
-   celery -A config worker -l info
-   ```
-
 ## 🔑 环境变量（.env.example）
 
 | 变量 | 说明 | 默认值 |
@@ -140,7 +133,6 @@ python run.py -h                     # 查看全部参数
 | `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_HOST` / `DB_PORT` | 数据库配置 | 见模板 |
 | `LLM_MODEL` | 模型名称 | `deepseek-ai/DeepSeek-V3.2-Exp` |
 | `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_TEMPERATURE` / `LLM_TIMEOUT` | LLM 调用配置 | 必填或默认 |
-| `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` | 任务队列配置 | `redis://localhost:6379/0` |
 | `MEDIA_ROOT` / `STATIC_ROOT` | 文件存储目录 | `media` / `static` |
 
 切换环境：
@@ -272,15 +264,13 @@ EXPOSE 8000
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
 ```
 
-如需 Celery，可在容器中追加 `celery -A config worker -l info` 或使用独立 Worker 服务。
-
 ## 🔄 与原项目 (RecruitmentSystemAPI) 对比
 
 | 改进项 | 原项目 | 本项目 |
 | ---- | ---- | ---- |
 | API 密钥管理 | 硬编码 | .env + `python-dotenv` |
 | 目录结构 | 单 app，逻辑耦合 | 多模块拆分 + services | 
-| 异步任务 | threading | Celery + Redis，保留回退 |
+| 异步任务 | threading | threading（简化实现） |
 | 响应/异常 | 散落各处 | `apps.common` 封装 SafeAPIView、响应体统一 |
 | 配置 | 单一 settings | dev/prod/test 分离，脚本化切换 |
 | AI 能力 | 无 Agent 封装 | LLM Agent + 可配置模型 |

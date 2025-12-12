@@ -20,7 +20,3 @@ PASSWORD_HASHERS = [
 
 # 测试期间禁用日志
 LOGGING = {}
-
-# 测试环境Celery配置
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = True
