@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-12 14:41:46
+> **生成时间**: 2025-12-12 15:52:34
 
 智能招聘管理系统后端API文档
 
@@ -16,7 +16,7 @@
 
 ## 概览
 
-共 **51** 个API端点，分布在 **6** 个模块中。
+共 **49** 个API端点，分布在 **6** 个模块中。
 
 ## 目录
 
@@ -25,7 +25,7 @@
 - [简历筛选](#screening) (20个接口)
 - [视频分析](#videos) (4个接口)
 - [最终推荐](#recommend) (3个接口)
-- [面试辅助](#interviews) (9个接口)
+- [面试辅助](#interviews) (7个接口)
 
 ---
 
@@ -104,10 +104,8 @@
 |:-----|:-----|:-----|
 | 🟢 GET | /api/interviews/sessions/ | interviews_sessions_retrieve |
 | 🟡 POST | /api/interviews/sessions/ | interviews_sessions_create |
-| 🔴 DELETE | /api/interviews/sessions/ | interviews_sessions_destroy |
 | 🟢 GET | /api/interviews/sessions/`{session_id}`/ | interviews_sessions_retrieve_2 |
-| 🟡 POST | /api/interviews/sessions/`{session_id}`/ | interviews_sessions_create_2 |
-| 🔴 DELETE | /api/interviews/sessions/`{session_id}`/ | interviews_sessions_destroy_2 |
+| 🔴 DELETE | /api/interviews/sessions/`{session_id}`/ | interviews_sessions_destroy |
 | 🟡 POST | /api/interviews/sessions/`{session_id}`/qa/ | interviews_sessions_qa_create |
 | 🟡 POST | /api/interviews/sessions/`{session_id}`/questions/ | interviews_sessions_questions_create |
 | 🟡 POST | /api/interviews/sessions/`{session_id}`/report/ | interviews_sessions_report_create |
@@ -693,10 +691,9 @@ GET: 获取已完成综合分析的统计数据
 
 #### 🟢 GET `/api/interviews/sessions/`
 
-面试会话API
+面试会话列表API
+GET: 获取会话列表（需要 resume_id 参数）
 POST: 创建会话
-GET: 获取会话详情
-DELETE: 结束会话
 
 **响应**:
 
@@ -706,53 +703,21 @@ DELETE: 结束会话
 
 #### 🟡 POST `/api/interviews/sessions/`
 
-面试会话API
+面试会话列表API
+GET: 获取会话列表（需要 resume_id 参数）
 POST: 创建会话
-GET: 获取会话详情
-DELETE: 结束会话
 
 **响应**:
 
   - `200`: No response body
-
----
-
-#### 🔴 DELETE `/api/interviews/sessions/`
-
-面试会话API
-POST: 创建会话
-GET: 获取会话详情
-DELETE: 结束会话
-
-**响应**:
-
-  - `204`: No response body
 
 ---
 
 #### 🟢 GET `/api/interviews/sessions/{session_id}/`
 
-面试会话API
-POST: 创建会话
+面试会话详情API
 GET: 获取会话详情
-DELETE: 结束会话
-
-**参数**:
-
-  - `session_id` (string, path, 必填): 
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/api/interviews/sessions/{session_id}/`
-
-面试会话API
-POST: 创建会话
-GET: 获取会话详情
-DELETE: 结束会话
+DELETE: 删除会话
 
 **参数**:
 
@@ -766,10 +731,9 @@ DELETE: 结束会话
 
 #### 🔴 DELETE `/api/interviews/sessions/{session_id}/`
 
-面试会话API
-POST: 创建会话
+面试会话详情API
 GET: 获取会话详情
-DELETE: 结束会话
+DELETE: 删除会话
 
 **参数**:
 

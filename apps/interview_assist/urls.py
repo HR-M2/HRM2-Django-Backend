@@ -5,7 +5,8 @@
 """
 from django.urls import path
 from .views import (
-    SessionView,
+    SessionListView,
+    SessionDetailView,
     GenerateQuestionsView,
     RecordQAView,
     GenerateReportView,
@@ -15,10 +16,10 @@ app_name = 'interview_assist'
 
 urlpatterns = [
     # 会话列表和创建 - GET列表, POST创建
-    path('sessions/', SessionView.as_view(), name='session-list'),
+    path('sessions/', SessionListView.as_view(), name='session-list'),
     
-    # 会话详情 - GET/PUT/DELETE
-    path('sessions/<uuid:session_id>/', SessionView.as_view(), name='session-detail'),
+    # 会话详情 - GET详情, DELETE删除
+    path('sessions/<uuid:session_id>/', SessionDetailView.as_view(), name='session-detail'),
     
     # 生成问题 - POST生成面试问题
     path('sessions/<uuid:session_id>/questions/', GenerateQuestionsView.as_view(), name='questions'),

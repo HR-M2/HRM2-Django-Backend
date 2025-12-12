@@ -1153,7 +1153,7 @@
     "/api/interviews/sessions/": {
       "get": {
         "operationId": "interviews_sessions_retrieve",
-        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "description": "面试会话列表API\nGET: 获取会话列表（需要 resume_id 参数）\nPOST: 创建会话",
         "tags": [
           "interviews"
         ],
@@ -1174,7 +1174,41 @@
       },
       "post": {
         "operationId": "interviews_sessions_create",
-        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "description": "面试会话列表API\nGET: 获取会话列表（需要 resume_id 参数）\nPOST: 创建会话",
+        "tags": [
+          "interviews"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/interviews/sessions/{session_id}/": {
+      "get": {
+        "operationId": "interviews_sessions_retrieve_2",
+        "description": "面试会话详情API\nGET: 获取会话详情\nDELETE: 删除会话",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
         "tags": [
           "interviews"
         ],
@@ -1195,94 +1229,7 @@
       },
       "delete": {
         "operationId": "interviews_sessions_destroy",
-        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
-        "tags": [
-          "interviews"
-        ],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "basicAuth": []
-          },
-          {}
-        ],
-        "responses": {
-          "204": {
-            "description": "No response body"
-          }
-        }
-      }
-    },
-    "/api/interviews/sessions/{session_id}/": {
-      "get": {
-        "operationId": "interviews_sessions_retrieve_2",
-        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "session_id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "tags": [
-          "interviews"
-        ],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "basicAuth": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "No response body"
-          }
-        }
-      },
-      "post": {
-        "operationId": "interviews_sessions_create_2",
-        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "session_id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "tags": [
-          "interviews"
-        ],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "basicAuth": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "description": "No response body"
-          }
-        }
-      },
-      "delete": {
-        "operationId": "interviews_sessions_destroy_2",
-        "description": "面试会话API\nPOST: 创建会话\nGET: 获取会话详情\nDELETE: 结束会话",
+        "description": "面试会话详情API\nGET: 获取会话详情\nDELETE: 删除会话",
         "parameters": [
           {
             "in": "path",
