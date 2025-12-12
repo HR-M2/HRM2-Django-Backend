@@ -20,6 +20,24 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
+class RecommendStatsView(SafeAPIView):
+    """
+    推荐统计API
+    GET: 获取已完成综合分析的统计数据
+    """
+    
+    def handle_get(self, request):
+        """获取已总结推荐的数量统计。"""
+        # 统计已完成综合分析的唯一简历数量（每个简历只算一次）
+        analyzed_count = CandidateComprehensiveAnalysis.objects.values(
+            'resume_data_id'
+        ).distinct().count()
+        
+        return ApiResponse.success(data={
+            'analyzed_count': analyzed_count
+        })
+
+
 class CandidateComprehensiveAnalysisView(SafeAPIView):
     """
     单人综合分析API

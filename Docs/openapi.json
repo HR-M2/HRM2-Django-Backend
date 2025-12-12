@@ -1061,6 +1061,29 @@
         }
       }
     },
+    "/api/recommend/stats/": {
+      "get": {
+        "operationId": "recommend_stats_retrieve",
+        "description": "推荐统计API\nGET: 获取已完成综合分析的统计数据",
+        "tags": [
+          "recommend"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
     "/api/recommend/analysis/{resume_id}/": {
       "get": {
         "operationId": "recommend_analysis_retrieve",
