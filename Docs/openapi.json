@@ -410,35 +410,27 @@
         }
       }
     },
-    "/api/library/": {
+    "/api/resumes/": {
       "get": {
-        "operationId": "library_retrieve",
-        "description": "获取简历库列表，支持分页和筛选",
-        "summary": "获取简历库列表",
+        "operationId": "resumes_retrieve",
+        "description": "获取简历列表，支持按岗位、状态、候选人过滤，支持分页",
+        "summary": "获取简历列表",
         "parameters": [
+          {
+            "in": "query",
+            "name": "candidate_name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "候选人姓名搜索"
+          },
           {
             "in": "query",
             "name": "is_assigned",
             "schema": {
               "type": "boolean"
             },
-            "description": "是否已分配"
-          },
-          {
-            "in": "query",
-            "name": "is_screened",
-            "schema": {
-              "type": "boolean"
-            },
-            "description": "是否已筛选"
-          },
-          {
-            "in": "query",
-            "name": "keyword",
-            "schema": {
-              "type": "string"
-            },
-            "description": "关键词搜索"
+            "description": "是否已分配岗位"
           },
           {
             "in": "query",
@@ -455,10 +447,26 @@
               "type": "integer"
             },
             "description": "每页数量"
+          },
+          {
+            "in": "query",
+            "name": "position_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "岗位ID过滤"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            },
+            "description": "状态过滤"
           }
         ],
         "tags": [
-          "library"
+          "resumes"
         ],
         "security": [
           {
@@ -474,7 +482,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiLibraryPaginatedResp"
+                  "$ref": "#/components/schemas/ResumeListResponse"
                 }
               }
             },
@@ -483,27 +491,109 @@
         }
       },
       "post": {
-        "operationId": "library_create",
-        "description": "批量上传简历到简历库，单次最多50份",
-        "summary": "上传简历到简历库",
+        "operationId": "resumes_create",
+        "description": "批量上传简历文件内容",
+        "summary": "批量上传简历",
         "tags": [
-          "library"
+          "resumes"
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LibraryUploadRequestRequest"
+                "$ref": "#/components/schemas/ResumeUploadRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/LibraryUploadRequestRequest"
+                "$ref": "#/components/schemas/ResumeUploadRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/LibraryUploadRequestRequest"
+                "$ref": "#/components/schemas/ResumeUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeUploadResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/resumes/stats/": {
+      "get": {
+        "operationId": "resumes_stats_retrieve",
+        "description": "获取简历的各项统计数据",
+        "summary": "获取简历统计",
+        "tags": [
+          "resumes"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeStatsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/resumes/batch-delete/": {
+      "post": {
+        "operationId": "resumes_batch_delete_create",
+        "description": "批量删除指定的简历",
+        "summary": "批量删除简历",
+        "tags": [
+          "resumes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchDeleteRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchDeleteRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchDeleteRequest"
               }
             }
           },
@@ -523,7 +613,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiLibraryUploadResp"
+                  "$ref": "#/components/schemas/BatchDeleteResponse"
                 }
               }
             },
@@ -532,15 +622,117 @@
         }
       }
     },
-    "/api/library/{id}/": {
+    "/api/resumes/check-hash/": {
+      "post": {
+        "operationId": "resumes_check_hash_create",
+        "description": "检查哪些简历哈希值已存在（用于上传前去重）",
+        "summary": "检查简历哈希",
+        "tags": [
+          "resumes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckHashRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckHashRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckHashRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckHashResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/resumes/assign/": {
+      "post": {
+        "operationId": "resumes_assign_create",
+        "description": "批量将简历分配到指定岗位，或取消分配",
+        "summary": "分配简历到岗位",
+        "tags": [
+          "resumes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeAssignRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeAssignRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeAssignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeAssignResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/resumes/{resume_id}/": {
       "get": {
-        "operationId": "library_retrieve_2",
+        "operationId": "resumes_retrieve_2",
         "description": "获取指定简历的详细信息",
         "summary": "获取简历详情",
         "parameters": [
           {
             "in": "path",
-            "name": "id",
+            "name": "resume_id",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -549,7 +741,7 @@
           }
         ],
         "tags": [
-          "library"
+          "resumes"
         ],
         "security": [
           {
@@ -565,7 +757,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiLibraryDetailResp"
+                  "$ref": "#/components/schemas/ResumeDetail"
                 }
               }
             },
@@ -574,13 +766,13 @@
         }
       },
       "put": {
-        "operationId": "library_update",
-        "description": "更新指定简历的信息",
+        "operationId": "resumes_update",
+        "description": "更新简历的候选人姓名、状态、岗位、备注等",
         "summary": "更新简历信息",
         "parameters": [
           {
             "in": "path",
-            "name": "id",
+            "name": "resume_id",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -589,26 +781,27 @@
           }
         ],
         "tags": [
-          "library"
+          "resumes"
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LibraryUpdateRequestRequest"
+                "$ref": "#/components/schemas/ResumeUpdateRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/LibraryUpdateRequestRequest"
+                "$ref": "#/components/schemas/ResumeUpdateRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/LibraryUpdateRequestRequest"
+                "$ref": "#/components/schemas/ResumeUpdateRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "security": [
           {
@@ -624,7 +817,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiLibraryUpdateResp"
+                  "$ref": "#/components/schemas/ResumeDetail"
                 }
               }
             },
@@ -633,13 +826,13 @@
         }
       },
       "delete": {
-        "operationId": "library_destroy",
+        "operationId": "resumes_destroy",
         "description": "删除指定简历",
         "summary": "删除简历",
         "parameters": [
           {
             "in": "path",
-            "name": "id",
+            "name": "resume_id",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -648,7 +841,42 @@
           }
         ],
         "tags": [
-          "library"
+          "resumes"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "basicAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/resumes/{resume_id}/screening/": {
+      "get": {
+        "operationId": "resumes_screening_retrieve",
+        "description": "获取简历的筛选结果和报告",
+        "summary": "获取筛选结果",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "resumes"
         ],
         "security": [
           {
@@ -664,38 +892,47 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LibraryDeleteResponse"
+                  "$ref": "#/components/schemas/ScreeningResultResponse"
                 }
               }
             },
             "description": ""
           }
         }
-      }
-    },
-    "/api/library/batch-delete/": {
-      "post": {
-        "operationId": "library_batch_delete_create",
-        "description": "根据ID列表批量删除简历",
-        "summary": "批量删除简历",
+      },
+      "put": {
+        "operationId": "resumes_screening_update",
+        "description": "更新简历的筛选结果（通常由筛选任务调用）",
+        "summary": "更新筛选结果",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
         "tags": [
-          "library"
+          "resumes"
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BatchDeleteRequestRequest"
+                "$ref": "#/components/schemas/UpdateScreeningResultRequestRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/BatchDeleteRequestRequest"
+                "$ref": "#/components/schemas/UpdateScreeningResultRequestRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/BatchDeleteRequestRequest"
+                "$ref": "#/components/schemas/UpdateScreeningResultRequestRequest"
               }
             }
           },
@@ -715,58 +952,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiLibraryBatchDeleteResp"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/library/check-hash/": {
-      "post": {
-        "operationId": "library_check_hash_create",
-        "description": "批量检查简历哈希值是否已存在于简历库",
-        "summary": "检查哈希值是否已存在",
-        "tags": [
-          "library"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HashCheckRequestRequest"
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/HashCheckRequestRequest"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/HashCheckRequestRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "basicAuth": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiLibraryHashCheckResp"
+                  "$ref": "#/components/schemas/UpdateScreeningResultResponse"
                 }
               }
             },
@@ -2110,132 +2296,6 @@
           "data"
         ]
       },
-      "ApiLibraryBatchDeleteResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/DeletedCount"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "ApiLibraryDetailResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/LibraryDetail"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "ApiLibraryHashCheckResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/HashCheckResponse"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "ApiLibraryPaginatedResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/LibraryPaginatedData"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "ApiLibraryUpdateResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/IdResponse"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "ApiLibraryUploadResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/LibraryUploadResponse"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
       "ApiLinkVideoResp": {
         "type": "object",
         "properties": {
@@ -2730,21 +2790,32 @@
           "total_resumes"
         ]
       },
-      "BatchDeleteRequestRequest": {
+      "BatchDeleteRequest": {
         "type": "object",
-        "description": "批量删除请求",
+        "description": "批量删除请求序列化器。",
         "properties": {
           "resume_ids": {
             "type": "array",
             "items": {
               "type": "string",
-              "minLength": 1
+              "format": "uuid"
             },
-            "description": "简历ID列表"
+            "description": "要删除的简历ID列表"
           }
         },
         "required": [
           "resume_ids"
+        ]
+      },
+      "BatchDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "deleted_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted_count"
         ]
       },
       "CandidateQuestion": {
@@ -2767,6 +2838,37 @@
         "required": [
           "content",
           "type"
+        ]
+      },
+      "CheckHashRequest": {
+        "type": "object",
+        "description": "检查哈希值请求序列化器。",
+        "properties": {
+          "hashes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "要检查的哈希值列表"
+          }
+        },
+        "required": [
+          "hashes"
+        ]
+      },
+      "CheckHashResponse": {
+        "type": "object",
+        "properties": {
+          "existing_hashes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "existing_hashes"
         ]
       },
       "ComprehensiveAnalysis": {
@@ -2824,19 +2926,6 @@
           "id",
           "recommendation",
           "resume_id"
-        ]
-      },
-      "DeletedCount": {
-        "type": "object",
-        "description": "删除计数响应",
-        "properties": {
-          "deleted_count": {
-            "type": "integer",
-            "description": "删除数量"
-          }
-        },
-        "required": [
-          "deleted_count"
         ]
       },
       "DimensionScoreDetail": {
@@ -3151,44 +3240,6 @@
           "skipped_count"
         ]
       },
-      "HashCheckRequestRequest": {
-        "type": "object",
-        "description": "哈希检查请求",
-        "properties": {
-          "hashes": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            },
-            "description": "哈希值列表"
-          }
-        },
-        "required": [
-          "hashes"
-        ]
-      },
-      "HashCheckResponse": {
-        "type": "object",
-        "description": "哈希检查响应",
-        "properties": {
-          "exists": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "boolean"
-            },
-            "description": "哈希存在映射"
-          },
-          "existing_count": {
-            "type": "integer",
-            "description": "已存在数量"
-          }
-        },
-        "required": [
-          "existing_count",
-          "exists"
-        ]
-      },
       "IdResponse": {
         "type": "object",
         "description": "ID 响应",
@@ -3351,185 +3402,6 @@
           "report_file_url"
         ]
       },
-      "LibraryDeleteResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "default": 200
-          },
-          "message": {
-            "type": "string",
-            "default": "成功"
-          },
-          "data": {
-            "nullable": true
-          }
-        }
-      },
-      "LibraryDetail": {
-        "type": "object",
-        "description": "简历库详情",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "简历ID"
-          },
-          "filename": {
-            "type": "string",
-            "description": "文件名"
-          },
-          "file_hash": {
-            "type": "string",
-            "description": "文件哈希"
-          },
-          "file_size": {
-            "type": "integer",
-            "description": "文件大小"
-          },
-          "file_type": {
-            "type": "string",
-            "description": "文件类型"
-          },
-          "content": {
-            "type": "string",
-            "description": "简历内容"
-          },
-          "candidate_name": {
-            "type": "string",
-            "description": "候选人姓名"
-          },
-          "is_screened": {
-            "type": "boolean",
-            "description": "是否已筛选"
-          },
-          "is_assigned": {
-            "type": "boolean",
-            "description": "是否已分配"
-          },
-          "notes": {
-            "type": "string",
-            "description": "备注"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "创建时间"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "更新时间"
-          }
-        },
-        "required": [
-          "candidate_name",
-          "content",
-          "created_at",
-          "file_hash",
-          "file_size",
-          "file_type",
-          "filename",
-          "id",
-          "is_assigned",
-          "is_screened",
-          "notes",
-          "updated_at"
-        ]
-      },
-      "LibraryItem": {
-        "type": "object",
-        "description": "简历库列表项",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "简历ID"
-          },
-          "filename": {
-            "type": "string",
-            "description": "文件名"
-          },
-          "file_hash": {
-            "type": "string",
-            "description": "文件哈希（前8位）"
-          },
-          "file_size": {
-            "type": "integer",
-            "description": "文件大小"
-          },
-          "file_type": {
-            "type": "string",
-            "description": "文件类型"
-          },
-          "candidate_name": {
-            "type": "string",
-            "description": "候选人姓名"
-          },
-          "is_screened": {
-            "type": "boolean",
-            "description": "是否已筛选"
-          },
-          "is_assigned": {
-            "type": "boolean",
-            "description": "是否已分配"
-          },
-          "notes": {
-            "type": "string",
-            "description": "备注"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "创建时间"
-          },
-          "content_preview": {
-            "type": "string",
-            "description": "内容预览"
-          }
-        },
-        "required": [
-          "candidate_name",
-          "content_preview",
-          "created_at",
-          "file_hash",
-          "file_size",
-          "file_type",
-          "filename",
-          "id",
-          "is_assigned",
-          "is_screened",
-          "notes"
-        ]
-      },
-      "LibraryPaginatedData": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/LibraryItem"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "description": "总数"
-          },
-          "page": {
-            "type": "integer",
-            "description": "当前页"
-          },
-          "page_size": {
-            "type": "integer",
-            "description": "每页数量"
-          }
-        },
-        "required": [
-          "items",
-          "page",
-          "page_size",
-          "total"
-        ]
-      },
       "LibrarySkippedItem": {
         "type": "object",
         "description": "跳过的简历项",
@@ -3547,21 +3419,6 @@
           "filename",
           "reason"
         ]
-      },
-      "LibraryUpdateRequestRequest": {
-        "type": "object",
-        "properties": {
-          "candidate_name": {
-            "type": "string",
-            "minLength": 1,
-            "description": "候选人姓名"
-          },
-          "notes": {
-            "type": "string",
-            "minLength": 1,
-            "description": "备注"
-          }
-        }
       },
       "LibraryUploadItem": {
         "type": "object",
@@ -3584,56 +3441,6 @@
           "candidate_name",
           "filename",
           "id"
-        ]
-      },
-      "LibraryUploadRequestRequest": {
-        "type": "object",
-        "description": "简历上传请求",
-        "properties": {
-          "resumes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ResumeUploadItemRequest"
-            },
-            "description": "简历列表"
-          }
-        },
-        "required": [
-          "resumes"
-        ]
-      },
-      "LibraryUploadResponse": {
-        "type": "object",
-        "description": "简历上传响应",
-        "properties": {
-          "uploaded": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/LibraryUploadItem"
-            },
-            "description": "上传成功列表"
-          },
-          "skipped": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/LibrarySkippedItem"
-            },
-            "description": "跳过列表"
-          },
-          "uploaded_count": {
-            "type": "integer",
-            "description": "上传成功数量"
-          },
-          "skipped_count": {
-            "type": "integer",
-            "description": "跳过数量"
-          }
-        },
-        "required": [
-          "skipped",
-          "skipped_count",
-          "uploaded",
-          "uploaded_count"
         ]
       },
       "LinkVideoRequestRequest": {
@@ -4320,6 +4127,45 @@
           "resume_content"
         ]
       },
+      "ResumeAssignRequest": {
+        "type": "object",
+        "description": "简历分配岗位序列化器。",
+        "properties": {
+          "resume_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "要分配的简历ID列表"
+          },
+          "position_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "目标岗位ID，为空则取消分配"
+          }
+        },
+        "required": [
+          "resume_ids"
+        ]
+      },
+      "ResumeAssignResponse": {
+        "type": "object",
+        "properties": {
+          "updated_count": {
+            "type": "integer"
+          },
+          "position_id": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "position_id",
+          "updated_count"
+        ]
+      },
       "ResumeDataDetail": {
         "type": "object",
         "description": "简历数据详情",
@@ -4465,6 +4311,301 @@
           "report"
         ]
       },
+      "ResumeDetail": {
+        "type": "object",
+        "description": "简历详情序列化器（完整版）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "title": "创建时间"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "title": "更新时间"
+          },
+          "filename": {
+            "type": "string",
+            "title": "文件名",
+            "maxLength": 255
+          },
+          "file_hash": {
+            "type": "string",
+            "readOnly": true,
+            "title": "文件哈希"
+          },
+          "file_hash_short": {
+            "type": "string",
+            "readOnly": true
+          },
+          "file_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64",
+            "title": "文件大小"
+          },
+          "file_type": {
+            "type": "string",
+            "title": "文件类型",
+            "maxLength": 50
+          },
+          "content": {
+            "type": "string",
+            "title": "简历内容"
+          },
+          "content_preview": {
+            "type": "string",
+            "readOnly": true
+          },
+          "candidate_name": {
+            "type": "string",
+            "title": "候选人姓名",
+            "maxLength": 100
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "screened",
+              "interviewing",
+              "analyzed"
+            ],
+            "type": "string",
+            "description": "* `pending` - 待筛选\n* `screened` - 已筛选\n* `interviewing` - 面试中\n* `analyzed` - 已分析",
+            "x-spec-enum-id": "f9672928d7b6f70c",
+            "title": "状态"
+          },
+          "status_display": {
+            "type": "string",
+            "readOnly": true
+          },
+          "position": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "title": "应聘岗位"
+          },
+          "position_title": {
+            "type": "string",
+            "readOnly": true
+          },
+          "position_details": {
+            "type": "string",
+            "readOnly": true
+          },
+          "is_screened": {
+            "type": "string",
+            "readOnly": true
+          },
+          "is_assigned": {
+            "type": "string",
+            "readOnly": true
+          },
+          "screening_result": {
+            "nullable": true,
+            "title": "筛选结果"
+          },
+          "screening_score": {
+            "type": "string",
+            "readOnly": true
+          },
+          "screening_summary": {
+            "type": "string",
+            "readOnly": true
+          },
+          "screening_report": {
+            "type": "string",
+            "nullable": true,
+            "title": "筛选报告MD"
+          },
+          "notes": {
+            "type": "string",
+            "title": "备注"
+          }
+        },
+        "required": [
+          "candidate_name",
+          "content",
+          "content_preview",
+          "created_at",
+          "file_hash",
+          "file_hash_short",
+          "filename",
+          "id",
+          "is_assigned",
+          "is_screened",
+          "position_details",
+          "position_title",
+          "screening_score",
+          "screening_summary",
+          "status_display",
+          "updated_at"
+        ]
+      },
+      "ResumeList": {
+        "type": "object",
+        "description": "简历列表序列化器（精简版）。",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "filename": {
+            "type": "string",
+            "title": "文件名",
+            "maxLength": 255
+          },
+          "file_hash_short": {
+            "type": "string",
+            "readOnly": true
+          },
+          "file_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": -9223372036854775808,
+            "format": "int64",
+            "title": "文件大小"
+          },
+          "file_type": {
+            "type": "string",
+            "title": "文件类型",
+            "maxLength": 50
+          },
+          "candidate_name": {
+            "type": "string",
+            "title": "候选人姓名",
+            "maxLength": 100
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "screened",
+              "interviewing",
+              "analyzed"
+            ],
+            "type": "string",
+            "description": "* `pending` - 待筛选\n* `screened` - 已筛选\n* `interviewing` - 面试中\n* `analyzed` - 已分析",
+            "x-spec-enum-id": "f9672928d7b6f70c",
+            "title": "状态"
+          },
+          "status_display": {
+            "type": "string",
+            "readOnly": true
+          },
+          "position": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "title": "应聘岗位"
+          },
+          "position_title": {
+            "type": "string",
+            "readOnly": true
+          },
+          "is_screened": {
+            "type": "string",
+            "readOnly": true
+          },
+          "is_assigned": {
+            "type": "string",
+            "readOnly": true
+          },
+          "notes": {
+            "type": "string",
+            "title": "备注"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "创建时间"
+          },
+          "content_preview": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "candidate_name",
+          "content_preview",
+          "file_hash_short",
+          "filename",
+          "id",
+          "is_assigned",
+          "is_screened",
+          "position_title",
+          "status_display"
+        ]
+      },
+      "ResumeListResponse": {
+        "type": "object",
+        "properties": {
+          "resumes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResumeList"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "page_size": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page",
+          "page_size",
+          "resumes",
+          "total"
+        ]
+      },
+      "ResumeStatsResponse": {
+        "type": "object",
+        "properties": {
+          "total_count": {
+            "type": "integer"
+          },
+          "pending_count": {
+            "type": "integer"
+          },
+          "screened_count": {
+            "type": "integer"
+          },
+          "interviewing_count": {
+            "type": "integer"
+          },
+          "analyzed_count": {
+            "type": "integer"
+          },
+          "assigned_count": {
+            "type": "integer"
+          },
+          "unassigned_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "analyzed_count",
+          "assigned_count",
+          "interviewing_count",
+          "pending_count",
+          "screened_count",
+          "total_count",
+          "unassigned_count"
+        ]
+      },
       "ResumeSummary": {
         "type": "object",
         "description": "简历摘要",
@@ -4494,29 +4635,113 @@
           "position_title"
         ]
       },
-      "ResumeUploadItemRequest": {
+      "ResumeUpdateRequest": {
         "type": "object",
-        "description": "简历上传项",
+        "description": "简历更新序列化器。",
         "properties": {
-          "name": {
+          "candidate_name": {
             "type": "string",
             "minLength": 1,
-            "description": "文件名"
+            "title": "候选人姓名",
+            "maxLength": 100
           },
-          "content": {
+          "position": {
             "type": "string",
-            "minLength": 1,
-            "description": "简历内容"
+            "format": "uuid",
+            "nullable": true,
+            "title": "应聘岗位"
           },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": {},
-            "description": "元数据（size, type等）"
+          "status": {
+            "enum": [
+              "pending",
+              "screened",
+              "interviewing",
+              "analyzed"
+            ],
+            "type": "string",
+            "description": "* `pending` - 待筛选\n* `screened` - 已筛选\n* `interviewing` - 面试中\n* `analyzed` - 已分析",
+            "x-spec-enum-id": "f9672928d7b6f70c",
+            "title": "状态"
+          },
+          "notes": {
+            "type": "string",
+            "title": "备注"
+          },
+          "screening_result": {
+            "nullable": true,
+            "title": "筛选结果"
+          },
+          "screening_report": {
+            "type": "string",
+            "nullable": true,
+            "title": "筛选报告MD"
           }
         },
         "required": [
-          "content",
-          "name"
+          "candidate_name"
+        ]
+      },
+      "ResumeUploadRequest": {
+        "type": "object",
+        "description": "简历上传请求序列化器（批量）。",
+        "properties": {
+          "resumes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {}
+            },
+            "description": "简历列表，每项包含 name, content, metadata"
+          }
+        },
+        "required": [
+          "resumes"
+        ]
+      },
+      "ResumeUploadResponse": {
+        "type": "object",
+        "properties": {
+          "created_count": {
+            "type": "integer"
+          },
+          "skipped_count": {
+            "type": "integer"
+          },
+          "resumes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResumeList"
+            }
+          }
+        },
+        "required": [
+          "created_count",
+          "resumes",
+          "skipped_count"
+        ]
+      },
+      "ScreeningResultResponse": {
+        "type": "object",
+        "properties": {
+          "resume_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "screening_result": {
+            "nullable": true
+          },
+          "screening_report": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "resume_id",
+          "screening_report",
+          "screening_result",
+          "status"
         ]
       },
       "ScreeningScore": {
@@ -4962,6 +5187,34 @@
           "disconnected_video_id",
           "resume_data_id",
           "video_name"
+        ]
+      },
+      "UpdateScreeningResultRequestRequest": {
+        "type": "object",
+        "properties": {
+          "screening_result": {},
+          "screening_report": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "screening_result"
+        ]
+      },
+      "UpdateScreeningResultResponse": {
+        "type": "object",
+        "properties": {
+          "resume_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resume_id",
+          "status"
         ]
       },
       "VideoAnalysisBrief": {

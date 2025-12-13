@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-13 20:43:01
+> **生成时间**: 2025-12-14 01:45:02
 
 智能招聘管理系统后端API文档
 
@@ -16,12 +16,12 @@
 
 ## 概览
 
-共 **38** 个API端点，分布在 **6** 个模块中。
+共 **42** 个API端点，分布在 **6** 个模块中。
 
 ## 目录
 
 - [岗位设置](#positions) (8个接口)
-- [简历库](#library) (7个接口)
+- [other](#other) (11个接口)
 - [简历筛选](#screening) (9个接口)
 - [视频分析](#videos) (4个接口)
 - [最终推荐](#recommend) (3个接口)
@@ -44,17 +44,21 @@
 | 🟡 POST | /api/positions/`{position_id}`/resumes/ | 分配简历到岗位 |
 | 🔴 DELETE | /api/positions/`{position_id}`/resumes/`{resume_id}`/ | 从岗位移除简历 |
 
-### 简历库
+### other
 
 | 方法 | 路径 | 说明 |
 |:-----|:-----|:-----|
-| 🟢 GET | /api/library/ | 获取简历库列表 |
-| 🟡 POST | /api/library/ | 上传简历到简历库 |
-| 🟡 POST | /api/library/batch-delete/ | 批量删除简历 |
-| 🟡 POST | /api/library/check-hash/ | 检查哈希值是否已存在 |
-| 🟢 GET | /api/library/`{id}`/ | 获取简历详情 |
-| 🟠 PUT | /api/library/`{id}`/ | 更新简历信息 |
-| 🔴 DELETE | /api/library/`{id}`/ | 删除简历 |
+| 🟢 GET | /api/resumes/ | 获取简历列表 |
+| 🟡 POST | /api/resumes/ | 批量上传简历 |
+| 🟡 POST | /api/resumes/assign/ | 分配简历到岗位 |
+| 🟡 POST | /api/resumes/batch-delete/ | 批量删除简历 |
+| 🟡 POST | /api/resumes/check-hash/ | 检查简历哈希 |
+| 🟢 GET | /api/resumes/stats/ | 获取简历统计 |
+| 🟢 GET | /api/resumes/`{resume_id}`/ | 获取简历详情 |
+| 🟠 PUT | /api/resumes/`{resume_id}`/ | 更新简历信息 |
+| 🔴 DELETE | /api/resumes/`{resume_id}`/ | 删除简历 |
+| 🟢 GET | /api/resumes/`{resume_id}`/screening/ | 获取筛选结果 |
+| 🟠 PUT | /api/resumes/`{resume_id}`/screening/ | 更新筛选结果 |
 
 ### 简历筛选
 
@@ -235,71 +239,98 @@
 
 ---
 
-### 简历库
+### other
 
-#### 🟢 GET `/api/library/`
+#### 🟢 GET `/api/resumes/`
 
-**获取简历库列表**
+**获取简历列表**
 
-获取简历库列表，支持分页和筛选
+获取简历列表，支持按岗位、状态、候选人过滤，支持分页
 
 **参数**:
 
-  - `is_assigned` (boolean, query, 可选): 是否已分配
-  - `is_screened` (boolean, query, 可选): 是否已筛选
-  - `keyword` (string, query, 可选): 关键词搜索
+  - `candidate_name` (string, query, 可选): 候选人姓名搜索
+  - `is_assigned` (boolean, query, 可选): 是否已分配岗位
   - `page` (integer, query, 可选): 页码
   - `page_size` (integer, query, 可选): 每页数量
+  - `position_id` (string, query, 可选): 岗位ID过滤
+  - `status` (string, query, 可选): 状态过滤
 
 **响应**:
 
-  - `200`:  → `ApiLibraryPaginatedResp`
+  - `200`:  → `ResumeListResponse`
 
 ---
 
-#### 🟡 POST `/api/library/`
+#### 🟡 POST `/api/resumes/`
 
-**上传简历到简历库**
+**批量上传简历**
 
-批量上传简历到简历库，单次最多50份
+批量上传简历文件内容
 
-**请求体**: `LibraryUploadRequestRequest`
+**请求体**: `ResumeUploadRequest`
 
 **响应**:
 
-  - `200`:  → `ApiLibraryUploadResp`
+  - `201`:  → `ResumeUploadResponse`
 
 ---
 
-#### 🟡 POST `/api/library/batch-delete/`
+#### 🟡 POST `/api/resumes/assign/`
+
+**分配简历到岗位**
+
+批量将简历分配到指定岗位，或取消分配
+
+**请求体**: `ResumeAssignRequest`
+
+**响应**:
+
+  - `200`:  → `ResumeAssignResponse`
+
+---
+
+#### 🟡 POST `/api/resumes/batch-delete/`
 
 **批量删除简历**
 
-根据ID列表批量删除简历
+批量删除指定的简历
 
-**请求体**: `BatchDeleteRequestRequest`
-
-**响应**:
-
-  - `200`:  → `ApiLibraryBatchDeleteResp`
-
----
-
-#### 🟡 POST `/api/library/check-hash/`
-
-**检查哈希值是否已存在**
-
-批量检查简历哈希值是否已存在于简历库
-
-**请求体**: `HashCheckRequestRequest`
+**请求体**: `BatchDeleteRequest`
 
 **响应**:
 
-  - `200`:  → `ApiLibraryHashCheckResp`
+  - `200`:  → `BatchDeleteResponse`
 
 ---
 
-#### 🟢 GET `/api/library/{id}/`
+#### 🟡 POST `/api/resumes/check-hash/`
+
+**检查简历哈希**
+
+检查哪些简历哈希值已存在（用于上传前去重）
+
+**请求体**: `CheckHashRequest`
+
+**响应**:
+
+  - `200`:  → `CheckHashResponse`
+
+---
+
+#### 🟢 GET `/api/resumes/stats/`
+
+**获取简历统计**
+
+获取简历的各项统计数据
+
+**响应**:
+
+  - `200`:  → `ResumeStatsResponse`
+
+---
+
+#### 🟢 GET `/api/resumes/{resume_id}/`
 
 **获取简历详情**
 
@@ -307,33 +338,33 @@
 
 **参数**:
 
-  - `id` (string, path, 必填): 
+  - `resume_id` (string, path, 必填): 
 
 **响应**:
 
-  - `200`:  → `ApiLibraryDetailResp`
+  - `200`:  → `ResumeDetail`
 
 ---
 
-#### 🟠 PUT `/api/library/{id}/`
+#### 🟠 PUT `/api/resumes/{resume_id}/`
 
 **更新简历信息**
 
-更新指定简历的信息
+更新简历的候选人姓名、状态、岗位、备注等
 
 **参数**:
 
-  - `id` (string, path, 必填): 
+  - `resume_id` (string, path, 必填): 
 
-**请求体**: `LibraryUpdateRequestRequest`
+**请求体**: `ResumeUpdateRequest`
 
 **响应**:
 
-  - `200`:  → `ApiLibraryUpdateResp`
+  - `200`:  → `ResumeDetail`
 
 ---
 
-#### 🔴 DELETE `/api/library/{id}/`
+#### 🔴 DELETE `/api/resumes/{resume_id}/`
 
 **删除简历**
 
@@ -341,11 +372,45 @@
 
 **参数**:
 
-  - `id` (string, path, 必填): 
+  - `resume_id` (string, path, 必填): 
 
 **响应**:
 
-  - `200`:  → `LibraryDeleteResponse`
+  - `200`: No response body
+
+---
+
+#### 🟢 GET `/api/resumes/{resume_id}/screening/`
+
+**获取筛选结果**
+
+获取简历的筛选结果和报告
+
+**参数**:
+
+  - `resume_id` (string, path, 必填): 
+
+**响应**:
+
+  - `200`:  → `ScreeningResultResponse`
+
+---
+
+#### 🟠 PUT `/api/resumes/{resume_id}/screening/`
+
+**更新筛选结果**
+
+更新简历的筛选结果（通常由筛选任务调用）
+
+**参数**:
+
+  - `resume_id` (string, path, 必填): 
+
+**请求体**: `UpdateScreeningResultRequestRequest`
+
+**响应**:
+
+  - `200`:  → `UpdateScreeningResultResponse`
 
 ---
 
@@ -813,54 +878,6 @@ AI生成岗位请求
 | `code` | integer | 否 | 状态码 |
 | `message` | string | 否 | 消息 |
 
-### ApiLibraryBatchDeleteResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | DeletedCount | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
-### ApiLibraryDetailResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | LibraryDetail | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
-### ApiLibraryHashCheckResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | HashCheckResponse | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
-### ApiLibraryPaginatedResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | LibraryPaginatedData | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
-### ApiLibraryUpdateResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | IdResponse | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
-### ApiLibraryUploadResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | LibraryUploadResponse | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
 ### ApiLinkVideoResp
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -1049,13 +1066,19 @@ AI生成岗位请求
 | `skipped_count` | integer | 是 | 跳过数量 |
 | `total_resumes` | integer | 是 | 总简历数 |
 
-### BatchDeleteRequestRequest
+### BatchDeleteRequest
 
-批量删除请求
+批量删除请求序列化器。
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resume_ids` | string[] | 是 | 简历ID列表 |
+| `resume_ids` | string[] | 是 | 要删除的简历ID列表 |
+
+### BatchDeleteResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `deleted_count` | integer | 是 | - |
 
 ### CandidateQuestion
 
@@ -1066,6 +1089,20 @@ AI生成岗位请求
 | `type` | string | 是 | 问题类型 |
 | `content` | string | 是 | 问题内容 |
 | `reason` | string | 否 | 推荐理由 |
+
+### CheckHashRequest
+
+检查哈希值请求序列化器。
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `hashes` | string[] | 是 | 要检查的哈希值列表 |
+
+### CheckHashResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `existing_hashes` | string[] | 是 | - |
 
 ### ComprehensiveAnalysis
 
@@ -1081,14 +1118,6 @@ AI生成岗位请求
 | `dimension_scores` | Record<string, DimensionScoreDetail> | 是 | 维度评分（按维度名称索引） |
 | `comprehensive_report` | string | 是 | 综合报告 |
 | `created_at` | string | 是 | 创建时间 |
-
-### DeletedCount
-
-删除计数响应
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `deleted_count` | integer | 是 | 删除数量 |
 
 ### DimensionScoreDetail
 
@@ -1198,23 +1227,6 @@ AI生成岗位请求
 | `skipped_count` | integer | 是 | 跳过数量 |
 | `requested_count` | integer | 是 | 请求数量 |
 
-### HashCheckRequestRequest
-
-哈希检查请求
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `hashes` | string[] | 是 | 哈希值列表 |
-
-### HashCheckResponse
-
-哈希检查响应
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `exists` | Record<string, boolean> | 是 | 哈希存在映射 |
-| `existing_count` | integer | 是 | 已存在数量 |
-
 ### IdResponse
 
 ID 响应
@@ -1272,60 +1284,6 @@ ID 响应
 | `report` | InterviewReport | 是 | 报告内容 |
 | `report_file_url` | string | 是 | 报告文件URL |
 
-### LibraryDeleteResponse
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `code` | integer | 否 | - |
-| `message` | string | 否 | - |
-| `data` | any | 否 | - |
-
-### LibraryDetail
-
-简历库详情
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `id` | string | 是 | 简历ID |
-| `filename` | string | 是 | 文件名 |
-| `file_hash` | string | 是 | 文件哈希 |
-| `file_size` | integer | 是 | 文件大小 |
-| `file_type` | string | 是 | 文件类型 |
-| `content` | string | 是 | 简历内容 |
-| `candidate_name` | string | 是 | 候选人姓名 |
-| `is_screened` | boolean | 是 | 是否已筛选 |
-| `is_assigned` | boolean | 是 | 是否已分配 |
-| `notes` | string | 是 | 备注 |
-| `created_at` | string | 是 | 创建时间 |
-| `updated_at` | string | 是 | 更新时间 |
-
-### LibraryItem
-
-简历库列表项
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `id` | string | 是 | 简历ID |
-| `filename` | string | 是 | 文件名 |
-| `file_hash` | string | 是 | 文件哈希（前8位） |
-| `file_size` | integer | 是 | 文件大小 |
-| `file_type` | string | 是 | 文件类型 |
-| `candidate_name` | string | 是 | 候选人姓名 |
-| `is_screened` | boolean | 是 | 是否已筛选 |
-| `is_assigned` | boolean | 是 | 是否已分配 |
-| `notes` | string | 是 | 备注 |
-| `created_at` | string | 是 | 创建时间 |
-| `content_preview` | string | 是 | 内容预览 |
-
-### LibraryPaginatedData
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `items` | LibraryItem[] | 是 | - |
-| `total` | integer | 是 | 总数 |
-| `page` | integer | 是 | 当前页 |
-| `page_size` | integer | 是 | 每页数量 |
-
 ### LibrarySkippedItem
 
 跳过的简历项
@@ -1334,13 +1292,6 @@ ID 响应
 |:-----|:-----|:-----|:-----|
 | `filename` | string | 是 | 文件名 |
 | `reason` | string | 是 | 跳过原因 |
-
-### LibraryUpdateRequestRequest
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `candidate_name` | string | 否 | 候选人姓名 |
-| `notes` | string | 否 | 备注 |
 
 ### LibraryUploadItem
 
@@ -1351,25 +1302,6 @@ ID 响应
 | `id` | string | 是 | 简历ID |
 | `filename` | string | 是 | 文件名 |
 | `candidate_name` | string | 是 | 候选人姓名 |
-
-### LibraryUploadRequestRequest
-
-简历上传请求
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `resumes` | ResumeUploadItemRequest[] | 是 | 简历列表 |
-
-### LibraryUploadResponse
-
-简历上传响应
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `uploaded` | LibraryUploadItem[] | 是 | 上传成功列表 |
-| `skipped` | LibrarySkippedItem[] | 是 | 跳过列表 |
-| `uploaded_count` | integer | 是 | 上传成功数量 |
-| `skipped_count` | integer | 是 | 跳过数量 |
 
 ### LinkVideoRequestRequest
 
@@ -1592,6 +1524,22 @@ ID 响应
 | `download_url` | string | 是 | 下载URL |
 | `resume_content` | string | 是 | 简历内容 |
 
+### ResumeAssignRequest
+
+简历分配岗位序列化器。
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `resume_ids` | string[] | 是 | 要分配的简历ID列表 |
+| `position_id` | string | 否 | 目标岗位ID，为空则取消分配 |
+
+### ResumeAssignResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `updated_count` | integer | 是 | - |
+| `position_id` | string | 是 | - |
+
 ### ResumeDataDetail
 
 简历数据详情
@@ -1632,6 +1580,85 @@ ID 响应
 |:-----|:-----|:-----|:-----|
 | `report` | ResumeDataDetail | 是 | - |
 
+### ResumeDetail
+
+简历详情序列化器（完整版）。
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `id` | string | 是 | - |
+| `created_at` | string | 是 | - |
+| `updated_at` | string | 是 | - |
+| `filename` | string | 是 | - |
+| `file_hash` | string | 是 | - |
+| `file_hash_short` | string | 是 | - |
+| `file_size` | integer | 否 | - |
+| `file_type` | string | 否 | - |
+| `content` | string | 是 | - |
+| `content_preview` | string | 是 | - |
+| `candidate_name` | string | 是 | - |
+| `status` | string | 否 | * `pending` - 待筛选
+* `screened` - 已筛选
+* `interviewing` - 面试中
+* `analyzed` - 已分析 |
+| `status_display` | string | 是 | - |
+| `position` | string | 否 | - |
+| `position_title` | string | 是 | - |
+| `position_details` | string | 是 | - |
+| `is_screened` | string | 是 | - |
+| `is_assigned` | string | 是 | - |
+| `screening_result` | any | 否 | - |
+| `screening_score` | string | 是 | - |
+| `screening_summary` | string | 是 | - |
+| `screening_report` | string | 否 | - |
+| `notes` | string | 否 | - |
+
+### ResumeList
+
+简历列表序列化器（精简版）。
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `id` | string | 是 | - |
+| `filename` | string | 是 | - |
+| `file_hash_short` | string | 是 | - |
+| `file_size` | integer | 否 | - |
+| `file_type` | string | 否 | - |
+| `candidate_name` | string | 是 | - |
+| `status` | string | 否 | * `pending` - 待筛选
+* `screened` - 已筛选
+* `interviewing` - 面试中
+* `analyzed` - 已分析 |
+| `status_display` | string | 是 | - |
+| `position` | string | 否 | - |
+| `position_title` | string | 是 | - |
+| `is_screened` | string | 是 | - |
+| `is_assigned` | string | 是 | - |
+| `notes` | string | 否 | - |
+| `created_at` | string | 否 | - |
+| `content_preview` | string | 是 | - |
+
+### ResumeListResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `resumes` | ResumeList[] | 是 | - |
+| `total` | integer | 是 | - |
+| `page` | integer | 是 | - |
+| `page_size` | integer | 是 | - |
+
+### ResumeStatsResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `total_count` | integer | 是 | - |
+| `pending_count` | integer | 是 | - |
+| `screened_count` | integer | 是 | - |
+| `interviewing_count` | integer | 是 | - |
+| `analyzed_count` | integer | 是 | - |
+| `assigned_count` | integer | 是 | - |
+| `unassigned_count` | integer | 是 | - |
+
 ### ResumeSummary
 
 简历摘要
@@ -1643,15 +1670,46 @@ ID 响应
 | `screening_score` | number | 否 | 筛选分数 |
 | `screening_summary` | string | 否 | 筛选摘要 |
 
-### ResumeUploadItemRequest
+### ResumeUpdateRequest
 
-简历上传项
+简历更新序列化器。
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `name` | string | 是 | 文件名 |
-| `content` | string | 是 | 简历内容 |
-| `metadata` | Record<string, any> | 否 | 元数据（size, type等） |
+| `candidate_name` | string | 是 | - |
+| `position` | string | 否 | - |
+| `status` | string | 否 | * `pending` - 待筛选
+* `screened` - 已筛选
+* `interviewing` - 面试中
+* `analyzed` - 已分析 |
+| `notes` | string | 否 | - |
+| `screening_result` | any | 否 | - |
+| `screening_report` | string | 否 | - |
+
+### ResumeUploadRequest
+
+简历上传请求序列化器（批量）。
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `resumes` | Record<string, any>[] | 是 | 简历列表，每项包含 name, content, metadata |
+
+### ResumeUploadResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `created_count` | integer | 是 | - |
+| `skipped_count` | integer | 是 | - |
+| `resumes` | ResumeList[] | 是 | - |
+
+### ScreeningResultResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `resume_id` | string | 是 | - |
+| `status` | string | 是 | - |
+| `screening_result` | any | 是 | - |
+| `screening_report` | string | 是 | - |
 
 ### ScreeningScore
 
@@ -1809,6 +1867,20 @@ ID 响应
 | `disconnected_video_id` | string | 是 | 断开的视频ID |
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `video_name` | string | 是 | 视频名称 |
+
+### UpdateScreeningResultRequestRequest
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `screening_result` | any | 是 | - |
+| `screening_report` | string | 否 | - |
+
+### UpdateScreeningResultResponse
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `resume_id` | string | 是 | - |
+| `status` | string | 是 | - |
 
 ### VideoAnalysisBrief
 

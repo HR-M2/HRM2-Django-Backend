@@ -2,22 +2,32 @@
 简历筛选模块的测试。
 """
 import json
+from unittest.mock import patch
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from apps.resume_screening.models import ResumeScreeningTask, ResumeData
+from apps.resume_screening.models import ScreeningTask
+from apps.position_settings.models import Position
 from apps.resume_screening.services import ScreeningService
 
 
-class ResumeScreeningTaskModelTest(TestCase):
-    """简历筛选任务模型的测试。"""
+class ScreeningTaskModelTest(TestCase):
+    """筛选任务模型的测试。"""
+    
+    def setUp(self):
+        """创建测试岗位"""
+        self.position = Position.objects.create(
+            title="Python开发工程师",
+            department="技术部"
+        )
     
     def test_create_task(self):
         """测试创建筛选任务。"""
-        task = ResumeScreeningTask.objects.create(
+        task = ScreeningTask.objects.create(
+            position=self.position,
             status='pending',
             progress=0,
-            total_steps=1
+            total_count=1
         )
         
         self.assertIsNotNone(task.id)
@@ -26,7 +36,7 @@ class ResumeScreeningTaskModelTest(TestCase):
     
     def test_task_status_choices(self):
         """测试任务状态选项。"""
-        task = ResumeScreeningTask.objects.create(status='running')
+        task = ScreeningTask.objects.create(position=self.position, status='running')
         self.assertEqual(task.status, 'running')
         
         task.status = 'completed'
@@ -87,8 +97,15 @@ class ResumeScreeningAPITest(TestCase):
     def setUp(self):
         self.client = Client()
     
-    def test_submit_screening_task(self):
-        """测试提交筛选任务。"""
+    @patch('threading.Thread')
+    def test_submit_screening_task(self, mock_thread):
+        """测试提交筛选任务。
+        
+        使用 mock 阻止后台线程执行，避免 SQLite 并发写入问题。
+        """
+        # Mock Thread 不启动实际线程
+        mock_thread.return_value.start.return_value = None
+        
         data = {
             "position": {
                 "title": "Python Developer",
