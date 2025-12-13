@@ -16,8 +16,6 @@ from .views import (
     LinkResumeVideoView,
     UnlinkResumeVideoView,
     GenerateRandomResumesView,
-    ForceScreeningErrorView,
-    ResetScreeningTestStateView,
 )
 
 app_name = 'resume_screening'
@@ -50,6 +48,4 @@ urlpatterns = [
     
     # 开发测试工具
     path('dev/generate-resumes/', GenerateRandomResumesView.as_view(), name='dev-generate'),
-    path('dev/force-error/', ForceScreeningErrorView.as_view(), name='dev-force-error'),
-    path('dev/reset-state/', ResetScreeningTestStateView.as_view(), name='dev-reset-state'),
 ]
