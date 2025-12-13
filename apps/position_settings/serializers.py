@@ -248,6 +248,3 @@ class ResumeAssignmentSerializer(serializers.Serializer):
     )
 
 
-# 兼容旧API的别名
-PositionCriteriaSerializer = PositionDetailSerializer
-PositionCriteriaListSerializer = PositionListSerializer

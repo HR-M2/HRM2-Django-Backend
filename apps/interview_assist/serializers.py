@@ -166,5 +166,3 @@ class SetFinalReportSerializer(serializers.Serializer):
     report = serializers.DictField(required=True, help_text="面试报告内容")
 
 
-# 兼容旧API的别名
-InterviewAssistSessionSerializer = InterviewSessionSerializer

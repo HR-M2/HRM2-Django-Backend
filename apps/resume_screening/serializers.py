@@ -140,6 +140,4 @@ class ResumeScreeningInputSerializer(serializers.Serializer):
         return value
 
 
-# 兼容旧API的别名
-ResumeScreeningTaskSerializer = ScreeningTaskSerializer
 

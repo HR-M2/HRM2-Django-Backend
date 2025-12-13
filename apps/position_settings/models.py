@@ -107,5 +107,3 @@ class Position(models.Model):
         )
 
 
-# 保留旧模型别名以便于渐进式迁移（将在 Phase 8 删除）
-PositionCriteria = Position

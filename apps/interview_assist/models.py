@@ -98,5 +98,3 @@ class InterviewSession(models.Model):
         self.save(update_fields=['final_report', 'updated_at'])
 
 
-# 保留旧模型别名以便于渐进式迁移（将在 Phase 8 删除）
-InterviewAssistSession = InterviewSession

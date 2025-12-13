@@ -2,7 +2,7 @@
 简历筛选模块URL配置。
 
 目标路径: /api/screening/
-注意：简历库相关API已迁移到 apps.resume_library 模块（/api/library/）
+注意：简历库相关API已迁移到 apps.resume 模块（/api/resumes/）
 """
 from django.urls import path
 from .views import (

@@ -216,5 +216,3 @@ class RecommendationInputSerializer(serializers.Serializer):
     include_interview = serializers.BooleanField(default=True, help_text="是否包含面试记录")
 
 
-# 兼容旧API的别名
-CandidateComprehensiveAnalysisSerializer = ComprehensiveAnalysisSerializer

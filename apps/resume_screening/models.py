@@ -82,30 +82,3 @@ class ScreeningTask(models.Model):
         self.save(update_fields=['status', 'error_message'])
 
 
-# 保留旧模型别名以便于渐进式迁移（将在 Phase 8 删除）
-ResumeScreeningTask = ScreeningTask
-
-
-# === 向后兼容占位类（Phase 5 Views 更新后删除）===
-class ScreeningReport:
-    """占位类 - 已合并到 Resume.screening_report"""
-    objects = None
-    
-    class DoesNotExist(Exception):
-        pass
-
-
-class ResumeData:
-    """占位类 - 已合并到 apps.resume.Resume"""
-    objects = None
-    
-    class DoesNotExist(Exception):
-        pass
-
-
-class ResumeGroup:
-    """占位类 - 已删除，用 Position 替代"""
-    objects = None
-    
-    class DoesNotExist(Exception):
-        pass
