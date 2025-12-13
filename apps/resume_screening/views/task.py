@@ -1,5 +1,10 @@
 """
 任务管理视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
+
+数据库简化重构：
+- 使用 ScreeningTask 模型（原 ResumeScreeningTask 已重命名+简化）
+- 使用 Resume 模型（原 ResumeData 已合并到 Resume）
+- ScreeningReport 已删除（报告内容存入 Resume）
 """
 import logging
 from django.http import FileResponse
@@ -14,7 +19,8 @@ from apps.common.schemas import (
     TaskListDataSerializer, IdResponseSerializer,
 )
 
-from ..models import ResumeScreeningTask, ScreeningReport, ResumeData
+from ..models import ScreeningTask
+from apps.resume.models import Resume
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +50,7 @@ class TaskHistoryView(SafeAPIView):
         page_size = min(int(request.GET.get('page_size', 20)), 50)
         status_filter = request.GET.get('status')
         
-        queryset = ResumeScreeningTask.objects.all().order_by('-created_at')
+        queryset = ScreeningTask.objects.all().order_by('-created_at')
         
         if status_filter:
             queryset = queryset.filter(status=status_filter)
@@ -61,20 +67,13 @@ class TaskHistoryView(SafeAPIView):
                 "task_id": str(task.id),
                 "status": task.status,
                 "progress": task.progress,
-                "current_step": task.current_step,
-                "total_steps": task.total_steps,
+                "current_step": task.processed_count,
+                "total_steps": task.total_count,
                 "created_at": task.created_at.isoformat()
             }
             
-            if task.status == 'running' and task.current_speaker:
-                data['current_speaker'] = task.current_speaker
-            
-            # 无论任务状态如何，都获取简历数据
+            # 获取简历数据
             data['resume_data'] = self._get_resume_data(task)
-            
-            # 如果已完成则添加结果
-            if task.status == 'completed':
-                data['reports'] = self._get_reports(task)
             
             if task.status == 'failed' and task.error_message:
                 data['error_message'] = task.error_message
@@ -89,50 +88,31 @@ class TaskHistoryView(SafeAPIView):
             "page_size": page_size
         })
     
-    def _get_reports(self, task):
-        """获取任务的报告。"""
-        reports = ScreeningReport.objects.filter(task=task)
-        result = []
-        
-        for report in reports:
-            report_data = {
-                "report_id": str(report.id),
-                "report_filename": report.original_filename,
-                "download_url": f"/resume-screening/reports/{report.id}/download/",
-                "resume_content": report.resume_content or ""
-            }
-            
-            if task.position_data:
-                report_data["position_info"] = task.position_data
-            
-            result.append(report_data)
-        
-        return result
-    
     def _get_resume_data(self, task):
-        """获取任务的简历数据。"""
-        resume_data_list = ResumeData.objects.filter(task=task)
+        """获取任务关联岗位的简历数据。"""
+        # 通过 Position 关联获取简历
+        resumes = Resume.objects.filter(position=task.position)
         result = []
         
-        for resume_data in resume_data_list:
+        for resume in resumes:
             data = {
-                "id": str(resume_data.id),
-                "candidate_name": resume_data.candidate_name,
-                "position_title": resume_data.position_title,
-                "screening_score": resume_data.screening_score,
-                "screening_summary": resume_data.screening_summary,
-                "json_content": resume_data.json_report_content,
-                "resume_content": resume_data.resume_content,
-                "report_md_url": resume_data.report_md_file.url if resume_data.report_md_file else None,
-                "report_json_url": resume_data.report_json_file.url if resume_data.report_json_file else None,
+                "id": str(resume.id),
+                "candidate_name": resume.candidate_name,
+                "position_title": task.position.title,
+                "screening_score": resume.screening_result.get('score') if resume.screening_result else None,
+                "screening_summary": resume.screening_result.get('summary') if resume.screening_result else None,
+                "resume_content": resume.content,
+                "screening_report": resume.screening_report,
             }
             
-            if resume_data.video_analysis:
+            # 获取关联的视频分析
+            video_analysis = resume.video_analyses.first()
+            if video_analysis:
                 data["video_analysis"] = {
-                    "id": str(resume_data.video_analysis.id),
-                    "video_name": resume_data.video_analysis.video_name,
-                    "status": resume_data.video_analysis.status,
-                    "confidence_score": resume_data.video_analysis.confidence_score,
+                    "id": str(video_analysis.id),
+                    "video_name": video_analysis.video_name,
+                    "status": video_analysis.status,
+                    "confidence_score": video_analysis.analysis_result.get('confidence_score') if video_analysis.analysis_result else None,
                 }
             
             result.append(data)
@@ -154,7 +134,7 @@ class TaskDeleteView(SafeAPIView):
     )
     def handle_delete(self, request, task_id):
         """删除指定任务及其关联数据。"""
-        task = self.get_object_or_404(ResumeScreeningTask, id=task_id)
+        task = self.get_object_or_404(ScreeningTask, id=task_id)
         
         # 删除关联的报告和简历数据（级联删除会自动处理）
         task_id_str = str(task.id)

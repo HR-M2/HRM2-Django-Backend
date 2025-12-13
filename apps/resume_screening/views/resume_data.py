@@ -1,5 +1,8 @@
 """
 简历数据详情视图模块
+
+数据库简化重构：
+- 使用 Resume 模型（原 ResumeData 已合并到 Resume）
 """
 import logging
 
@@ -13,7 +16,7 @@ from apps.common.schemas import (
     ResumeDataDetailSerializer,
 )
 
-from ..models import ResumeData
+from apps.resume.models import Resume
 
 logger = logging.getLogger(__name__)
 
@@ -38,29 +41,28 @@ class ResumeDataDetailView(SafeAPIView):
     )
     def handle_get(self, request, resume_id):
         """获取简历数据详情。"""
-        resume_data = self.get_object_or_404(ResumeData, id=resume_id)
+        resume = self.get_object_or_404(Resume, id=resume_id)
         
-        # 解析分数
+        # 解析分数（从 screening_result JSON）
         scores = {}
-        if resume_data.screening_score:
+        if resume.screening_result:
             scores = {
-                "hr_score": resume_data.screening_score.get("hr_score", 0),
-                "technical_score": resume_data.screening_score.get("technical_score", 0),
-                "manager_score": resume_data.screening_score.get("manager_score", 0),
-                "comprehensive_score": resume_data.screening_score.get("comprehensive_score", 0)
+                "hr_score": resume.screening_result.get("hr_score", 0),
+                "technical_score": resume.screening_result.get("technical_score", 0),
+                "manager_score": resume.screening_result.get("manager_score", 0),
+                "comprehensive_score": resume.screening_result.get("score", 0)
             }
         
         data = {
-            "id": str(resume_data.id),
-            "created_at": resume_data.created_at.isoformat(),
-            "candidate_name": resume_data.candidate_name,
-            "position_title": resume_data.position_title,
+            "id": str(resume.id),
+            "created_at": resume.created_at.isoformat(),
+            "candidate_name": resume.candidate_name,
+            "position_title": resume.position.title if resume.position else None,
             "screening_score": scores,
-            "screening_summary": resume_data.screening_summary,
-            "resume_content": resume_data.resume_content,
-            "json_report_content": resume_data.json_report_content,
-            "report_json_url": resume_data.report_json_file.url if resume_data.report_json_file else None,
-            "video_analysis_id": str(resume_data.video_analysis.id) if resume_data.video_analysis else None,
+            "screening_summary": resume.screening_result.get('summary') if resume.screening_result else None,
+            "resume_content": resume.content,
+            "screening_report": resume.screening_report,
+            "video_analysis_id": str(resume.video_analyses.first().id) if resume.video_analyses.exists() else None,
         }
         
         # 返回与原版一致的格式
