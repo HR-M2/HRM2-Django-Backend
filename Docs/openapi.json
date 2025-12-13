@@ -1032,120 +1032,6 @@
         }
       }
     },
-    "/api/screening/data/": {
-      "get": {
-        "operationId": "screening_data_retrieve",
-        "description": "获取简历数据列表，支持过滤和分页",
-        "summary": "获取简历数据列表",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "candidate_name",
-            "schema": {
-              "type": "string"
-            },
-            "description": "候选人姓名过滤"
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "type": "integer"
-            },
-            "description": "页码"
-          },
-          {
-            "in": "query",
-            "name": "page_size",
-            "schema": {
-              "type": "integer"
-            },
-            "description": "每页数量"
-          },
-          {
-            "in": "query",
-            "name": "position_title",
-            "schema": {
-              "type": "string"
-            },
-            "description": "岗位名称过滤"
-          }
-        ],
-        "tags": [
-          "screening"
-        ],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "basicAuth": []
-          },
-          {}
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResumeDataListResp"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      },
-      "post": {
-        "operationId": "screening_data_create",
-        "description": "创建新的简历数据记录",
-        "summary": "创建简历数据",
-        "tags": [
-          "screening"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResumeDataCreateRequestRequest"
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/ResumeDataCreateRequestRequest"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/ResumeDataCreateRequestRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "basicAuth": []
-          },
-          {}
-        ],
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResumeDataCreateResp"
-                }
-              }
-            },
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/screening/videos/link/": {
       "post": {
         "operationId": "screening_videos_link_create",
@@ -2518,53 +2404,11 @@
           "data"
         ]
       },
-      "ApiResumeDataCreateResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/IdResponse"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
       "ApiResumeDataDetailResp": {
         "type": "object",
         "properties": {
           "data": {
             "$ref": "#/components/schemas/ResumeDataReportWrapper"
-          },
-          "code": {
-            "type": "integer",
-            "default": 200,
-            "description": "状态码"
-          },
-          "message": {
-            "type": "string",
-            "default": "成功",
-            "description": "消息"
-          }
-        },
-        "required": [
-          "data"
-        ]
-      },
-      "ApiResumeDataListResp": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/ResumeDataListData"
           },
           "code": {
             "type": "integer",
@@ -4476,35 +4320,6 @@
           "resume_content"
         ]
       },
-      "ResumeDataCreateRequestRequest": {
-        "type": "object",
-        "description": "创建简历数据请求",
-        "properties": {
-          "position_title": {
-            "type": "string",
-            "minLength": 1,
-            "description": "岗位名称"
-          },
-          "position_details": {
-            "description": "岗位详情"
-          },
-          "candidate_name": {
-            "type": "string",
-            "minLength": 1,
-            "description": "候选人姓名"
-          },
-          "resume_content": {
-            "type": "string",
-            "minLength": 1,
-            "description": "简历内容"
-          }
-        },
-        "required": [
-          "candidate_name",
-          "position_title",
-          "resume_content"
-        ]
-      },
       "ResumeDataDetail": {
         "type": "object",
         "description": "简历数据详情",
@@ -4637,95 +4452,6 @@
           "report_md_url",
           "resume_content",
           "screening_summary"
-        ]
-      },
-      "ResumeDataList": {
-        "type": "object",
-        "description": "简历数据列表项（分页用）",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "简历数据ID"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "创建时间"
-          },
-          "position_title": {
-            "type": "string",
-            "description": "应聘岗位"
-          },
-          "candidate_name": {
-            "type": "string",
-            "description": "候选人姓名"
-          },
-          "screening_score": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ScreeningScore"
-              }
-            ],
-            "nullable": true,
-            "description": "筛选得分"
-          },
-          "resume_file_hash": {
-            "type": "string",
-            "description": "文件哈希"
-          },
-          "report_md_url": {
-            "type": "string",
-            "nullable": true,
-            "description": "MD报告URL"
-          },
-          "report_json_url": {
-            "type": "string",
-            "nullable": true,
-            "description": "JSON报告URL"
-          },
-          "video_analysis": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/VideoAnalysisBrief"
-              }
-            ],
-            "description": "视频分析信息"
-          }
-        },
-        "required": [
-          "candidate_name",
-          "created_at",
-          "id",
-          "position_title",
-          "report_json_url",
-          "report_md_url",
-          "resume_file_hash"
-        ]
-      },
-      "ResumeDataListData": {
-        "type": "object",
-        "properties": {
-          "results": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ResumeDataList"
-            }
-          },
-          "total": {
-            "type": "integer"
-          },
-          "page": {
-            "type": "integer"
-          },
-          "page_size": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "page",
-          "page_size",
-          "results",
-          "total"
         ]
       },
       "ResumeDataReportWrapper": {

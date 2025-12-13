@@ -8,7 +8,6 @@ from django.urls import path
 from .views import (
     ResumeScreeningView,
     ScreeningTaskStatusView,
-    ResumeDataView,
     ResumeDataDetailView,
     TaskHistoryView,
     TaskDeleteView,
@@ -38,9 +37,6 @@ urlpatterns = [
     
     # 报告下载 - GET下载报告文件
     path('reports/<uuid:report_id>/download/', ReportDownloadView.as_view(), name='report-download'),
-    
-    # 简历数据 - GET获取筛选后的简历数据
-    path('data/', ResumeDataView.as_view(), name='data'),
     
     # 视频关联
     path('videos/link/', LinkResumeVideoView.as_view(), name='video-link'),

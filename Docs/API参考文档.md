@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-13 20:29:50
+> **生成时间**: 2025-12-13 20:43:01
 
 智能招聘管理系统后端API文档
 
@@ -16,13 +16,13 @@
 
 ## 概览
 
-共 **40** 个API端点，分布在 **6** 个模块中。
+共 **38** 个API端点，分布在 **6** 个模块中。
 
 ## 目录
 
 - [岗位设置](#positions) (8个接口)
 - [简历库](#library) (7个接口)
-- [简历筛选](#screening) (11个接口)
+- [简历筛选](#screening) (9个接口)
 - [视频分析](#videos) (4个接口)
 - [最终推荐](#recommend) (3个接口)
 - [面试辅助](#interviews) (7个接口)
@@ -61,8 +61,6 @@
 | 方法 | 路径 | 说明 |
 |:-----|:-----|:-----|
 | 🟡 POST | /api/screening/ | 提交简历筛选任务 |
-| 🟢 GET | /api/screening/data/ | 获取简历数据列表 |
-| 🟡 POST | /api/screening/data/ | 创建简历数据 |
 | 🟡 POST | /api/screening/dev/generate-resumes/ | 生成随机简历 |
 | 🟢 GET | /api/screening/reports/`{report_id}`/ | 获取简历数据详情 |
 | 🟢 GET | /api/screening/reports/`{report_id}`/download/ | 下载筛选报告 |
@@ -362,39 +360,6 @@
 **响应**:
 
   - `202`:  → `ApiScreeningSubmitResp`
-
----
-
-#### 🟢 GET `/api/screening/data/`
-
-**获取简历数据列表**
-
-获取简历数据列表，支持过滤和分页
-
-**参数**:
-
-  - `candidate_name` (string, query, 可选): 候选人姓名过滤
-  - `page` (integer, query, 可选): 页码
-  - `page_size` (integer, query, 可选): 每页数量
-  - `position_title` (string, query, 可选): 岗位名称过滤
-
-**响应**:
-
-  - `200`:  → `ApiResumeDataListResp`
-
----
-
-#### 🟡 POST `/api/screening/data/`
-
-**创建简历数据**
-
-创建新的简历数据记录
-
-**请求体**: `ResumeDataCreateRequestRequest`
-
-**响应**:
-
-  - `201`:  → `ApiResumeDataCreateResp`
 
 ---
 
@@ -960,27 +925,11 @@ AI生成岗位请求
 | `code` | integer | 否 | 状态码 |
 | `message` | string | 否 | 消息 |
 
-### ApiResumeDataCreateResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | IdResponse | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
 ### ApiResumeDataDetailResp
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
 | `data` | ResumeDataReportWrapper | 是 | - |
-| `code` | integer | 否 | 状态码 |
-| `message` | string | 否 | 消息 |
-
-### ApiResumeDataListResp
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `data` | ResumeDataListData | 是 | - |
 | `code` | integer | 否 | 状态码 |
 | `message` | string | 否 | 消息 |
 
@@ -1643,17 +1592,6 @@ ID 响应
 | `download_url` | string | 是 | 下载URL |
 | `resume_content` | string | 是 | 简历内容 |
 
-### ResumeDataCreateRequestRequest
-
-创建简历数据请求
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `position_title` | string | 是 | 岗位名称 |
-| `position_details` | any | 否 | 岗位详情 |
-| `candidate_name` | string | 是 | 候选人姓名 |
-| `resume_content` | string | 是 | 简历内容 |
-
 ### ResumeDataDetail
 
 简历数据详情
@@ -1687,31 +1625,6 @@ ID 响应
 | `report_md_url` | string | 是 | MD报告URL |
 | `report_json_url` | string | 是 | JSON报告URL |
 | `video_analysis` | VideoAnalysisBrief | 否 | 视频分析 |
-
-### ResumeDataList
-
-简历数据列表项（分页用）
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `id` | string | 是 | 简历数据ID |
-| `created_at` | string | 是 | 创建时间 |
-| `position_title` | string | 是 | 应聘岗位 |
-| `candidate_name` | string | 是 | 候选人姓名 |
-| `screening_score` | ScreeningScore | 否 | 筛选得分 |
-| `resume_file_hash` | string | 是 | 文件哈希 |
-| `report_md_url` | string | 是 | MD报告URL |
-| `report_json_url` | string | 是 | JSON报告URL |
-| `video_analysis` | VideoAnalysisBrief | 否 | 视频分析信息 |
-
-### ResumeDataListData
-
-| 字段 | 类型 | 必填 | 说明 |
-|:-----|:-----|:-----|:-----|
-| `results` | ResumeDataList[] | 是 | - |
-| `total` | integer | 是 | - |
-| `page` | integer | 是 | - |
-| `page_size` | integer | 是 | - |
 
 ### ResumeDataReportWrapper
 

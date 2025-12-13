@@ -1,143 +1,21 @@
 """
-简历数据管理视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
+简历数据详情视图模块
 """
 import logging
 
-from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
-from apps.common.pagination import paginate_queryset
-from apps.common.utils import generate_hash
 from apps.common.schemas import (
     api_response,
-    ResumeDataListSerializer, ResumeDataDetailSerializer,
-    ResumeDataCreateRequestSerializer, IdResponseSerializer,
+    ResumeDataDetailSerializer,
 )
 
 from ..models import ResumeData
-from ..serializers import ResumeDataSerializer
 
 logger = logging.getLogger(__name__)
-
-
-class ResumeDataView(SafeAPIView):
-    """
-    简历数据管理API
-    GET: 获取简历数据列表
-    POST: 创建新的简历数据
-    """
-    
-    @extend_schema(
-        summary="获取简历数据列表",
-        description="获取简历数据列表，支持过滤和分页",
-        parameters=[
-            OpenApiParameter(name='candidate_name', type=str, description='候选人姓名过滤'),
-            OpenApiParameter(name='position_title', type=str, description='岗位名称过滤'),
-            OpenApiParameter(name='page', type=int, description='页码'),
-            OpenApiParameter(name='page_size', type=int, description='每页数量'),
-        ],
-        responses={200: api_response(
-            inline_serializer(
-                name='ResumeDataListData',
-                fields={
-                    'results': ResumeDataListSerializer(many=True),
-                    'total': serializers.IntegerField(),
-                    'page': serializers.IntegerField(),
-                    'page_size': serializers.IntegerField(),
-                }
-            ),
-            "ResumeDataList"
-        )},
-        tags=["screening"],
-    )
-    def handle_get(self, request):
-        """获取简历数据列表，支持过滤和分页。"""
-        candidate_name = request.GET.get('candidate_name')
-        position_title = request.GET.get('position_title')
-        page = int(request.GET.get('page', 1))
-        page_size = min(int(request.GET.get('page_size', 10)), 50)
-        
-        queryset = ResumeData.objects.all()
-        
-        if candidate_name:
-            queryset = queryset.filter(candidate_name__icontains=candidate_name)
-        if position_title:
-            queryset = queryset.filter(position_title__icontains=position_title)
-        
-        # 分页
-        total = queryset.count()
-        start = (page - 1) * page_size
-        end = start + page_size
-        data_list = queryset[start:end]
-        
-        # 构建响应 - 与原版格式一致
-        result = []
-        for data in data_list:
-            item = {
-                "id": str(data.id),
-                "created_at": data.created_at.isoformat(),
-                "position_title": data.position_title,
-                "candidate_name": data.candidate_name,
-                "screening_score": data.screening_score,
-                "resume_file_hash": data.resume_file_hash,
-                "report_md_url": data.report_md_file.url if data.report_md_file else None,
-                "report_json_url": data.report_json_file.url if data.report_json_file else None,
-            }
-            
-            # 如果存在则添加视频分析信息
-            if data.video_analysis:
-                item["video_analysis"] = {
-                    "id": str(data.video_analysis.id),
-                    "video_name": data.video_analysis.video_name,
-                    "status": data.video_analysis.status,
-                    "fraud_score": data.video_analysis.fraud_score,
-                    "neuroticism_score": data.video_analysis.neuroticism_score,
-                    "extraversion_score": data.video_analysis.extraversion_score,
-                    "openness_score": data.video_analysis.openness_score,
-                    "agreeableness_score": data.video_analysis.agreeableness_score,
-                    "conscientiousness_score": data.video_analysis.conscientiousness_score,
-                    "confidence_score": data.video_analysis.confidence_score,
-                }
-            
-            result.append(item)
-        
-        # 返回与原版完全一致的格式
-        return ApiResponse.success(data={
-            "results": result,
-            "total": total,
-            "page": page,
-            "page_size": page_size
-        })
-    
-    @extend_schema(
-        summary="创建简历数据",
-        description="创建新的简历数据记录",
-        request=ResumeDataCreateRequestSerializer,
-        responses={201: api_response(IdResponseSerializer(), "ResumeDataCreate")},
-        tags=["screening"],
-    )
-    def handle_post(self, request):
-        """创建新的简历数据记录。"""
-        position_title = self.get_param(request, 'position_title', required=True)
-        position_details = self.get_param(request, 'position_details', default={})
-        candidate_name = self.get_param(request, 'candidate_name', required=True)
-        resume_content = self.get_param(request, 'resume_content', required=True)
-        
-        resume_data = ResumeData.objects.create(
-            position_title=position_title,
-            position_details=position_details,
-            candidate_name=candidate_name,
-            resume_content=resume_content,
-            resume_file_hash=generate_hash(resume_content)
-        )
-        
-        # 返回与原版一致的格式
-        return ApiResponse.created(
-            data={"id": str(resume_data.id)},
-            message="简历数据创建成功"
-        )
 
 
 class ResumeDataDetailView(SafeAPIView):

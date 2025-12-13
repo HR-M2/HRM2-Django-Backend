@@ -1,5 +1,5 @@
 from .screening import ResumeScreeningView, ScreeningTaskStatusView
-from .resume_data import ResumeDataView, ResumeDataDetailView
+from .resume_data import ResumeDataDetailView
 from .task import TaskHistoryView, TaskDeleteView, ReportDownloadView
 from .link import LinkResumeVideoView, UnlinkResumeVideoView
 from .dev_tools import GenerateRandomResumesView
@@ -16,7 +16,6 @@ from apps.resume_library.views import (
 __all__ = [
     'ResumeScreeningView',
     'ScreeningTaskStatusView',
-    'ResumeDataView',
     'ResumeDataDetailView',
     'TaskHistoryView',
     'TaskDeleteView',
