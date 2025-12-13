@@ -6,9 +6,20 @@
 import logging
 from django.db import models
 
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from rest_framework import serializers
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
+from apps.common.schemas import (
+    api_response, paginated_response, success_response,
+    LibraryItemSerializer, LibraryDetailSerializer,
+    LibraryUploadResponseSerializer, LibraryUploadRequestSerializer,
+    BatchDeleteRequestSerializer, DeletedCountSerializer,
+    HashCheckRequestSerializer, HashCheckResponseSerializer,
+    IdResponseSerializer,
+)
 
 from .models import ResumeLibrary
 from .services import LibraryService
@@ -24,6 +35,19 @@ class LibraryListView(SafeAPIView):
     POST: 上传简历到简历库
     """
     
+    @extend_schema(
+        summary="获取简历库列表",
+        description="获取简历库列表，支持分页和筛选",
+        parameters=[
+            OpenApiParameter(name='page', type=int, description='页码'),
+            OpenApiParameter(name='page_size', type=int, description='每页数量'),
+            OpenApiParameter(name='keyword', type=str, description='关键词搜索'),
+            OpenApiParameter(name='is_screened', type=bool, description='是否已筛选'),
+            OpenApiParameter(name='is_assigned', type=bool, description='是否已分配'),
+        ],
+        responses={200: paginated_response(LibraryItemSerializer(), "Library")},
+        tags=["library"],
+    )
     def handle_get(self, request):
         """获取简历库列表。"""
         # 分页参数
@@ -77,6 +101,13 @@ class LibraryListView(SafeAPIView):
             page_size=page_size
         )
     
+    @extend_schema(
+        summary="上传简历到简历库",
+        description="批量上传简历到简历库，单次最多50份",
+        request=LibraryUploadRequestSerializer,
+        responses={200: api_response(LibraryUploadResponseSerializer(), "LibraryUpload")},
+        tags=["library"],
+    )
     def handle_post(self, request):
         """上传简历到简历库（支持批量上传）。"""
         resumes = self.get_param(request, 'resumes', required=True)
@@ -129,6 +160,12 @@ class LibraryDetailView(SafeAPIView):
     DELETE: 删除简历
     """
     
+    @extend_schema(
+        summary="获取简历详情",
+        description="获取指定简历的详细信息",
+        responses={200: api_response(LibraryDetailSerializer(), "LibraryDetail")},
+        tags=["library"],
+    )
     def handle_get(self, request, id):
         """获取简历详情。"""
         resume = LibraryService.get_resume_by_id(str(id))
@@ -150,6 +187,19 @@ class LibraryDetailView(SafeAPIView):
             'updated_at': resume.updated_at.isoformat()
         })
     
+    @extend_schema(
+        summary="更新简历信息",
+        description="更新指定简历的信息",
+        request=inline_serializer(
+            name='LibraryUpdateRequest',
+            fields={
+                'candidate_name': serializers.CharField(required=False, help_text="候选人姓名"),
+                'notes': serializers.CharField(required=False, help_text="备注"),
+            }
+        ),
+        responses={200: api_response(IdResponseSerializer(), "LibraryUpdate")},
+        tags=["library"],
+    )
     def handle_put(self, request, id):
         """更新简历信息。"""
         resume = LibraryService.get_resume_by_id(str(id))
@@ -171,6 +221,12 @@ class LibraryDetailView(SafeAPIView):
             message='更新成功'
         )
     
+    @extend_schema(
+        summary="删除简历",
+        description="删除指定简历",
+        responses={200: success_response("LibraryDelete")},
+        tags=["library"],
+    )
     def handle_delete(self, request, id):
         """删除简历。"""
         if not LibraryService.delete_resume(str(id)):
@@ -186,6 +242,13 @@ class LibraryBatchDeleteView(SafeAPIView):
     POST: 批量删除简历
     """
     
+    @extend_schema(
+        summary="批量删除简历",
+        description="根据ID列表批量删除简历",
+        request=BatchDeleteRequestSerializer,
+        responses={200: api_response(DeletedCountSerializer(), "LibraryBatchDelete")},
+        tags=["library"],
+    )
     def handle_post(self, request):
         """批量删除简历。"""
         resume_ids = self.get_param(request, 'resume_ids', required=True)
@@ -208,6 +271,13 @@ class LibraryCheckHashView(SafeAPIView):
     POST: 检查哈希值列表
     """
     
+    @extend_schema(
+        summary="检查哈希值是否已存在",
+        description="批量检查简历哈希值是否已存在于简历库",
+        request=HashCheckRequestSerializer,
+        responses={200: api_response(HashCheckResponseSerializer(), "LibraryHashCheck")},
+        tags=["library"],
+    )
     def handle_post(self, request):
         """检查哈希值列表。"""
         hashes = self.get_param(request, 'hashes', required=True)

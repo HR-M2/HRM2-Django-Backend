@@ -41,6 +41,7 @@ class SafeAPIViewMeta(type):
     """
     SafeAPIView的元类，用于动态设置http_method_names。
     只暴露子类实际实现的handle_xxx方法对应的HTTP方法。
+    同时将 handle_xxx 方法上的 @extend_schema 装饰器复制到对应的 HTTP 方法。
     """
     def __new__(mcs, name, bases, namespace):
         cls = super().__new__(mcs, name, bases, namespace)
@@ -62,9 +63,35 @@ class SafeAPIViewMeta(type):
         for handle_method, http_method in method_map.items():
             if handle_method in namespace:
                 allowed_methods.append(http_method)
+                # 将 handle_xxx 的 schema 注解复制到对应的 HTTP 方法
+                handle_func = namespace[handle_method]
+                mcs._create_http_method_with_schema(cls, http_method, handle_func)
         
         cls.http_method_names = allowed_methods
         return cls
+    
+    @staticmethod
+    def _create_http_method_with_schema(cls, http_method, handle_func):
+        """为每个子类创建独立的 HTTP 方法并复制 schema 注解。"""
+        import functools
+        
+        # 获取基类的 HTTP 方法
+        base_method = getattr(cls, http_method, None)
+        if base_method is None:
+            return
+        
+        # 创建新的方法包装器
+        @functools.wraps(base_method)
+        def wrapper(self, request, *args, **kwargs):
+            return base_method(self, request, *args, **kwargs)
+        
+        # 复制 schema 相关属性到新方法
+        for attr in ['kwargs', '_spectacular_extensions']:
+            if hasattr(handle_func, attr):
+                setattr(wrapper, attr, getattr(handle_func, attr))
+        
+        # 设置新方法到类
+        setattr(cls, http_method, wrapper)
 
 
 class SafeAPIView(BaseAPIViewMixin, APIView, metaclass=SafeAPIViewMeta):

@@ -3,9 +3,16 @@
 """
 import logging
 
+from drf_spectacular.utils import extend_schema
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
+from apps.common.schemas import (
+    api_response,
+    LinkVideoRequestSerializer, UnlinkVideoRequestSerializer,
+    LinkVideoResponseSerializer, UnlinkVideoResponseSerializer,
+)
 
 from ..models import ResumeData
 
@@ -18,6 +25,13 @@ class LinkResumeVideoView(SafeAPIView):
     POST: 建立简历与视频分析的关联
     """
     
+    @extend_schema(
+        summary="关联简历与视频",
+        description="建立简历数据与视频分析记录的关联",
+        request=LinkVideoRequestSerializer,
+        responses={200: api_response(LinkVideoResponseSerializer(), "LinkVideo")},
+        tags=["screening"],
+    )
     def handle_post(self, request):
         """将简历数据与视频分析关联。"""
         from apps.video_analysis.models import VideoAnalysis
@@ -66,6 +80,13 @@ class UnlinkResumeVideoView(SafeAPIView):
     POST: 解除简历与视频分析的关联
     """
     
+    @extend_schema(
+        summary="解除简历与视频关联",
+        description="解除简历数据与视频分析记录的关联",
+        request=UnlinkVideoRequestSerializer,
+        responses={200: api_response(UnlinkVideoResponseSerializer(), "UnlinkVideo")},
+        tags=["screening"],
+    )
     def handle_post(self, request):
         """解除简历数据与视频分析的关联。"""
         resume_data_id = self.get_param(request, 'resume_data_id', required=True)

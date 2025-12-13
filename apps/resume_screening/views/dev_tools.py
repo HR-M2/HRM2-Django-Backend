@@ -4,9 +4,15 @@
 """
 import logging
 
+from drf_spectacular.utils import extend_schema
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
+from apps.common.schemas import (
+    api_response,
+    GenerateResumesRequestSerializer, GenerateResumesResponseSerializer,
+)
 from apps.resume_library.models import ResumeLibrary
 
 logger = logging.getLogger(__name__)
@@ -18,6 +24,13 @@ class GenerateRandomResumesView(SafeAPIView):
     POST: 根据岗位要求生成随机简历并添加到简历库
     """
     
+    @extend_schema(
+        summary="生成随机简历",
+        description="根据岗位要求使用AI生成随机简历并添加到简历库（开发测试用）",
+        request=GenerateResumesRequestSerializer,
+        responses={200: api_response(GenerateResumesResponseSerializer(), "GenerateResumes")},
+        tags=["screening"],
+    )
     def handle_post(self, request):
         """生成随机简历并添加到简历库"""
         from services.agents import get_dev_tools_service

@@ -3,10 +3,18 @@
 """
 import logging
 
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from rest_framework import serializers
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.utils import generate_hash
+from apps.common.schemas import (
+    api_response,
+    ResumeDataListSerializer, ResumeDataDetailSerializer,
+    ResumeDataCreateRequestSerializer, IdResponseSerializer,
+)
 
 from ..models import ResumeData
 from ..serializers import ResumeDataSerializer
@@ -21,6 +29,29 @@ class ResumeDataView(SafeAPIView):
     POST: 创建新的简历数据
     """
     
+    @extend_schema(
+        summary="获取简历数据列表",
+        description="获取简历数据列表，支持过滤和分页",
+        parameters=[
+            OpenApiParameter(name='candidate_name', type=str, description='候选人姓名过滤'),
+            OpenApiParameter(name='position_title', type=str, description='岗位名称过滤'),
+            OpenApiParameter(name='page', type=int, description='页码'),
+            OpenApiParameter(name='page_size', type=int, description='每页数量'),
+        ],
+        responses={200: api_response(
+            inline_serializer(
+                name='ResumeDataListData',
+                fields={
+                    'results': ResumeDataListSerializer(many=True),
+                    'total': serializers.IntegerField(),
+                    'page': serializers.IntegerField(),
+                    'page_size': serializers.IntegerField(),
+                }
+            ),
+            "ResumeDataList"
+        )},
+        tags=["screening"],
+    )
     def handle_get(self, request):
         """获取简历数据列表，支持过滤和分页。"""
         candidate_name = request.GET.get('candidate_name')
@@ -80,6 +111,13 @@ class ResumeDataView(SafeAPIView):
             "page_size": page_size
         })
     
+    @extend_schema(
+        summary="创建简历数据",
+        description="创建新的简历数据记录",
+        request=ResumeDataCreateRequestSerializer,
+        responses={201: api_response(IdResponseSerializer(), "ResumeDataCreate")},
+        tags=["screening"],
+    )
     def handle_post(self, request):
         """创建新的简历数据记录。"""
         position_title = self.get_param(request, 'position_title', required=True)
@@ -108,6 +146,18 @@ class ResumeDataDetailView(SafeAPIView):
     GET: 获取简历数据详情
     """
     
+    @extend_schema(
+        summary="获取简历数据详情",
+        description="获取指定简历数据的详细信息",
+        responses={200: api_response(
+            inline_serializer(
+                name='ResumeDataReportWrapper',
+                fields={'report': ResumeDataDetailSerializer()}
+            ),
+            "ResumeDataDetail"
+        )},
+        tags=["screening"],
+    )
     def handle_get(self, request, resume_id):
         """获取简历数据详情。"""
         resume_data = self.get_object_or_404(ResumeData, id=resume_id)

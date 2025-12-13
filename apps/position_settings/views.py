@@ -5,9 +5,20 @@ import os
 import json
 import logging
 from django.conf import settings
+
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from rest_framework import serializers
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
+from apps.common.schemas import (
+    api_response, success_response,
+    PositionItemSerializer, PositionDetailSerializer, PositionListDataSerializer,
+    PositionCreateRequestSerializer, AssignResumesRequestSerializer,
+    AssignResumesResponseSerializer, RemoveResumeResponseSerializer,
+    AIGenerateRequestSerializer,
+)
 
 from .models import PositionCriteria
 
@@ -24,6 +35,12 @@ class RecruitmentCriteriaView(SafeAPIView):
     # 默认标准文件路径（用于向后兼容）- 与原版路径一致
     CRITERIA_FILE = os.path.join('apps', 'position_settings', 'migrations', 'recruitment_criteria.json')
     
+    @extend_schema(
+        summary="获取招聘标准",
+        description="获取当前招聘标准（向后兼容API）",
+        responses={200: api_response(PositionItemSerializer(), "RecruitmentCriteria")},
+        tags=["positions"],
+    )
     def handle_get(self, request):
         """获取招聘标准。"""
         # 首先尝试从文件获取（与原版一致）
@@ -50,6 +67,13 @@ class RecruitmentCriteriaView(SafeAPIView):
         default_criteria = self._get_default_criteria()
         return ApiResponse.success(data=default_criteria)
     
+    @extend_schema(
+        summary="更新招聘标准",
+        description="更新招聘标准（向后兼容API）",
+        request=PositionCreateRequestSerializer,
+        responses={200: api_response(PositionItemSerializer(), "RecruitmentCriteriaUpdate")},
+        tags=["positions"],
+    )
     def handle_post(self, request):
         """更新招聘标准。"""
         data = request.data
@@ -115,6 +139,15 @@ class PositionCriteriaListView(SafeAPIView):
     POST: 创建新岗位
     """
     
+    @extend_schema(
+        summary="获取岗位列表",
+        description="获取所有激活的岗位标准列表",
+        parameters=[
+            OpenApiParameter(name='include_resumes', type=bool, description='是否包含关联简历'),
+        ],
+        responses={200: api_response(PositionListDataSerializer(), "PositionList")},
+        tags=["positions"],
+    )
     def handle_get(self, request):
         """获取所有岗位标准。"""
         include_resumes = request.GET.get('include_resumes', 'false').lower() == 'true'
@@ -147,6 +180,13 @@ class PositionCriteriaListView(SafeAPIView):
             'total': len(data)
         })
     
+    @extend_schema(
+        summary="创建新岗位",
+        description="创建新的岗位标准",
+        request=PositionCreateRequestSerializer,
+        responses={201: api_response(PositionItemSerializer(), "PositionCreate")},
+        tags=["positions"],
+    )
     def handle_post(self, request):
         """创建新岗位。"""
         data = request.data
@@ -188,6 +228,15 @@ class PositionCriteriaDetailView(SafeAPIView):
     DELETE: 删除岗位（软删除）
     """
     
+    @extend_schema(
+        summary="获取岗位详情",
+        description="获取指定岗位的详细信息，包含关联简历",
+        parameters=[
+            OpenApiParameter(name='include_resumes', type=bool, description='是否包含关联简历'),
+        ],
+        responses={200: api_response(PositionDetailSerializer(), "PositionDetail")},
+        tags=["positions"],
+    )
     def handle_get(self, request, position_id):
         """获取岗位详情。"""
         try:
@@ -218,6 +267,13 @@ class PositionCriteriaDetailView(SafeAPIView):
         
         return ApiResponse.success(data=data)
     
+    @extend_schema(
+        summary="更新岗位",
+        description="更新指定岗位的信息",
+        request=PositionCreateRequestSerializer,
+        responses={200: api_response(PositionItemSerializer(), "PositionUpdate")},
+        tags=["positions"],
+    )
     def handle_put(self, request, position_id):
         """更新岗位。"""
         try:
@@ -256,6 +312,12 @@ class PositionCriteriaDetailView(SafeAPIView):
         
         return ApiResponse.success(data=criteria.to_dict(), message='岗位更新成功')
     
+    @extend_schema(
+        summary="删除岗位",
+        description="软删除指定岗位",
+        responses={200: success_response("PositionDelete")},
+        tags=["positions"],
+    )
     def handle_delete(self, request, position_id):
         """删除岗位（软删除）。"""
         try:
@@ -275,6 +337,13 @@ class PositionAssignResumesView(SafeAPIView):
     POST: 将简历分配到岗位
     """
     
+    @extend_schema(
+        summary="分配简历到岗位",
+        description="将一个或多个简历分配到指定岗位",
+        request=AssignResumesRequestSerializer,
+        responses={200: api_response(AssignResumesResponseSerializer(), "AssignResumes")},
+        tags=["positions"],
+    )
     def handle_post(self, request, position_id):
         """将简历分配到岗位。"""
         from apps.resume_screening.models import ResumeData
@@ -331,6 +400,12 @@ class PositionRemoveResumeView(SafeAPIView):
     DELETE: 从岗位移除指定简历
     """
     
+    @extend_schema(
+        summary="从岗位移除简历",
+        description="从指定岗位移除指定简历",
+        responses={200: api_response(RemoveResumeResponseSerializer(), "RemoveResume")},
+        tags=["positions"],
+    )
     def handle_delete(self, request, position_id, resume_id):
         """从岗位移除简历。"""
         from .models import ResumePositionAssignment
@@ -368,6 +443,13 @@ class PositionAIGenerateView(SafeAPIView):
     POST: 根据描述和文档生成岗位要求
     """
     
+    @extend_schema(
+        summary="AI生成岗位要求",
+        description="根据描述和参考文档，使用AI生成岗位要求",
+        request=AIGenerateRequestSerializer,
+        responses={200: api_response(PositionItemSerializer(), "AIGenerate")},
+        tags=["positions"],
+    )
     def handle_post(self, request):
         """根据用户输入生成岗位要求。"""
         from services.agents import get_position_ai_service

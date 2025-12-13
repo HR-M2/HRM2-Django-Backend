@@ -5,9 +5,20 @@ import logging
 from datetime import datetime
 from django.core.files.base import ContentFile
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework import serializers
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
+from apps.common.schemas import (
+    api_response, success_response,
+    SessionItemSerializer, SessionCreateResponseSerializer, SessionDetailSerializer,
+    GenerateQuestionsResponseSerializer, RecordQAResponseSerializer,
+    InterviewReportResponseSerializer,
+    SessionCreateRequestSerializer, GenerateQuestionsRequestSerializer,
+    RecordQARequestSerializer, GenerateReportRequestSerializer,
+)
 
 from .models import InterviewAssistSession
 from services.agents import InterviewAssistAgent
@@ -22,6 +33,15 @@ class SessionListView(SafeAPIView):
     POST: 创建会话
     """
     
+    @extend_schema(
+        summary="获取面试会话列表",
+        description="获取指定简历的面试会话列表",
+        parameters=[
+            OpenApiParameter(name='resume_id', type=str, required=True, description='简历ID（必填）'),
+        ],
+        responses={200: api_response(SessionItemSerializer(many=True), "SessionList")},
+        tags=["interviews"],
+    )
     def handle_get(self, request):
         """获取会话列表。"""
         resume_id = request.GET.get('resume_id')
@@ -46,6 +66,13 @@ class SessionListView(SafeAPIView):
         
         return ApiResponse.success(data=data)
     
+    @extend_schema(
+        summary="创建面试会话",
+        description="为指定简历创建新的面试辅助会话",
+        request=SessionCreateRequestSerializer,
+        responses={201: api_response(SessionCreateResponseSerializer(), "SessionCreate")},
+        tags=["interviews"],
+    )
     def handle_post(self, request):
         """创建面试会话。"""
         from apps.resume_screening.models import ResumeData
@@ -102,6 +129,12 @@ class SessionDetailView(SafeAPIView):
     DELETE: 删除会话
     """
     
+    @extend_schema(
+        summary="获取会话详情",
+        description="获取指定面试会话的详细信息",
+        responses={200: api_response(SessionDetailSerializer(), "SessionDetail")},
+        tags=["interviews"],
+    )
     def handle_get(self, request, session_id):
         """获取会话详情。"""
         session = self.get_object_or_404(InterviewAssistSession, id=session_id)
@@ -125,6 +158,12 @@ class SessionDetailView(SafeAPIView):
         
         return ApiResponse.success(data=response_data)
     
+    @extend_schema(
+        summary="删除会话",
+        description="删除指定的面试会话",
+        responses={200: success_response("SessionDelete")},
+        tags=["interviews"],
+    )
     def handle_delete(self, request, session_id):
         """删除会话。"""
         session = self.get_object_or_404(InterviewAssistSession, id=session_id)
@@ -139,6 +178,13 @@ class GenerateQuestionsView(SafeAPIView):
     POST: 生成候选问题（临时生成，不保存到数据库）
     """
     
+    @extend_schema(
+        summary="生成候选问题",
+        description="根据简历和岗位要求生成候选面试问题",
+        request=GenerateQuestionsRequestSerializer,
+        responses={200: api_response(GenerateQuestionsResponseSerializer(), "GenerateQuestions")},
+        tags=["interviews"],
+    )
     def handle_post(self, request, session_id):
         """生成候选问题。"""
         session = self.get_object_or_404(InterviewAssistSession, id=session_id)
@@ -201,6 +247,13 @@ class RecordQAView(SafeAPIView):
     POST: 记录问答并获取评估
     """
     
+    @extend_schema(
+        summary="记录问答并生成候选提问",
+        description="记录面试问答，可选评估回答，并生成候选提问",
+        request=RecordQARequestSerializer,
+        responses={200: api_response(RecordQAResponseSerializer(), "RecordQA")},
+        tags=["interviews"],
+    )
     def handle_post(self, request, session_id):
         """记录问答并生成候选提问。"""
         session = self.get_object_or_404(InterviewAssistSession, id=session_id)
@@ -308,6 +361,13 @@ class GenerateReportView(SafeAPIView):
     POST: 生成最终报告
     """
     
+    @extend_schema(
+        summary="生成面试报告",
+        description="根据问答记录生成最终面试评估报告",
+        request=GenerateReportRequestSerializer,
+        responses={200: api_response(InterviewReportResponseSerializer(), "GenerateReport")},
+        tags=["interviews"],
+    )
     def handle_post(self, request, session_id):
         """生成最终报告。"""
         session = self.get_object_or_404(InterviewAssistSession, id=session_id)

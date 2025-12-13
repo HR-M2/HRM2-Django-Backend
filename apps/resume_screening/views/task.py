@@ -4,9 +4,15 @@
 import logging
 from django.http import FileResponse
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
+from apps.common.schemas import (
+    api_response, success_response,
+    TaskListDataSerializer, IdResponseSerializer,
+)
 
 from ..models import ResumeScreeningTask, ScreeningReport, ResumeData
 
@@ -20,6 +26,17 @@ class TaskHistoryView(SafeAPIView):
     DELETE: 删除指定任务
     """
     
+    @extend_schema(
+        summary="获取任务历史列表",
+        description="获取筛选任务历史列表，支持分页和状态过滤",
+        parameters=[
+            OpenApiParameter(name='page', type=int, description='页码'),
+            OpenApiParameter(name='page_size', type=int, description='每页数量'),
+            OpenApiParameter(name='status', type=str, description='状态过滤'),
+        ],
+        responses={200: api_response(TaskListDataSerializer(), "TaskHistory")},
+        tags=["screening"],
+    )
     def handle_get(self, request):
         """获取任务历史，支持分页。"""
         # 获取分页参数
@@ -129,6 +146,12 @@ class TaskDeleteView(SafeAPIView):
     DELETE: 删除指定任务
     """
     
+    @extend_schema(
+        summary="删除筛选任务",
+        description="删除指定的筛选任务及其关联数据",
+        responses={200: api_response(IdResponseSerializer(), "TaskDelete")},
+        tags=["screening"],
+    )
     def handle_delete(self, request, task_id):
         """删除指定任务及其关联数据。"""
         task = self.get_object_or_404(ResumeScreeningTask, id=task_id)
@@ -155,6 +178,14 @@ class ReportDownloadView(SafeAPIView):
     2. 如果没有文件，从数据库的 ResumeData 动态生成 Markdown 报告
     """
     
+    @extend_schema(
+        summary="下载筛选报告",
+        description="下载指定简历的筛选报告（Markdown格式）",
+        responses={
+            (200, 'text/markdown'): bytes,
+        },
+        tags=["screening"],
+    )
     def handle_get(self, request, report_id):
         """下载筛选报告。"""
         # 首先尝试从 ResumeData 获取数据（优先，因为包含完整信息）

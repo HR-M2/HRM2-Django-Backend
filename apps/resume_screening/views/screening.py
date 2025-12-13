@@ -4,9 +4,15 @@
 import logging
 from django.conf import settings
 
+from drf_spectacular.utils import extend_schema
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
+from apps.common.schemas import (
+    api_response,
+    TaskSubmitSerializer, TaskStatusSerializer,
+)
 
 from ..models import ResumeScreeningTask, ScreeningReport, ResumeData
 from ..services import ScreeningService, ReportService
@@ -21,6 +27,12 @@ class ResumeScreeningView(SafeAPIView):
     POST: 提交简历筛选任务
     """
     
+    @extend_schema(
+        summary="提交简历筛选任务",
+        description="提交简历筛选任务，后台异步处理",
+        responses={202: api_response(TaskSubmitSerializer(), "ScreeningSubmit")},
+        tags=["screening"],
+    )
     def handle_post(self, request):
         """提交简历筛选任务。"""
         # 验证输入
@@ -164,6 +176,12 @@ class ScreeningTaskStatusView(SafeAPIView):
     GET: 获取任务状态和结果
     """
     
+    @extend_schema(
+        summary="获取筛选任务状态",
+        description="获取指定筛选任务的状态和结果",
+        responses={200: api_response(TaskStatusSerializer(), "ScreeningTaskStatus")},
+        tags=["screening"],
+    )
     def handle_get(self, request, task_id):
         """获取任务状态。"""
         task = self.get_object_or_404(ResumeScreeningTask, id=task_id)

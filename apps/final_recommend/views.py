@@ -5,9 +5,15 @@
 """
 import logging
 
+from drf_spectacular.utils import extend_schema, extend_schema_view
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
+from apps.common.schemas import (
+    api_response, success_response,
+    RecommendStatsSerializer, ComprehensiveAnalysisSerializer,
+)
 
 from .models import CandidateComprehensiveAnalysis
 
@@ -26,6 +32,12 @@ class RecommendStatsView(SafeAPIView):
     GET: 获取已完成综合分析的统计数据
     """
     
+    @extend_schema(
+        summary="获取推荐统计",
+        description="获取已完成综合分析的统计数据",
+        responses={200: api_response(RecommendStatsSerializer(), "RecommendStats")},
+        tags=["recommend"],
+    )
     def handle_get(self, request):
         """获取已总结推荐的数量统计。"""
         # 统计已完成综合分析的唯一简历数量（每个简历只算一次）
@@ -45,6 +57,14 @@ class CandidateComprehensiveAnalysisView(SafeAPIView):
     GET: 获取候选人的分析历史
     """
     
+    @extend_schema(
+        summary="获取综合分析历史",
+        description="获取候选人的综合分析历史记录",
+        responses={
+            200: api_response(ComprehensiveAnalysisSerializer(allow_null=True), "ComprehensiveAnalysisGet"),
+        },
+        tags=["recommend"],
+    )
     def handle_get(self, request, resume_id=None):
         """获取候选人的分析历史。"""
         if not resume_id:
@@ -74,6 +94,14 @@ class CandidateComprehensiveAnalysisView(SafeAPIView):
             'created_at': analysis.created_at.isoformat()
         })
     
+    @extend_schema(
+        summary="执行综合分析",
+        description="对单个候选人进行综合分析，整合初筛报告和面试报告",
+        responses={
+            200: api_response(ComprehensiveAnalysisSerializer(), "ComprehensiveAnalysisPost"),
+        },
+        tags=["recommend"],
+    )
     def handle_post(self, request, resume_id):
         """执行单人综合分析。"""
         from apps.resume_screening.models import ResumeData
