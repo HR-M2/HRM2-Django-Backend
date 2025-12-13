@@ -13,7 +13,7 @@ from apps.common.schemas import (
     api_response,
     GenerateResumesRequestSerializer, GenerateResumesResponseSerializer,
 )
-from apps.resume_library.models import ResumeLibrary
+from apps.resume.models import Resume
 
 logger = logging.getLogger(__name__)
 
@@ -58,30 +58,29 @@ class GenerateRandomResumesView(SafeAPIView):
             
             for resume in resumes:
                 # 检查哈希是否已存在
-                if ResumeLibrary.objects.filter(file_hash=resume['file_hash']).exists():
+                if Resume.objects.filter(file_hash=resume['file_hash']).exists():
                     skipped_resumes.append({
                         'filename': resume['name'],
                         'reason': '哈希值已存在'
                     })
                     continue
                 
-                # 创建简历库记录
-                library_entry = ResumeLibrary.objects.create(
+                # 创建简历记录
+                resume_entry = Resume.objects.create(
                     filename=resume['name'],
                     file_hash=resume['file_hash'],
                     file_size=len(resume['content'].encode('utf-8')),
                     file_type='text/plain',
                     content=resume['content'],
                     candidate_name=resume['candidate_name'],
-                    is_screened=False,
-                    is_assigned=False,
+                    status=Resume.Status.PENDING,
                     notes=f"由开发测试工具自动生成，目标岗位：{position_data.get('position', '未知')}"
                 )
                 
                 added_resumes.append({
-                    'id': str(library_entry.id),
-                    'filename': library_entry.filename,
-                    'candidate_name': library_entry.candidate_name
+                    'id': str(resume_entry.id),
+                    'filename': resume_entry.filename,
+                    'candidate_name': resume_entry.candidate_name
                 })
             
             return ApiResponse.success(

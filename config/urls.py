@@ -24,7 +24,7 @@ urlpatterns = [
     
     # API端点 - 统一 /api/ 前缀
     path('api/positions/', include('apps.position_settings.urls')),
-    path('api/library/', include('apps.resume_library.urls')),
+    # path('api/library/', ...) - 已合并到 resume 应用，待 Phase 6 创建 resume URLs
     path('api/screening/', include('apps.resume_screening.urls')),
     path('api/videos/', include('apps.video_analysis.urls')),
     path('api/recommend/', include('apps.final_recommend.urls')),
