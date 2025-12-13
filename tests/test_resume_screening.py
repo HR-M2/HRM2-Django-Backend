@@ -5,7 +5,7 @@ import json
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from apps.resume_screening.models import ResumeScreeningTask, ResumeGroup, ResumeData
+from apps.resume_screening.models import ResumeScreeningTask, ResumeData
 from apps.resume_screening.services import ScreeningService
 
 
@@ -114,18 +114,3 @@ class ResumeScreeningAPITest(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class ResumeGroupTest(TestCase):
-    """简历组模型和服务的测试。"""
-    
-    def test_create_group(self):
-        """测试创建简历组。"""
-        group = ResumeGroup.objects.create(
-            position_title="Python Developer",
-            position_details={"required_skills": ["Python"]},
-            position_hash="test_hash_123",
-            group_name="Test Group"
-        )
-        
-        self.assertIsNotNone(group.id)
-        self.assertEqual(group.position_title, "Python Developer")
-        self.assertEqual(group.status, 'pending')

@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-12 16:55:13
+> **生成时间**: 2025-12-13 11:22:26
 
 智能招聘管理系统后端API文档
 
@@ -16,13 +16,13 @@
 
 ## 概览
 
-共 **49** 个API端点，分布在 **6** 个模块中。
+共 **43** 个API端点，分布在 **6** 个模块中。
 
 ## 目录
 
 - [岗位设置](#positions) (8个接口)
 - [简历库](#library) (7个接口)
-- [简历筛选](#screening) (20个接口)
+- [简历筛选](#screening) (14个接口)
 - [视频分析](#videos) (4个接口)
 - [最终推荐](#recommend) (3个接口)
 - [面试辅助](#interviews) (7个接口)
@@ -67,12 +67,6 @@
 | 🟡 POST | /api/screening/dev/force-error/ | screening_dev_force_error_create |
 | 🟡 POST | /api/screening/dev/generate-resumes/ | screening_dev_generate_resumes_create |
 | 🟡 POST | /api/screening/dev/reset-state/ | screening_dev_reset_state_create |
-| 🟢 GET | /api/screening/groups/ | screening_groups_retrieve |
-| 🟡 POST | /api/screening/groups/add-resume/ | screening_groups_add_resume_create |
-| 🟡 POST | /api/screening/groups/create/ | screening_groups_create_create |
-| 🟡 POST | /api/screening/groups/remove-resume/ | screening_groups_remove_resume_create |
-| 🟡 POST | /api/screening/groups/set-status/ | screening_groups_set_status_create |
-| 🟢 GET | /api/screening/groups/`{group_id}`/ | screening_groups_retrieve_2 |
 | 🟢 GET | /api/screening/reports/`{report_id}`/ | screening_reports_retrieve |
 | 🟢 GET | /api/screening/reports/`{report_id}`/download/ | screening_reports_download_retrieve |
 | 🟢 GET | /api/screening/tasks/ | screening_tasks_retrieve |
@@ -413,76 +407,6 @@ POST: 根据岗位要求生成随机简历并添加到简历库
 
 重置简历筛选测试状态
 POST: 清除所有测试相关的缓存和状态
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/api/screening/groups/`
-
-简历组列表API
-GET: 获取简历组列表
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/api/screening/groups/add-resume/`
-
-添加简历到组API
-POST: 向简历组添加简历
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/api/screening/groups/create/`
-
-创建简历组API
-POST: 创建新的简历组
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/api/screening/groups/remove-resume/`
-
-从组中移除简历API
-POST: 从简历组移除简历
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟡 POST `/api/screening/groups/set-status/`
-
-设置简历组状态API
-POST: 更新简历组状态
-
-**响应**:
-
-  - `200`: No response body
-
----
-
-#### 🟢 GET `/api/screening/groups/{group_id}/`
-
-简历组详情API
-GET: 获取简历组详情
-
-**参数**:
-
-  - `group_id` (string, path, 必填): 
 
 **响应**:
 

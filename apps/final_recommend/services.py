@@ -3,7 +3,7 @@
 """
 import logging
 import json
-from typing import Dict, List, Any, Tuple, Callable
+from typing import Dict, List, Any, Callable
 
 # 注意: EvaluationAgentManager 已废弃并删除，批量评估功能不再支持
 # 请使用 CandidateComprehensiveAnalyzer 进行单人综合分析
@@ -39,71 +39,6 @@ class EvaluationService:
                 "team_lead_experience": True
             }
         }
-    
-    @classmethod
-    def load_candidates_data(cls, group_id: str) -> Dict[str, Any]:
-        """加载简历组的候选人数据。"""
-        from apps.resume_screening.models import ResumeGroup, ResumeData
-        
-        try:
-            group = ResumeGroup.objects.get(id=group_id)
-            resumes = ResumeData.objects.filter(group=group)
-            
-            candidates = {}
-            for resume in resumes:
-                candidates[resume.candidate_name] = {
-                    "resume_content": resume.resume_content,
-                    "screening_score": resume.screening_score or {},
-                    "screening_summary": resume.screening_summary or "",
-                    "final_recommendation": {
-                        "reasons": resume.json_report_content or resume.screening_summary or ""
-                    }
-                }
-            
-            return candidates
-        except ResumeGroup.DoesNotExist:
-            logger.error(f"Resume group not found: {group_id}")
-            return {}
-    
-    @classmethod
-    def load_personality_data(cls, group_id: str) -> Tuple[Dict, Dict]:
-        """加载候选人的人格和欺诈检测数据。"""
-        from apps.resume_screening.models import ResumeGroup, ResumeData
-        
-        big_five_scores = {}
-        fraud_scores = {}
-        
-        try:
-            group = ResumeGroup.objects.get(id=group_id)
-            resumes = ResumeData.objects.filter(group=group)
-            
-            for resume in resumes:
-                name = resume.candidate_name
-                
-                if resume.video_analysis:
-                    va = resume.video_analysis
-                    big_five_scores[name] = {
-                        'openness': va.openness_score or 'N/A',
-                        'conscientiousness': va.conscientiousness_score or 'N/A',
-                        'extraversion': va.extraversion_score or 'N/A',
-                        'agreeableness': va.agreeableness_score or 'N/A',
-                        'neuroticism': va.neuroticism_score or 'N/A'
-                    }
-                    fraud_scores[name] = va.fraud_score or 'N/A'
-                else:
-                    big_five_scores[name] = {
-                        'openness': 'N/A',
-                        'conscientiousness': 'N/A',
-                        'extraversion': 'N/A',
-                        'agreeableness': 'N/A',
-                        'neuroticism': 'N/A'
-                    }
-                    fraud_scores[name] = 'N/A'
-        
-        except ResumeGroup.DoesNotExist:
-            logger.error(f"Resume group not found: {group_id}")
-        
-        return big_five_scores, fraud_scores
     
     @classmethod
     def generate_candidate_info(

@@ -10,12 +10,6 @@ from .views import (
     ScreeningTaskStatusView,
     ResumeDataView,
     ResumeDataDetailView,
-    ResumeGroupListView,
-    ResumeGroupDetailView,
-    CreateResumeGroupView,
-    AddResumeToGroupView,
-    RemoveResumeFromGroupView,
-    SetGroupStatusView,
     TaskHistoryView,
     TaskDeleteView,
     ReportDownloadView,
@@ -49,18 +43,6 @@ urlpatterns = [
     
     # 简历数据 - GET获取筛选后的简历数据
     path('data/', ResumeDataView.as_view(), name='data'),
-    
-    # 简历组 - GET列表, POST创建
-    path('groups/', ResumeGroupListView.as_view(), name='group-list'),
-    path('groups/create/', CreateResumeGroupView.as_view(), name='group-create'),
-    
-    # 简历组详情 - GET/DELETE
-    path('groups/<uuid:group_id>/', ResumeGroupDetailView.as_view(), name='group-detail'),
-    
-    # 简历组操作
-    path('groups/add-resume/', AddResumeToGroupView.as_view(), name='group-add-resume'),
-    path('groups/remove-resume/', RemoveResumeFromGroupView.as_view(), name='group-remove-resume'),
-    path('groups/set-status/', SetGroupStatusView.as_view(), name='group-set-status'),
     
     # 视频关联
     path('videos/link/', LinkResumeVideoView.as_view(), name='video-link'),

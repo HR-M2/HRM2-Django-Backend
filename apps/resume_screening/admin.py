@@ -2,7 +2,7 @@
 Admin configuration for resume screening module.
 """
 from django.contrib import admin
-from .models import ResumeScreeningTask, ScreeningReport, ResumeGroup, ResumeData
+from .models import ResumeScreeningTask, ScreeningReport, ResumeData
 
 
 @admin.register(ResumeScreeningTask)
@@ -19,14 +19,6 @@ class ScreeningReportAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     search_fields = ['original_filename']
     readonly_fields = ['id', 'created_at']
-
-
-@admin.register(ResumeGroup)
-class ResumeGroupAdmin(admin.ModelAdmin):
-    list_display = ['id', 'group_name', 'position_title', 'resume_count', 'status', 'created_at']
-    list_filter = ['status', 'created_at']
-    search_fields = ['group_name', 'position_title']
-    readonly_fields = ['id', 'created_at', 'position_hash']
 
 
 @admin.register(ResumeData)

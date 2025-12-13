@@ -2,7 +2,7 @@
 简历筛选模块序列化器。
 """
 from rest_framework import serializers
-from .models import ResumeScreeningTask, ScreeningReport, ResumeGroup, ResumeData
+from .models import ResumeScreeningTask, ScreeningReport, ResumeData
 
 
 class ResumeScreeningTaskSerializer(serializers.ModelSerializer):
@@ -28,19 +28,6 @@ class ScreeningReportSerializer(serializers.ModelSerializer):
             'original_filename', 'resume_content', 'json_report_content'
         ]
         read_only_fields = ['id', 'created_at']
-
-
-class ResumeGroupSerializer(serializers.ModelSerializer):
-    """ResumeGroup模型序列化器。"""
-    
-    class Meta:
-        model = ResumeGroup
-        fields = [
-            'id', 'created_at', 'position_title',
-            'position_details', 'position_hash', 'group_name',
-            'description', 'resume_count', 'status'
-        ]
-        read_only_fields = ['id', 'created_at', 'position_hash', 'resume_count']
 
 
 class ResumeDataSerializer(serializers.ModelSerializer):
@@ -91,13 +78,3 @@ class ResumeScreeningInputSerializer(serializers.Serializer):
         return value
 
 
-class CreateResumeGroupSerializer(serializers.Serializer):
-    """创建简历组序列化器。"""
-    
-    group_name = serializers.CharField(required=True, max_length=255)
-    description = serializers.CharField(required=False, allow_blank=True)
-    resume_data_ids = serializers.ListField(
-        child=serializers.UUIDField(),
-        required=True,
-        min_length=1
-    )
