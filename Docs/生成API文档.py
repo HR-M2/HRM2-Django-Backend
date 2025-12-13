@@ -90,12 +90,24 @@ def format_schema_type(schema):
         ref = schema['$ref']
         return ref.split('/')[-1]
     
+    # 处理 allOf（drf-spectacular 用于可空嵌套类型）
+    if 'allOf' in schema:
+        all_of = schema['allOf']
+        if all_of and len(all_of) > 0:
+            # 通常第一个元素是 $ref
+            return format_schema_type(all_of[0])
+        return 'any'
+    
     if schema_type == 'array':
         items = schema.get('items', {})
         item_type = format_schema_type(items)
         return f'{item_type}[]'
     
     if schema_type == 'object':
+        # 检查是否有 additionalProperties（用于 DictField）
+        if 'additionalProperties' in schema:
+            value_type = format_schema_type(schema['additionalProperties'])
+            return f'Record<string, {value_type}>'
         return 'object'
     
     if 'anyOf' in schema:

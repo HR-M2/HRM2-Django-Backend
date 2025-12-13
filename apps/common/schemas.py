@@ -116,6 +116,154 @@ class IdResponseSerializer(serializers.Serializer):
     id = serializers.CharField(help_text="记录ID")
 
 
+# =============================================================================
+# 嵌套结构 Schema（替换 JSONField）
+# =============================================================================
+
+class ScreeningScoreSerializer(serializers.Serializer):
+    """筛选得分结构"""
+    hr_score = serializers.FloatField(required=False, allow_null=True, help_text="HR评分")
+    technical_score = serializers.FloatField(required=False, allow_null=True, help_text="技术评分")
+    manager_score = serializers.FloatField(required=False, allow_null=True, help_text="经理评分")
+    comprehensive_score = serializers.FloatField(help_text="综合评分")
+
+
+class ProjectRequirementsSerializer(serializers.Serializer):
+    """项目要求结构"""
+    min_projects = serializers.IntegerField(required=False, default=0, help_text="最少项目数")
+    team_lead_experience = serializers.BooleanField(required=False, default=False, help_text="是否需要团队领导经验")
+
+
+class VideoAnalysisResultSerializer(serializers.Serializer):
+    """视频分析结果结构"""
+    fraud_score = serializers.FloatField(required=False, allow_null=True, help_text="欺诈评分")
+    neuroticism_score = serializers.FloatField(required=False, allow_null=True, help_text="神经质评分")
+    extraversion_score = serializers.FloatField(required=False, allow_null=True, help_text="外向性评分")
+    openness_score = serializers.FloatField(required=False, allow_null=True, help_text="开放性评分")
+    agreeableness_score = serializers.FloatField(required=False, allow_null=True, help_text="宜人性评分")
+    conscientiousness_score = serializers.FloatField(required=False, allow_null=True, help_text="尽责性评分")
+
+
+class DimensionScoreDetailSerializer(serializers.Serializer):
+    """维度评分详情"""
+    dimension_score = serializers.FloatField(help_text="维度得分")
+    dimension_name = serializers.CharField(help_text="维度名称")
+    weight = serializers.FloatField(help_text="权重")
+    strengths = serializers.ListField(child=serializers.CharField(), help_text="优势")
+    weaknesses = serializers.ListField(child=serializers.CharField(), help_text="劣势")
+    analysis = serializers.CharField(help_text="分析")
+    sub_scores = serializers.DictField(child=serializers.FloatField(), help_text="子评分")
+
+
+class QARecordSerializer(serializers.Serializer):
+    """问答记录"""
+    question = serializers.CharField(help_text="问题")
+    answer = serializers.CharField(help_text="回答")
+
+
+class OverallAssessmentSerializer(serializers.Serializer):
+    """整体评估"""
+    recommendation_score = serializers.FloatField(help_text="推荐分数")
+    recommendation = serializers.CharField(help_text="推荐结论")
+    summary = serializers.CharField(help_text="总结")
+
+
+class FinalReportSerializer(serializers.Serializer):
+    """最终报告结构"""
+    overall_assessment = OverallAssessmentSerializer(required=False, help_text="整体评估")
+    highlights = serializers.ListField(child=serializers.CharField(), required=False, help_text="亮点")
+    red_flags = serializers.ListField(child=serializers.CharField(), required=False, help_text="风险点")
+
+
+class ResumeSummarySerializer(serializers.Serializer):
+    """简历摘要"""
+    candidate_name = serializers.CharField(help_text="候选人姓名")
+    position_title = serializers.CharField(help_text="应聘岗位")
+    screening_score = serializers.FloatField(required=False, allow_null=True, help_text="筛选分数")
+    screening_summary = serializers.CharField(required=False, allow_null=True, help_text="筛选摘要")
+
+
+class InterviewQuestionSerializer(serializers.Serializer):
+    """面试问题"""
+    question = serializers.CharField(help_text="问题内容")
+    category = serializers.CharField(help_text="问题类别")
+    difficulty = serializers.IntegerField(help_text="难度等级")
+    expected_skills = serializers.ListField(child=serializers.CharField(), help_text="期望技能")
+    source = serializers.ChoiceField(
+        choices=['resume_based', 'skill_based', 'hr_custom'],
+        help_text="问题来源"
+    )
+    related_point = serializers.CharField(required=False, help_text="相关点")
+
+
+class DimensionScoreItemSerializer(serializers.Serializer):
+    """评估维度评分项"""
+    score = serializers.FloatField(help_text="分数")
+    comment = serializers.CharField(help_text="评语")
+
+
+class SkillAssessmentSerializer(serializers.Serializer):
+    """技能评估"""
+    skill = serializers.CharField(help_text="技能名称")
+    level = serializers.CharField(help_text="技能水平")
+    evidence = serializers.CharField(help_text="证据")
+
+
+class AnswerEvaluationSerializer(serializers.Serializer):
+    """回答评估结果"""
+    normalized_score = serializers.FloatField(help_text="标准化分数")
+    dimension_scores = serializers.DictField(
+        child=serializers.FloatField(),
+        help_text="维度评分（technical_depth, practical_experience, answer_specificity, logical_clarity, honesty, communication）"
+    )
+    confidence_level = serializers.ChoiceField(
+        choices=['genuine', 'uncertain', 'overconfident'],
+        help_text="置信度等级"
+    )
+    should_followup = serializers.BooleanField(help_text="是否需要追问")
+    followup_reason = serializers.CharField(required=False, help_text="追问原因")
+    feedback = serializers.CharField(help_text="反馈")
+
+
+class InterviewReportSerializer(serializers.Serializer):
+    """面试报告结构"""
+    overall_assessment = OverallAssessmentSerializer(help_text="整体评估")
+    dimension_analysis = serializers.DictField(
+        child=DimensionScoreItemSerializer(),
+        help_text="维度分析"
+    )
+    skill_assessment = SkillAssessmentSerializer(many=True, help_text="技能评估")
+    highlights = serializers.ListField(child=serializers.CharField(), help_text="亮点")
+    red_flags = serializers.ListField(child=serializers.CharField(), help_text="风险点")
+    overconfidence_detected = serializers.BooleanField(help_text="是否检测到过度自信")
+    suggested_next_steps = serializers.ListField(child=serializers.CharField(), help_text="建议后续步骤")
+
+
+class DocumentItemSerializer(serializers.Serializer):
+    """参考文档项"""
+    name = serializers.CharField(help_text="文档名称")
+    content = serializers.CharField(help_text="文档内容")
+
+
+class QuestionInputSerializer(serializers.Serializer):
+    """问题输入"""
+    content = serializers.CharField(help_text="问题内容")
+    expected_skills = serializers.ListField(
+        child=serializers.CharField(), required=False, help_text="期望技能"
+    )
+    difficulty = serializers.IntegerField(required=False, help_text="难度等级")
+
+
+class AnswerInputSerializer(serializers.Serializer):
+    """回答输入"""
+    content = serializers.CharField(help_text="回答内容")
+
+
+# =============================================================================
+# 以下是原有的通用字段 Schema
+# =============================================================================
+
+
 class CountResponseSerializer(serializers.Serializer):
     """计数响应"""
     count = serializers.IntegerField(help_text="数量")
@@ -148,7 +296,7 @@ class VideoAnalysisItemSerializer(serializers.Serializer):
     )
     confidence_score = serializers.FloatField(allow_null=True, help_text="置信度分数")
     created_at = serializers.DateTimeField(help_text="创建时间")
-    analysis_result = serializers.JSONField(required=False, help_text="分析结果")
+    analysis_result = VideoAnalysisResultSerializer(required=False, help_text="分析结果")
 
 
 class VideoAnalysisDetailSerializer(VideoAnalysisItemSerializer):
@@ -173,7 +321,7 @@ class VideoUpdateResponseSerializer(serializers.Serializer):
     """视频更新响应"""
     id = serializers.CharField(help_text="视频分析ID")
     status = serializers.CharField(help_text="状态")
-    analysis_result = serializers.JSONField(help_text="分析结果")
+    analysis_result = VideoAnalysisResultSerializer(help_text="分析结果")
     resume_data_id = serializers.CharField(required=False, help_text="关联简历ID")
 
 
@@ -201,8 +349,11 @@ class ComprehensiveAnalysisSerializer(serializers.Serializer):
     candidate_name = serializers.CharField(help_text="候选人姓名")
     final_score = serializers.FloatField(help_text="最终得分")
     recommendation = RecommendationSerializer(help_text="推荐结果")
-    dimension_scores = serializers.JSONField(help_text="维度评分")
-    comprehensive_report = serializers.JSONField(help_text="综合报告")
+    dimension_scores = serializers.DictField(
+        child=DimensionScoreDetailSerializer(),
+        help_text="维度评分（按维度名称索引）"
+    )
+    comprehensive_report = serializers.CharField(help_text="综合报告")
     created_at = serializers.DateTimeField(help_text="创建时间")
 
 
@@ -284,7 +435,7 @@ class PositionItemSerializer(serializers.Serializer):
     education = serializers.ListField(child=serializers.CharField(), help_text="学历要求")
     certifications = serializers.ListField(child=serializers.CharField(), help_text="证书要求")
     salary_range = serializers.ListField(child=serializers.IntegerField(), help_text="薪资范围")
-    project_requirements = serializers.JSONField(help_text="项目要求")
+    project_requirements = ProjectRequirementsSerializer(required=False, allow_null=True, help_text="项目要求")
     resume_count = serializers.IntegerField(help_text="简历数量")
     created_at = serializers.DateTimeField(help_text="创建时间")
 
@@ -295,7 +446,7 @@ class PositionResumeSerializer(serializers.Serializer):
     candidate_name = serializers.CharField(help_text="候选人姓名")
     position_title = serializers.CharField(help_text="应聘岗位")
     resume_content = serializers.CharField(help_text="简历内容")
-    screening_score = serializers.JSONField(allow_null=True, help_text="筛选得分")
+    screening_score = ScreeningScoreSerializer(allow_null=True, required=False, help_text="筛选得分")
     screening_summary = serializers.CharField(allow_null=True, help_text="筛选摘要")
     report_md_url = serializers.CharField(allow_null=True, help_text="MD报告URL")
     report_json_url = serializers.CharField(allow_null=True, help_text="JSON报告URL")
@@ -336,9 +487,9 @@ class SessionItemSerializer(serializers.Serializer):
     """会话列表项"""
     id = serializers.CharField(help_text="会话ID")
     resume_data_id = serializers.CharField(help_text="简历数据ID")
-    qa_records = serializers.ListField(child=serializers.JSONField(), help_text="问答记录")
+    qa_records = QARecordSerializer(many=True, help_text="问答记录")
     created_at = serializers.DateTimeField(help_text="创建时间")
-    final_report = serializers.JSONField(required=False, help_text="最终报告")
+    final_report = FinalReportSerializer(required=False, allow_null=True, help_text="最终报告")
 
 
 class SessionCreateResponseSerializer(serializers.Serializer):
@@ -347,7 +498,7 @@ class SessionCreateResponseSerializer(serializers.Serializer):
     candidate_name = serializers.CharField(help_text="候选人姓名")
     position_title = serializers.CharField(help_text="应聘岗位")
     created_at = serializers.DateTimeField(help_text="创建时间")
-    resume_summary = serializers.JSONField(help_text="简历摘要")
+    resume_summary = ResumeSummarySerializer(help_text="简历摘要")
 
 
 class SessionDetailSerializer(serializers.Serializer):
@@ -373,7 +524,7 @@ class InterestPointSerializer(serializers.Serializer):
 class GenerateQuestionsResponseSerializer(serializers.Serializer):
     """生成问题响应"""
     session_id = serializers.CharField(help_text="会话ID")
-    question_pool = serializers.ListField(child=serializers.JSONField(), help_text="问题池")
+    question_pool = InterviewQuestionSerializer(many=True, help_text="问题池")
     resume_highlights = serializers.ListField(child=serializers.CharField(), help_text="简历亮点")
     interest_points = InterestPointSerializer(many=True, help_text="兴趣点")
 
@@ -388,14 +539,14 @@ class CandidateQuestionSerializer(serializers.Serializer):
 class RecordQAResponseSerializer(serializers.Serializer):
     """记录问答响应"""
     round_number = serializers.IntegerField(help_text="轮次")
-    evaluation = serializers.JSONField(allow_null=True, help_text="评估结果")
+    evaluation = AnswerEvaluationSerializer(allow_null=True, required=False, help_text="评估结果")
     candidate_questions = CandidateQuestionSerializer(many=True, help_text="候选问题")
     hr_action_hints = serializers.ListField(child=serializers.CharField(), help_text="HR行动提示")
 
 
 class InterviewReportResponseSerializer(serializers.Serializer):
     """生成面试报告响应"""
-    report = serializers.JSONField(help_text="报告内容")
+    report = InterviewReportSerializer(help_text="报告内容")
     report_file_url = serializers.CharField(allow_null=True, help_text="报告文件URL")
 
 
@@ -416,9 +567,9 @@ class ResumeDataItemSerializer(serializers.Serializer):
     id = serializers.CharField(help_text="简历数据ID")
     candidate_name = serializers.CharField(help_text="候选人姓名")
     position_title = serializers.CharField(help_text="应聘岗位")
-    screening_score = serializers.JSONField(allow_null=True, help_text="筛选得分")
+    screening_score = ScreeningScoreSerializer(allow_null=True, required=False, help_text="筛选得分")
     screening_summary = serializers.CharField(allow_null=True, help_text="筛选摘要")
-    json_content = serializers.JSONField(allow_null=True, help_text="JSON内容")
+    json_content = serializers.JSONField(allow_null=True, help_text="JSON内容（原始报告数据）")
     resume_content = serializers.CharField(help_text="简历内容")
     report_md_url = serializers.CharField(allow_null=True, help_text="MD报告URL")
     report_json_url = serializers.CharField(allow_null=True, help_text="JSON报告URL")
@@ -431,10 +582,10 @@ class ResumeDataDetailSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(help_text="创建时间")
     candidate_name = serializers.CharField(help_text="候选人姓名")
     position_title = serializers.CharField(help_text="应聘岗位")
-    screening_score = serializers.JSONField(help_text="筛选得分")
+    screening_score = ScreeningScoreSerializer(allow_null=True, required=False, help_text="筛选得分")
     screening_summary = serializers.CharField(allow_null=True, help_text="筛选摘要")
     resume_content = serializers.CharField(help_text="简历内容")
-    json_report_content = serializers.JSONField(allow_null=True, help_text="JSON报告内容")
+    json_report_content = serializers.JSONField(allow_null=True, help_text="JSON报告内容（原始报告数据）")
     report_json_url = serializers.CharField(allow_null=True, help_text="JSON报告URL")
     video_analysis_id = serializers.CharField(allow_null=True, help_text="视频分析ID")
 
@@ -445,11 +596,11 @@ class ResumeDataListSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(help_text="创建时间")
     position_title = serializers.CharField(help_text="应聘岗位")
     candidate_name = serializers.CharField(help_text="候选人姓名")
-    screening_score = serializers.JSONField(allow_null=True, help_text="筛选得分")
+    screening_score = ScreeningScoreSerializer(allow_null=True, required=False, help_text="筛选得分")
     resume_file_hash = serializers.CharField(help_text="文件哈希")
     report_md_url = serializers.CharField(allow_null=True, help_text="MD报告URL")
     report_json_url = serializers.CharField(allow_null=True, help_text="JSON报告URL")
-    video_analysis = serializers.JSONField(required=False, help_text="视频分析信息")
+    video_analysis = VideoAnalysisBriefSerializer(required=False, help_text="视频分析信息")
 
 
 class ReportItemSerializer(serializers.Serializer):
@@ -539,7 +690,7 @@ class PositionCreateRequestSerializer(serializers.Serializer):
     education = serializers.ListField(child=serializers.CharField(), required=False, help_text="学历要求")
     certifications = serializers.ListField(child=serializers.CharField(), required=False, help_text="证书要求")
     salary_range = serializers.ListField(child=serializers.IntegerField(), required=False, help_text="薪资范围")
-    project_requirements = serializers.JSONField(required=False, help_text="项目要求")
+    project_requirements = ProjectRequirementsSerializer(required=False, allow_null=True, help_text="项目要求")
 
 
 class AssignResumesRequestSerializer(serializers.Serializer):
@@ -551,15 +702,19 @@ class AssignResumesRequestSerializer(serializers.Serializer):
 class AIGenerateRequestSerializer(serializers.Serializer):
     """AI生成岗位请求"""
     description = serializers.CharField(help_text="岗位描述")
-    documents = serializers.ListField(child=serializers.JSONField(), required=False, help_text="参考文档")
+    documents = DocumentItemSerializer(many=True, required=False, help_text="参考文档")
+
+
+class ResumeUploadItemSerializer(serializers.Serializer):
+    """简历上传项"""
+    name = serializers.CharField(help_text="文件名")
+    content = serializers.CharField(help_text="简历内容")
+    metadata = serializers.DictField(required=False, help_text="元数据（size, type等）")
 
 
 class LibraryUploadRequestSerializer(serializers.Serializer):
     """简历上传请求"""
-    resumes = serializers.ListField(
-        child=serializers.JSONField(),
-        help_text="简历列表，每项包含 name, content, metadata"
-    )
+    resumes = ResumeUploadItemSerializer(many=True, help_text="简历列表")
 
 
 class BatchDeleteRequestSerializer(serializers.Serializer):
@@ -589,8 +744,8 @@ class GenerateQuestionsRequestSerializer(serializers.Serializer):
 
 class RecordQARequestSerializer(serializers.Serializer):
     """记录问答请求"""
-    question = serializers.JSONField(help_text="问题数据")
-    answer = serializers.JSONField(help_text="回答数据")
+    question = QuestionInputSerializer(help_text="问题数据")
+    answer = AnswerInputSerializer(help_text="回答数据")
     skip_evaluation = serializers.BooleanField(required=False, help_text="跳过评估")
     followup_count = serializers.IntegerField(required=False, help_text="追问数量")
     alternative_count = serializers.IntegerField(required=False, help_text="候选问题数量")
@@ -613,9 +768,19 @@ class UnlinkVideoRequestSerializer(serializers.Serializer):
     resume_data_id = serializers.CharField(help_text="简历数据ID")
 
 
+class GenerateResumesPositionSerializer(serializers.Serializer):
+    """生成简历用岗位信息"""
+    position = serializers.CharField(help_text="岗位名称")
+    description = serializers.CharField(required=False, help_text="岗位描述")
+    required_skills = serializers.ListField(child=serializers.CharField(), required=False, help_text="必需技能")
+    optional_skills = serializers.ListField(child=serializers.CharField(), required=False, help_text="可选技能")
+    min_experience = serializers.IntegerField(required=False, help_text="最低经验年限")
+    education = serializers.ListField(child=serializers.CharField(), required=False, help_text="学历要求")
+
+
 class GenerateResumesRequestSerializer(serializers.Serializer):
     """生成简历请求"""
-    position = serializers.JSONField(help_text="岗位信息")
+    position = GenerateResumesPositionSerializer(help_text="岗位信息")
     count = serializers.IntegerField(required=False, help_text="生成数量")
 
 

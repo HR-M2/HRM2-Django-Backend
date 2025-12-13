@@ -2000,12 +2000,76 @@
           },
           "documents": {
             "type": "array",
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/DocumentItemRequest"
+            },
             "description": "参考文档"
           }
         },
         "required": [
           "description"
+        ]
+      },
+      "AnswerEvaluation": {
+        "type": "object",
+        "description": "回答评估结果",
+        "properties": {
+          "normalized_score": {
+            "type": "number",
+            "format": "double",
+            "description": "标准化分数"
+          },
+          "dimension_scores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "维度评分（technical_depth, practical_experience, answer_specificity, logical_clarity, honesty, communication）"
+          },
+          "confidence_level": {
+            "enum": [
+              "genuine",
+              "uncertain",
+              "overconfident"
+            ],
+            "type": "string",
+            "x-spec-enum-id": "d16e28ad8579744a",
+            "description": "置信度等级\n\n* `genuine` - genuine\n* `uncertain` - uncertain\n* `overconfident` - overconfident"
+          },
+          "should_followup": {
+            "type": "boolean",
+            "description": "是否需要追问"
+          },
+          "followup_reason": {
+            "type": "string",
+            "description": "追问原因"
+          },
+          "feedback": {
+            "type": "string",
+            "description": "反馈"
+          }
+        },
+        "required": [
+          "confidence_level",
+          "dimension_scores",
+          "feedback",
+          "normalized_score",
+          "should_followup"
+        ]
+      },
+      "AnswerInputRequest": {
+        "type": "object",
+        "description": "回答输入",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "回答内容"
+          }
+        },
+        "required": [
+          "content"
         ]
       },
       "ApiAIGenerateResp": {
@@ -2891,9 +2955,14 @@
             "description": "推荐结果"
           },
           "dimension_scores": {
-            "description": "维度评分"
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DimensionScoreDetail"
+            },
+            "description": "维度评分（按维度名称索引）"
           },
           "comprehensive_report": {
+            "type": "string",
             "description": "综合报告"
           },
           "created_at": {
@@ -2925,6 +2994,128 @@
         "required": [
           "deleted_count"
         ]
+      },
+      "DimensionScoreDetail": {
+        "type": "object",
+        "description": "维度评分详情",
+        "properties": {
+          "dimension_score": {
+            "type": "number",
+            "format": "double",
+            "description": "维度得分"
+          },
+          "dimension_name": {
+            "type": "string",
+            "description": "维度名称"
+          },
+          "weight": {
+            "type": "number",
+            "format": "double",
+            "description": "权重"
+          },
+          "strengths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "优势"
+          },
+          "weaknesses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "劣势"
+          },
+          "analysis": {
+            "type": "string",
+            "description": "分析"
+          },
+          "sub_scores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "子评分"
+          }
+        },
+        "required": [
+          "analysis",
+          "dimension_name",
+          "dimension_score",
+          "strengths",
+          "sub_scores",
+          "weaknesses",
+          "weight"
+        ]
+      },
+      "DimensionScoreItem": {
+        "type": "object",
+        "description": "评估维度评分项",
+        "properties": {
+          "score": {
+            "type": "number",
+            "format": "double",
+            "description": "分数"
+          },
+          "comment": {
+            "type": "string",
+            "description": "评语"
+          }
+        },
+        "required": [
+          "comment",
+          "score"
+        ]
+      },
+      "DocumentItemRequest": {
+        "type": "object",
+        "description": "参考文档项",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "文档名称"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "文档内容"
+          }
+        },
+        "required": [
+          "content",
+          "name"
+        ]
+      },
+      "FinalReport": {
+        "type": "object",
+        "description": "最终报告结构",
+        "properties": {
+          "overall_assessment": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OverallAssessment"
+              }
+            ],
+            "description": "整体评估"
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "亮点"
+          },
+          "red_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "风险点"
+          }
+        }
       },
       "GenerateQuestionsRequestRequest": {
         "type": "object",
@@ -2967,7 +3158,9 @@
           },
           "question_pool": {
             "type": "array",
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/InterviewQuestion"
+            },
             "description": "问题池"
           },
           "resume_highlights": {
@@ -3007,11 +3200,63 @@
           }
         }
       },
+      "GenerateResumesPositionRequest": {
+        "type": "object",
+        "description": "生成简历用岗位信息",
+        "properties": {
+          "position": {
+            "type": "string",
+            "minLength": 1,
+            "description": "岗位名称"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "岗位描述"
+          },
+          "required_skills": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "必需技能"
+          },
+          "optional_skills": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "可选技能"
+          },
+          "min_experience": {
+            "type": "integer",
+            "description": "最低经验年限"
+          },
+          "education": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "学历要求"
+          }
+        },
+        "required": [
+          "position"
+        ]
+      },
       "GenerateResumesRequestRequest": {
         "type": "object",
         "description": "生成简历请求",
         "properties": {
           "position": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GenerateResumesPositionRequest"
+              }
+            ],
             "description": "岗位信息"
           },
           "count": {
@@ -3131,11 +3376,124 @@
           "question"
         ]
       },
+      "InterviewQuestion": {
+        "type": "object",
+        "description": "面试问题",
+        "properties": {
+          "question": {
+            "type": "string",
+            "description": "问题内容"
+          },
+          "category": {
+            "type": "string",
+            "description": "问题类别"
+          },
+          "difficulty": {
+            "type": "integer",
+            "description": "难度等级"
+          },
+          "expected_skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "期望技能"
+          },
+          "source": {
+            "enum": [
+              "resume_based",
+              "skill_based",
+              "hr_custom"
+            ],
+            "type": "string",
+            "x-spec-enum-id": "5cb5a78e03b2469f",
+            "description": "问题来源\n\n* `resume_based` - resume_based\n* `skill_based` - skill_based\n* `hr_custom` - hr_custom"
+          },
+          "related_point": {
+            "type": "string",
+            "description": "相关点"
+          }
+        },
+        "required": [
+          "category",
+          "difficulty",
+          "expected_skills",
+          "question",
+          "source"
+        ]
+      },
+      "InterviewReport": {
+        "type": "object",
+        "description": "面试报告结构",
+        "properties": {
+          "overall_assessment": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OverallAssessment"
+              }
+            ],
+            "description": "整体评估"
+          },
+          "dimension_analysis": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DimensionScoreItem"
+            },
+            "description": "维度分析"
+          },
+          "skill_assessment": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillAssessment"
+            },
+            "description": "技能评估"
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "亮点"
+          },
+          "red_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "风险点"
+          },
+          "overconfidence_detected": {
+            "type": "boolean",
+            "description": "是否检测到过度自信"
+          },
+          "suggested_next_steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "建议后续步骤"
+          }
+        },
+        "required": [
+          "dimension_analysis",
+          "highlights",
+          "overall_assessment",
+          "overconfidence_detected",
+          "red_flags",
+          "skill_assessment",
+          "suggested_next_steps"
+        ]
+      },
       "InterviewReportResponse": {
         "type": "object",
         "description": "生成面试报告响应",
         "properties": {
           "report": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InterviewReport"
+              }
+            ],
             "description": "报告内容"
           },
           "report_file_url": {
@@ -3390,8 +3748,10 @@
         "properties": {
           "resumes": {
             "type": "array",
-            "items": {},
-            "description": "简历列表，每项包含 name, content, metadata"
+            "items": {
+              "$ref": "#/components/schemas/ResumeUploadItemRequest"
+            },
+            "description": "简历列表"
           }
         },
         "required": [
@@ -3480,6 +3840,30 @@
           "video_name"
         ]
       },
+      "OverallAssessment": {
+        "type": "object",
+        "description": "整体评估",
+        "properties": {
+          "recommendation_score": {
+            "type": "number",
+            "format": "double",
+            "description": "推荐分数"
+          },
+          "recommendation": {
+            "type": "string",
+            "description": "推荐结论"
+          },
+          "summary": {
+            "type": "string",
+            "description": "总结"
+          }
+        },
+        "required": [
+          "recommendation",
+          "recommendation_score",
+          "summary"
+        ]
+      },
       "PositionCreateRequestRequest": {
         "type": "object",
         "description": "创建岗位请求",
@@ -3543,6 +3927,12 @@
             "description": "薪资范围"
           },
           "project_requirements": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProjectRequirementsRequest"
+              }
+            ],
+            "nullable": true,
             "description": "项目要求"
           }
         },
@@ -3626,6 +4016,12 @@
             "description": "薪资范围"
           },
           "project_requirements": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProjectRequirements"
+              }
+            ],
+            "nullable": true,
             "description": "项目要求"
           },
           "resume_count": {
@@ -3655,7 +4051,6 @@
           "min_experience",
           "optional_skills",
           "position",
-          "project_requirements",
           "required_skills",
           "resume_count",
           "salary_range"
@@ -3721,6 +4116,12 @@
             "description": "薪资范围"
           },
           "project_requirements": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProjectRequirements"
+              }
+            ],
+            "nullable": true,
             "description": "项目要求"
           },
           "resume_count": {
@@ -3743,7 +4144,6 @@
           "min_experience",
           "optional_skills",
           "position",
-          "project_requirements",
           "required_skills",
           "resume_count",
           "salary_range"
@@ -3791,6 +4191,11 @@
             "description": "简历内容"
           },
           "screening_score": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScreeningScore"
+              }
+            ],
             "nullable": true,
             "description": "筛选得分"
           },
@@ -3823,8 +4228,83 @@
           "report_json_url",
           "report_md_url",
           "resume_content",
-          "screening_score",
           "screening_summary"
+        ]
+      },
+      "ProjectRequirements": {
+        "type": "object",
+        "description": "项目要求结构",
+        "properties": {
+          "min_projects": {
+            "type": "integer",
+            "default": 0,
+            "description": "最少项目数"
+          },
+          "team_lead_experience": {
+            "type": "boolean",
+            "default": false,
+            "description": "是否需要团队领导经验"
+          }
+        }
+      },
+      "ProjectRequirementsRequest": {
+        "type": "object",
+        "description": "项目要求结构",
+        "properties": {
+          "min_projects": {
+            "type": "integer",
+            "default": 0,
+            "description": "最少项目数"
+          },
+          "team_lead_experience": {
+            "type": "boolean",
+            "default": false,
+            "description": "是否需要团队领导经验"
+          }
+        }
+      },
+      "QARecord": {
+        "type": "object",
+        "description": "问答记录",
+        "properties": {
+          "question": {
+            "type": "string",
+            "description": "问题"
+          },
+          "answer": {
+            "type": "string",
+            "description": "回答"
+          }
+        },
+        "required": [
+          "answer",
+          "question"
+        ]
+      },
+      "QuestionInputRequest": {
+        "type": "object",
+        "description": "问题输入",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "问题内容"
+          },
+          "expected_skills": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "期望技能"
+          },
+          "difficulty": {
+            "type": "integer",
+            "description": "难度等级"
+          }
+        },
+        "required": [
+          "content"
         ]
       },
       "RecommendStats": {
@@ -3874,9 +4354,19 @@
         "description": "记录问答请求",
         "properties": {
           "question": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuestionInputRequest"
+              }
+            ],
             "description": "问题数据"
           },
           "answer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnswerInputRequest"
+              }
+            ],
             "description": "回答数据"
           },
           "skip_evaluation": {
@@ -3906,6 +4396,11 @@
             "description": "轮次"
           },
           "evaluation": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnswerEvaluation"
+              }
+            ],
             "nullable": true,
             "description": "评估结果"
           },
@@ -3926,7 +4421,6 @@
         },
         "required": [
           "candidate_questions",
-          "evaluation",
           "hr_action_hints",
           "round_number"
         ]
@@ -4033,6 +4527,12 @@
             "description": "应聘岗位"
           },
           "screening_score": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScreeningScore"
+              }
+            ],
+            "nullable": true,
             "description": "筛选得分"
           },
           "screening_summary": {
@@ -4046,7 +4546,7 @@
           },
           "json_report_content": {
             "nullable": true,
-            "description": "JSON报告内容"
+            "description": "JSON报告内容（原始报告数据）"
           },
           "report_json_url": {
             "type": "string",
@@ -4067,7 +4567,6 @@
           "position_title",
           "report_json_url",
           "resume_content",
-          "screening_score",
           "screening_summary",
           "video_analysis_id"
         ]
@@ -4089,6 +4588,11 @@
             "description": "应聘岗位"
           },
           "screening_score": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScreeningScore"
+              }
+            ],
             "nullable": true,
             "description": "筛选得分"
           },
@@ -4099,7 +4603,7 @@
           },
           "json_content": {
             "nullable": true,
-            "description": "JSON内容"
+            "description": "JSON内容（原始报告数据）"
           },
           "resume_content": {
             "type": "string",
@@ -4132,7 +4636,6 @@
           "report_json_url",
           "report_md_url",
           "resume_content",
-          "screening_score",
           "screening_summary"
         ]
       },
@@ -4158,6 +4661,11 @@
             "description": "候选人姓名"
           },
           "screening_score": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScreeningScore"
+              }
+            ],
             "nullable": true,
             "description": "筛选得分"
           },
@@ -4176,6 +4684,11 @@
             "description": "JSON报告URL"
           },
           "video_analysis": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VideoAnalysisBrief"
+              }
+            ],
             "description": "视频分析信息"
           }
         },
@@ -4186,8 +4699,7 @@
           "position_title",
           "report_json_url",
           "report_md_url",
-          "resume_file_hash",
-          "screening_score"
+          "resume_file_hash"
         ]
       },
       "ResumeDataListData": {
@@ -4225,6 +4737,92 @@
         },
         "required": [
           "report"
+        ]
+      },
+      "ResumeSummary": {
+        "type": "object",
+        "description": "简历摘要",
+        "properties": {
+          "candidate_name": {
+            "type": "string",
+            "description": "候选人姓名"
+          },
+          "position_title": {
+            "type": "string",
+            "description": "应聘岗位"
+          },
+          "screening_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "筛选分数"
+          },
+          "screening_summary": {
+            "type": "string",
+            "nullable": true,
+            "description": "筛选摘要"
+          }
+        },
+        "required": [
+          "candidate_name",
+          "position_title"
+        ]
+      },
+      "ResumeUploadItemRequest": {
+        "type": "object",
+        "description": "简历上传项",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "文件名"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "简历内容"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "元数据（size, type等）"
+          }
+        },
+        "required": [
+          "content",
+          "name"
+        ]
+      },
+      "ScreeningScore": {
+        "type": "object",
+        "description": "筛选得分结构",
+        "properties": {
+          "hr_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "HR评分"
+          },
+          "technical_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "技术评分"
+          },
+          "manager_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "经理评分"
+          },
+          "comprehensive_score": {
+            "type": "number",
+            "format": "double",
+            "description": "综合评分"
+          }
+        },
+        "required": [
+          "comprehensive_score"
         ]
       },
       "SessionCreateRequestRequest": {
@@ -4266,6 +4864,11 @@
             "description": "创建时间"
           },
           "resume_summary": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResumeSummary"
+              }
+            ],
             "description": "简历摘要"
           }
         },
@@ -4365,7 +4968,9 @@
           },
           "qa_records": {
             "type": "array",
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/QARecord"
+            },
             "description": "问答记录"
           },
           "created_at": {
@@ -4374,6 +4979,12 @@
             "description": "创建时间"
           },
           "final_report": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FinalReport"
+              }
+            ],
+            "nullable": true,
             "description": "最终报告"
           }
         },
@@ -4382,6 +4993,29 @@
           "id",
           "qa_records",
           "resume_data_id"
+        ]
+      },
+      "SkillAssessment": {
+        "type": "object",
+        "description": "技能评估",
+        "properties": {
+          "skill": {
+            "type": "string",
+            "description": "技能名称"
+          },
+          "level": {
+            "type": "string",
+            "description": "技能水平"
+          },
+          "evidence": {
+            "type": "string",
+            "description": "证据"
+          }
+        },
+        "required": [
+          "evidence",
+          "level",
+          "skill"
         ]
       },
       "TaskItem": {
@@ -4677,6 +5311,11 @@
             "description": "创建时间"
           },
           "analysis_result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VideoAnalysisResult"
+              }
+            ],
             "description": "分析结果"
           },
           "summary": {
@@ -4745,6 +5384,11 @@
             "description": "创建时间"
           },
           "analysis_result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VideoAnalysisResult"
+              }
+            ],
             "description": "分析结果"
           }
         },
@@ -4757,6 +5401,48 @@
           "status",
           "video_name"
         ]
+      },
+      "VideoAnalysisResult": {
+        "type": "object",
+        "description": "视频分析结果结构",
+        "properties": {
+          "fraud_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "欺诈评分"
+          },
+          "neuroticism_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "神经质评分"
+          },
+          "extraversion_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "外向性评分"
+          },
+          "openness_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "开放性评分"
+          },
+          "agreeableness_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "宜人性评分"
+          },
+          "conscientiousness_score": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "尽责性评分"
+          }
+        }
       },
       "VideoListData": {
         "type": "object",
@@ -4847,6 +5533,11 @@
             "description": "状态"
           },
           "analysis_result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VideoAnalysisResult"
+              }
+            ],
             "description": "分析结果"
           },
           "resume_data_id": {

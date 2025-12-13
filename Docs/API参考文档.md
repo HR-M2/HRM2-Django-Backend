@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-13 16:43:15
+> **生成时间**: 2025-12-13 20:29:50
 
 智能招聘管理系统后端API文档
 
@@ -765,7 +765,32 @@ AI生成岗位请求
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
 | `description` | string | 是 | 岗位描述 |
-| `documents` | any[] | 否 | 参考文档 |
+| `documents` | DocumentItemRequest[] | 否 | 参考文档 |
+
+### AnswerEvaluation
+
+回答评估结果
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `normalized_score` | number | 是 | 标准化分数 |
+| `dimension_scores` | Record<string, number> | 是 | 维度评分（technical_depth, practical_experience, answer_specificity, logical_clarity, honesty, communication） |
+| `confidence_level` | string | 是 | 置信度等级
+
+* `genuine` - genuine
+* `uncertain` - uncertain
+* `overconfident` - overconfident |
+| `should_followup` | boolean | 是 | 是否需要追问 |
+| `followup_reason` | string | 否 | 追问原因 |
+| `feedback` | string | 是 | 反馈 |
+
+### AnswerInputRequest
+
+回答输入
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `content` | string | 是 | 回答内容 |
 
 ### ApiAIGenerateResp
 
@@ -787,7 +812,7 @@ AI生成岗位请求
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `data` | any | 是 | - |
+| `data` | ComprehensiveAnalysis | 是 | - |
 | `code` | integer | 否 | 状态码 |
 | `message` | string | 否 | 消息 |
 
@@ -1103,9 +1128,9 @@ AI生成岗位请求
 | `resume_id` | string | 是 | 简历ID |
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `final_score` | number | 是 | 最终得分 |
-| `recommendation` | any | 是 | 推荐结果 |
-| `dimension_scores` | any | 是 | 维度评分 |
-| `comprehensive_report` | any | 是 | 综合报告 |
+| `recommendation` | Recommendation | 是 | 推荐结果 |
+| `dimension_scores` | Record<string, DimensionScoreDetail> | 是 | 维度评分（按维度名称索引） |
+| `comprehensive_report` | string | 是 | 综合报告 |
 | `created_at` | string | 是 | 创建时间 |
 
 ### DeletedCount
@@ -1115,6 +1140,48 @@ AI生成岗位请求
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
 | `deleted_count` | integer | 是 | 删除数量 |
+
+### DimensionScoreDetail
+
+维度评分详情
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `dimension_score` | number | 是 | 维度得分 |
+| `dimension_name` | string | 是 | 维度名称 |
+| `weight` | number | 是 | 权重 |
+| `strengths` | string[] | 是 | 优势 |
+| `weaknesses` | string[] | 是 | 劣势 |
+| `analysis` | string | 是 | 分析 |
+| `sub_scores` | Record<string, number> | 是 | 子评分 |
+
+### DimensionScoreItem
+
+评估维度评分项
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `score` | number | 是 | 分数 |
+| `comment` | string | 是 | 评语 |
+
+### DocumentItemRequest
+
+参考文档项
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `name` | string | 是 | 文档名称 |
+| `content` | string | 是 | 文档内容 |
+
+### FinalReport
+
+最终报告结构
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `overall_assessment` | OverallAssessment | 否 | 整体评估 |
+| `highlights` | string[] | 否 | 亮点 |
+| `red_flags` | string[] | 否 | 风险点 |
 
 ### GenerateQuestionsRequestRequest
 
@@ -1135,7 +1202,7 @@ AI生成岗位请求
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
 | `session_id` | string | 是 | 会话ID |
-| `question_pool` | any[] | 是 | 问题池 |
+| `question_pool` | InterviewQuestion[] | 是 | 问题池 |
 | `resume_highlights` | string[] | 是 | 简历亮点 |
 | `interest_points` | InterestPoint[] | 是 | 兴趣点 |
 
@@ -1148,13 +1215,26 @@ AI生成岗位请求
 | `include_conversation_log` | boolean | 否 | 包含对话记录 |
 | `hr_notes` | string | 否 | HR备注 |
 
+### GenerateResumesPositionRequest
+
+生成简历用岗位信息
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `position` | string | 是 | 岗位名称 |
+| `description` | string | 否 | 岗位描述 |
+| `required_skills` | string[] | 否 | 必需技能 |
+| `optional_skills` | string[] | 否 | 可选技能 |
+| `min_experience` | integer | 否 | 最低经验年限 |
+| `education` | string[] | 否 | 学历要求 |
+
 ### GenerateResumesRequestRequest
 
 生成简历请求
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `position` | any | 是 | 岗位信息 |
+| `position` | GenerateResumesPositionRequest | 是 | 岗位信息 |
 | `count` | integer | 否 | 生成数量 |
 
 ### GenerateResumesResponse
@@ -1183,7 +1263,7 @@ AI生成岗位请求
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `exists` | object | 是 | 哈希存在映射 |
+| `exists` | Record<string, boolean> | 是 | 哈希存在映射 |
 | `existing_count` | integer | 是 | 已存在数量 |
 
 ### IdResponse
@@ -1203,13 +1283,44 @@ ID 响应
 | `content` | string | 是 | 内容 |
 | `question` | string | 是 | 相关问题 |
 
+### InterviewQuestion
+
+面试问题
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `question` | string | 是 | 问题内容 |
+| `category` | string | 是 | 问题类别 |
+| `difficulty` | integer | 是 | 难度等级 |
+| `expected_skills` | string[] | 是 | 期望技能 |
+| `source` | string | 是 | 问题来源
+
+* `resume_based` - resume_based
+* `skill_based` - skill_based
+* `hr_custom` - hr_custom |
+| `related_point` | string | 否 | 相关点 |
+
+### InterviewReport
+
+面试报告结构
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `overall_assessment` | OverallAssessment | 是 | 整体评估 |
+| `dimension_analysis` | Record<string, DimensionScoreItem> | 是 | 维度分析 |
+| `skill_assessment` | SkillAssessment[] | 是 | 技能评估 |
+| `highlights` | string[] | 是 | 亮点 |
+| `red_flags` | string[] | 是 | 风险点 |
+| `overconfidence_detected` | boolean | 是 | 是否检测到过度自信 |
+| `suggested_next_steps` | string[] | 是 | 建议后续步骤 |
+
 ### InterviewReportResponse
 
 生成面试报告响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `report` | any | 是 | 报告内容 |
+| `report` | InterviewReport | 是 | 报告内容 |
 | `report_file_url` | string | 是 | 报告文件URL |
 
 ### LibraryDeleteResponse
@@ -1298,7 +1409,7 @@ ID 响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resumes` | any[] | 是 | 简历列表，每项包含 name, content, metadata |
+| `resumes` | ResumeUploadItemRequest[] | 是 | 简历列表 |
 
 ### LibraryUploadResponse
 
@@ -1331,6 +1442,16 @@ ID 响应
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `video_name` | string | 是 | 视频名称 |
 
+### OverallAssessment
+
+整体评估
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `recommendation_score` | number | 是 | 推荐分数 |
+| `recommendation` | string | 是 | 推荐结论 |
+| `summary` | string | 是 | 总结 |
+
 ### PositionCreateRequestRequest
 
 创建岗位请求
@@ -1346,7 +1467,7 @@ ID 响应
 | `education` | string[] | 否 | 学历要求 |
 | `certifications` | string[] | 否 | 证书要求 |
 | `salary_range` | integer[] | 否 | 薪资范围 |
-| `project_requirements` | any | 否 | 项目要求 |
+| `project_requirements` | ProjectRequirementsRequest | 否 | 项目要求 |
 
 ### PositionDeleteResponse
 
@@ -1372,7 +1493,7 @@ ID 响应
 | `education` | string[] | 是 | 学历要求 |
 | `certifications` | string[] | 是 | 证书要求 |
 | `salary_range` | integer[] | 是 | 薪资范围 |
-| `project_requirements` | any | 是 | 项目要求 |
+| `project_requirements` | ProjectRequirements | 否 | 项目要求 |
 | `resume_count` | integer | 是 | 简历数量 |
 | `created_at` | string | 是 | 创建时间 |
 | `resumes` | PositionResume[] | 否 | 关联简历 |
@@ -1393,7 +1514,7 @@ ID 响应
 | `education` | string[] | 是 | 学历要求 |
 | `certifications` | string[] | 是 | 证书要求 |
 | `salary_range` | integer[] | 是 | 薪资范围 |
-| `project_requirements` | any | 是 | 项目要求 |
+| `project_requirements` | ProjectRequirements | 否 | 项目要求 |
 | `resume_count` | integer | 是 | 简历数量 |
 | `created_at` | string | 是 | 创建时间 |
 
@@ -1416,11 +1537,48 @@ ID 响应
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `position_title` | string | 是 | 应聘岗位 |
 | `resume_content` | string | 是 | 简历内容 |
-| `screening_score` | any | 是 | 筛选得分 |
+| `screening_score` | ScreeningScore | 否 | 筛选得分 |
 | `screening_summary` | string | 是 | 筛选摘要 |
 | `report_md_url` | string | 是 | MD报告URL |
 | `report_json_url` | string | 是 | JSON报告URL |
 | `created_at` | string | 是 | 创建时间 |
+
+### ProjectRequirements
+
+项目要求结构
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `min_projects` | integer | 否 | 最少项目数 |
+| `team_lead_experience` | boolean | 否 | 是否需要团队领导经验 |
+
+### ProjectRequirementsRequest
+
+项目要求结构
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `min_projects` | integer | 否 | 最少项目数 |
+| `team_lead_experience` | boolean | 否 | 是否需要团队领导经验 |
+
+### QARecord
+
+问答记录
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `question` | string | 是 | 问题 |
+| `answer` | string | 是 | 回答 |
+
+### QuestionInputRequest
+
+问题输入
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `content` | string | 是 | 问题内容 |
+| `expected_skills` | string[] | 否 | 期望技能 |
+| `difficulty` | integer | 否 | 难度等级 |
 
 ### RecommendStats
 
@@ -1447,8 +1605,8 @@ ID 响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `question` | any | 是 | 问题数据 |
-| `answer` | any | 是 | 回答数据 |
+| `question` | QuestionInputRequest | 是 | 问题数据 |
+| `answer` | AnswerInputRequest | 是 | 回答数据 |
 | `skip_evaluation` | boolean | 否 | 跳过评估 |
 | `followup_count` | integer | 否 | 追问数量 |
 | `alternative_count` | integer | 否 | 候选问题数量 |
@@ -1460,7 +1618,7 @@ ID 响应
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
 | `round_number` | integer | 是 | 轮次 |
-| `evaluation` | any | 是 | 评估结果 |
+| `evaluation` | AnswerEvaluation | 否 | 评估结果 |
 | `candidate_questions` | CandidateQuestion[] | 是 | 候选问题 |
 | `hr_action_hints` | string[] | 是 | HR行动提示 |
 
@@ -1506,10 +1664,10 @@ ID 响应
 | `created_at` | string | 是 | 创建时间 |
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `position_title` | string | 是 | 应聘岗位 |
-| `screening_score` | any | 是 | 筛选得分 |
+| `screening_score` | ScreeningScore | 否 | 筛选得分 |
 | `screening_summary` | string | 是 | 筛选摘要 |
 | `resume_content` | string | 是 | 简历内容 |
-| `json_report_content` | any | 是 | JSON报告内容 |
+| `json_report_content` | any | 是 | JSON报告内容（原始报告数据） |
 | `report_json_url` | string | 是 | JSON报告URL |
 | `video_analysis_id` | string | 是 | 视频分析ID |
 
@@ -1522,13 +1680,13 @@ ID 响应
 | `id` | string | 是 | 简历数据ID |
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `position_title` | string | 是 | 应聘岗位 |
-| `screening_score` | any | 是 | 筛选得分 |
+| `screening_score` | ScreeningScore | 否 | 筛选得分 |
 | `screening_summary` | string | 是 | 筛选摘要 |
-| `json_content` | any | 是 | JSON内容 |
+| `json_content` | any | 是 | JSON内容（原始报告数据） |
 | `resume_content` | string | 是 | 简历内容 |
 | `report_md_url` | string | 是 | MD报告URL |
 | `report_json_url` | string | 是 | JSON报告URL |
-| `video_analysis` | any | 否 | 视频分析 |
+| `video_analysis` | VideoAnalysisBrief | 否 | 视频分析 |
 
 ### ResumeDataList
 
@@ -1540,11 +1698,11 @@ ID 响应
 | `created_at` | string | 是 | 创建时间 |
 | `position_title` | string | 是 | 应聘岗位 |
 | `candidate_name` | string | 是 | 候选人姓名 |
-| `screening_score` | any | 是 | 筛选得分 |
+| `screening_score` | ScreeningScore | 否 | 筛选得分 |
 | `resume_file_hash` | string | 是 | 文件哈希 |
 | `report_md_url` | string | 是 | MD报告URL |
 | `report_json_url` | string | 是 | JSON报告URL |
-| `video_analysis` | any | 否 | 视频分析信息 |
+| `video_analysis` | VideoAnalysisBrief | 否 | 视频分析信息 |
 
 ### ResumeDataListData
 
@@ -1560,6 +1718,38 @@ ID 响应
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
 | `report` | ResumeDataDetail | 是 | - |
+
+### ResumeSummary
+
+简历摘要
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `candidate_name` | string | 是 | 候选人姓名 |
+| `position_title` | string | 是 | 应聘岗位 |
+| `screening_score` | number | 否 | 筛选分数 |
+| `screening_summary` | string | 否 | 筛选摘要 |
+
+### ResumeUploadItemRequest
+
+简历上传项
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `name` | string | 是 | 文件名 |
+| `content` | string | 是 | 简历内容 |
+| `metadata` | Record<string, any> | 否 | 元数据（size, type等） |
+
+### ScreeningScore
+
+筛选得分结构
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `hr_score` | number | 否 | HR评分 |
+| `technical_score` | number | 否 | 技术评分 |
+| `manager_score` | number | 否 | 经理评分 |
+| `comprehensive_score` | number | 是 | 综合评分 |
 
 ### SessionCreateRequestRequest
 
@@ -1580,7 +1770,7 @@ ID 响应
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `position_title` | string | 是 | 应聘岗位 |
 | `created_at` | string | 是 | 创建时间 |
-| `resume_summary` | any | 是 | 简历摘要 |
+| `resume_summary` | ResumeSummary | 是 | 简历摘要 |
 
 ### SessionDeleteResponse
 
@@ -1615,9 +1805,19 @@ ID 响应
 |:-----|:-----|:-----|:-----|
 | `id` | string | 是 | 会话ID |
 | `resume_data_id` | string | 是 | 简历数据ID |
-| `qa_records` | any[] | 是 | 问答记录 |
+| `qa_records` | QARecord[] | 是 | 问答记录 |
 | `created_at` | string | 是 | 创建时间 |
-| `final_report` | any | 否 | 最终报告 |
+| `final_report` | FinalReport | 否 | 最终报告 |
+
+### SkillAssessment
+
+技能评估
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `skill` | string | 是 | 技能名称 |
+| `level` | string | 是 | 技能水平 |
+| `evidence` | string | 是 | 证据 |
 
 ### TaskItem
 
@@ -1726,7 +1926,7 @@ ID 响应
 * `failed` - failed |
 | `confidence_score` | number | 是 | 置信度分数 |
 | `created_at` | string | 是 | 创建时间 |
-| `analysis_result` | any | 否 | 分析结果 |
+| `analysis_result` | VideoAnalysisResult | 否 | 分析结果 |
 | `summary` | string | 否 | 分析摘要 |
 | `error_message` | string | 否 | 错误信息 |
 | `resume_data_id` | string | 否 | 关联简历ID |
@@ -1749,7 +1949,20 @@ ID 响应
 * `failed` - failed |
 | `confidence_score` | number | 是 | 置信度分数 |
 | `created_at` | string | 是 | 创建时间 |
-| `analysis_result` | any | 否 | 分析结果 |
+| `analysis_result` | VideoAnalysisResult | 否 | 分析结果 |
+
+### VideoAnalysisResult
+
+视频分析结果结构
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `fraud_score` | number | 否 | 欺诈评分 |
+| `neuroticism_score` | number | 否 | 神经质评分 |
+| `extraversion_score` | number | 否 | 外向性评分 |
+| `openness_score` | number | 否 | 开放性评分 |
+| `agreeableness_score` | number | 否 | 宜人性评分 |
+| `conscientiousness_score` | number | 否 | 尽责性评分 |
 
 ### VideoListData
 
@@ -1782,7 +1995,7 @@ ID 响应
 |:-----|:-----|:-----|:-----|
 | `id` | string | 是 | 视频分析ID |
 | `status` | string | 是 | 状态 |
-| `analysis_result` | any | 是 | 分析结果 |
+| `analysis_result` | VideoAnalysisResult | 是 | 分析结果 |
 | `resume_data_id` | string | 否 | 关联简历ID |
 
 ### VideoUploadRequestRequest

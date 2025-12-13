@@ -39,7 +39,6 @@ RESUME_BASED_QUESTION_PROMPT = """基于以下简历内容，为面试官生成�
     "interest_points": [
         {{
             "content": "兴趣点的简短描述（如：在XX公司主导了微服务改造项目）",
-            "reason": "为什么这个点值得关注",
             "question": "针对这个兴趣点的面试问题"
         }}
     ],
@@ -475,14 +474,12 @@ class InterviewAssistAgent:
                 if isinstance(point, dict):
                     interest_points.append({
                         "content": point.get('content', point.get('point', '')),
-                        "question": point.get('question', '请详细介绍这方面的经验'),
-                        "reason": point.get('reason', '')
+                        "question": point.get('question', '请详细介绍这方面的经验')
                     })
                 else:
                     interest_points.append({
                         "content": str(point),
-                        "question": f"请详细介绍您在{str(point)}方面的经验",
-                        "reason": ""
+                        "question": f"请详细介绍您在{str(point)}方面的经验"
                     })
             
             return {
@@ -524,18 +521,15 @@ class InterviewAssistAgent:
         fallback_interest_points = [
             {
                 "content": "项目经验",
-                "question": "请详细介绍您最具代表性的项目经验",
-                "reason": "验证实际工作能力"
+                "question": "请详细介绍您最具代表性的项目经验"
             },
             {
                 "content": "技术栈",
-                "question": "请介绍您最擅长的技术栈及实际应用案例",
-                "reason": "评估技术深度"
+                "question": "请介绍您最擅长的技术栈及实际应用案例"
             },
             {
                 "content": "团队协作",
-                "question": "请描述您在团队中的角色和协作方式",
-                "reason": "评估协作能力"
+                "question": "请描述您在团队中的角色和协作方式"
             }
         ]
         
