@@ -1,13 +1,15 @@
 """
 Admin configuration for final recommendation module.
+
+数据库简化重构：删除废弃模型的 admin 注册
 """
 from django.contrib import admin
-from .models import InterviewEvaluationTask
+from .models import ComprehensiveAnalysis
 
 
-@admin.register(InterviewEvaluationTask)
-class InterviewEvaluationTaskAdmin(admin.ModelAdmin):
-    list_display = ['id', 'group_id', 'status', 'progress', 'current_speaker', 'created_at']
-    list_filter = ['status', 'created_at']
-    search_fields = ['group_id']
-    readonly_fields = ['id', 'created_at', 'updated_at']
+@admin.register(ComprehensiveAnalysis)
+class ComprehensiveAnalysisAdmin(admin.ModelAdmin):
+    list_display = ['id', 'resume', 'final_score', 'recommendation_label', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['resume__candidate_name']
+    readonly_fields = ['id', 'created_at']
