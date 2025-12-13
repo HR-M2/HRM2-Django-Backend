@@ -167,131 +167,78 @@ class ReportDownloadView(SafeAPIView):
         tags=["screening"],
     )
     def handle_get(self, request, report_id):
-        """下载筛选报告。"""
-        # 首先尝试从 ResumeData 获取数据（优先，因为包含完整信息）
-        resume_data = ResumeData.objects.filter(id=report_id).first()
+        """下载筛选报告。
         
-        if resume_data:
-            # 从数据库动态生成 Markdown 报告
-            md_content = self._generate_markdown_report(resume_data)
-            filename = f"{resume_data.candidate_name}简历初筛结果.md"
+        数据库简化重构后，报告内容存储在 Resume.screening_report 字段中。
+        report_id 现在是 resume_id。
+        """
+        # 从 Resume 获取数据
+        resume = Resume.objects.filter(id=report_id).first()
+        
+        if resume:
+            # 如果有已存储的报告，直接返回
+            if resume.screening_report:
+                md_content = resume.screening_report
+            else:
+                # 从数据库动态生成 Markdown 报告
+                md_content = self._generate_markdown_report(resume)
             
+            filename = f"{resume.candidate_name}简历初筛结果.md"
             response = self._create_markdown_response(md_content, filename)
             return response
         
-        # 备选：尝试从 ScreeningReport 获取
-        report = ScreeningReport.objects.filter(id=report_id).first()
-        
-        if report:
-            # 如果有实际文件，返回文件
-            if report.md_file:
-                try:
-                    response = FileResponse(
-                        report.md_file.open('rb'),
-                        content_type='text/markdown'
-                    )
-                    response['Content-Disposition'] = f'attachment; filename="{report.original_filename}"'
-                    return response
-                except FileNotFoundError:
-                    logger.warning(f"Report file not found for report_id={report_id}")
-            
-            # 如果文件不存在但有关联的 ResumeData
-            resume_data = report.resume_data.first()
-            if resume_data:
-                md_content = self._generate_markdown_report(resume_data)
-                filename = report.original_filename or f"{resume_data.candidate_name}简历初筛结果.md"
-                response = self._create_markdown_response(md_content, filename)
-                return response
-        
-        # 都找不到，返回404
+        # 找不到，返回404
         return ApiResponse.not_found(message="报告不存在")
     
-    def _generate_markdown_report(self, resume_data: ResumeData) -> str:
-        """从 ResumeData 生成 Markdown 报告内容。"""
+    def _generate_markdown_report(self, resume: Resume) -> str:
+        """从 Resume 生成 Markdown 报告内容。
+        
+        数据库简化重构：
+        - resume.screening_result JSON 包含 score, dimensions, summary
+        - resume.position 外键获取岗位信息
+        """
         lines = []
         
         # 标题
-        lines.append(f"# {resume_data.candidate_name} 简历初筛报告")
+        lines.append(f"# {resume.candidate_name} 简历初筛报告")
         lines.append("")
-        lines.append(f"**岗位**: {resume_data.position_title}")
-        lines.append(f"**生成时间**: {resume_data.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        position_title = resume.position.title if resume.position else "未指定"
+        lines.append(f"**岗位**: {position_title}")
+        lines.append(f"**生成时间**: {resume.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
         lines.append("")
         
         # 评分部分
-        if resume_data.screening_score:
-            scores = resume_data.screening_score
+        if resume.screening_result:
+            result = resume.screening_result
             lines.append("## 📊 评分结果")
             lines.append("")
-            lines.append("| 评分维度 | 分数 |")
-            lines.append("|---------|------|")
-            lines.append(f"| 综合评分 | **{scores.get('comprehensive_score', 'N/A')}** |")
-            lines.append(f"| HR评分 | {scores.get('hr_score', 'N/A')} |")
-            lines.append(f"| 技术评分 | {scores.get('technical_score', 'N/A')} |")
-            lines.append(f"| 管理评分 | {scores.get('manager_score', 'N/A')} |")
-            lines.append("")
+            
+            # 综合评分
+            if 'score' in result:
+                lines.append(f"**综合评分**: {result.get('score', 'N/A')}")
+                lines.append("")
+            
+            # 维度评分
+            if 'dimensions' in result and isinstance(result['dimensions'], dict):
+                lines.append("| 评分维度 | 分数 |")
+                lines.append("|---------|------|")
+                for dim_name, dim_score in result['dimensions'].items():
+                    lines.append(f"| {dim_name} | {dim_score} |")
+                lines.append("")
         
         # 筛选总结
-        if resume_data.screening_summary:
+        if resume.screening_result and resume.screening_result.get('summary'):
             lines.append("## 📝 筛选总结")
             lines.append("")
-            lines.append(resume_data.screening_summary)
+            lines.append(resume.screening_result['summary'])
             lines.append("")
         
-        # JSON 报告内容（如果有详细分析）
-        if resume_data.json_report_content:
-            try:
-                import json
-                json_data = json.loads(resume_data.json_report_content)
-                
-                # HR分析
-                if 'hr_analysis' in json_data:
-                    lines.append("## 👔 HR分析")
-                    lines.append("")
-                    hr = json_data['hr_analysis']
-                    if isinstance(hr, dict):
-                        for key, value in hr.items():
-                            lines.append(f"**{key}**: {value}")
-                    else:
-                        lines.append(str(hr))
-                    lines.append("")
-                
-                # 技术分析
-                if 'technical_analysis' in json_data:
-                    lines.append("## 💻 技术分析")
-                    lines.append("")
-                    tech = json_data['technical_analysis']
-                    if isinstance(tech, dict):
-                        for key, value in tech.items():
-                            lines.append(f"**{key}**: {value}")
-                    else:
-                        lines.append(str(tech))
-                    lines.append("")
-                
-                # 管理分析
-                if 'manager_analysis' in json_data:
-                    lines.append("## 📋 管理分析")
-                    lines.append("")
-                    mgr = json_data['manager_analysis']
-                    if isinstance(mgr, dict):
-                        for key, value in mgr.items():
-                            lines.append(f"**{key}**: {value}")
-                    else:
-                        lines.append(str(mgr))
-                    lines.append("")
-                    
-            except (json.JSONDecodeError, TypeError):
-                # JSON解析失败，直接输出原始内容
-                lines.append("## 📄 详细分析")
-                lines.append("")
-                lines.append(resume_data.json_report_content)
-                lines.append("")
-        
         # 简历原文
-        if resume_data.resume_content:
+        if resume.content:
             lines.append("## 📄 简历原文")
             lines.append("")
             lines.append("```")
-            lines.append(resume_data.resume_content)
+            lines.append(resume.content)
             lines.append("```")
             lines.append("")
         
