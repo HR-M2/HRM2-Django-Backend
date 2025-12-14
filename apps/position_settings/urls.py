@@ -6,8 +6,8 @@
 """
 from django.urls import path
 from .views import (
-    PositionCriteriaListView,
-    PositionCriteriaDetailView,
+    PositionListView,
+    PositionDetailView,
     PositionAssignResumesView,
     PositionRemoveResumeView,
     PositionAIGenerateView
@@ -17,10 +17,10 @@ app_name = 'position_settings'
 
 urlpatterns = [
     # 岗位列表和创建 - GET列表, POST创建
-    path('', PositionCriteriaListView.as_view(), name='list'),
+    path('', PositionListView.as_view(), name='list'),
     
     # 岗位详情 - GET/PUT/DELETE
-    path('<uuid:position_id>/', PositionCriteriaDetailView.as_view(), name='detail'),
+    path('<uuid:position_id>/', PositionDetailView.as_view(), name='detail'),
     
     # 简历分配 - POST分配简历到岗位
     path('<uuid:position_id>/resumes/', PositionAssignResumesView.as_view(), name='resumes'),

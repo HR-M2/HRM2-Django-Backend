@@ -140,10 +140,10 @@ class RecruitmentCriteriaView(SafeAPIView):
         }
 
 
-class PositionCriteriaListView(SafeAPIView):
+class PositionListView(SafeAPIView):
     """
-    岗位标准列表API
-    GET: 获取所有岗位标准列表
+    岗位列表API
+    GET: 获取所有岗位列表
     POST: 创建新岗位
     """
     
@@ -237,9 +237,9 @@ class PositionCriteriaListView(SafeAPIView):
         return ApiResponse.created(data=position.to_dict(), message='岗位创建成功')
 
 
-class PositionCriteriaDetailView(SafeAPIView):
+class PositionDetailView(SafeAPIView):
     """
-    单个岗位API
+    岗位详情API
     GET: 获取岗位详情
     PUT: 更新岗位
     DELETE: 删除岗位（软删除）
