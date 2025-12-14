@@ -1,5 +1,9 @@
 """
 简历筛选服务层模块。
+
+数据库简化重构 - Phase 7:
+- 更新为使用新的 Resume 模型
+- 任务完成时更新 Resume 状态和结果
 """
 import os
 import re
@@ -137,7 +141,8 @@ class ScreeningService:
                         'md_content': md_content,
                         'json_content': json_content,
                         'scores': extracted['scores'],
-                        'summary': extracted['final_recommendation']['reasons'][:500]
+                        'summary': extracted['final_recommendation']['reasons'][:500],
+                        'filename': resume['name']  # 保留原始文件名
                     }
                 else:
                     # 测试用模拟结果
@@ -145,7 +150,8 @@ class ScreeningService:
                         'md_content': f"# {candidate_name} 简历初筛结果\n\n暂无评审结果",
                         'json_content': '{}',
                         'scores': {},
-                        'summary': ''
+                        'summary': '',
+                        'filename': resume['name']
                     }
                 
             except Exception as e:

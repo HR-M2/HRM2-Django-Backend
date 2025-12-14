@@ -4,12 +4,12 @@
 """
 import json
 import random
-import hashlib
 import logging
 from typing import Dict, Any, List
 from openai import OpenAI
 
 from .llm_config import get_config_list
+from apps.common.utils import generate_hash
 
 logger = logging.getLogger(__name__)
 
@@ -110,8 +110,7 @@ class DevToolsService:
             content = response.choices[0].message.content.strip()
             
             # 生成文件哈希
-            hash_input = f"{candidate_name}_{content}_{random.random()}"
-            file_hash = hashlib.sha256(hash_input.encode()).hexdigest()
+            file_hash = generate_hash(content)
             
             return {
                 'name': f"{candidate_name}_简历.txt",

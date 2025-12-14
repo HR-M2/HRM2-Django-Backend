@@ -33,7 +33,7 @@ django.setup()
 # 模块中文名称映射（与 SPECTACULAR_SETTINGS['TAGS'] 对应）
 TAG_TITLES = {
     'positions': '岗位设置',
-    'library': '简历库',
+    'resumes': '简历管理',
     'screening': '简历筛选',
     'videos': '视频分析',
     'interviews': '面试辅助',
@@ -66,7 +66,7 @@ def extract_tag_from_path(path):
     # 新的 /api/ 前缀路径映射
     tag_mapping = {
         '/api/positions/': 'positions',
-        '/api/library/': 'library',
+        '/api/resumes/': 'resumes',
         '/api/screening/': 'screening',
         '/api/videos/': 'videos',
         '/api/interviews/': 'interviews',
@@ -90,12 +90,24 @@ def format_schema_type(schema):
         ref = schema['$ref']
         return ref.split('/')[-1]
     
+    # 处理 allOf（drf-spectacular 用于可空嵌套类型）
+    if 'allOf' in schema:
+        all_of = schema['allOf']
+        if all_of and len(all_of) > 0:
+            # 通常第一个元素是 $ref
+            return format_schema_type(all_of[0])
+        return 'any'
+    
     if schema_type == 'array':
         items = schema.get('items', {})
         item_type = format_schema_type(items)
         return f'{item_type}[]'
     
     if schema_type == 'object':
+        # 检查是否有 additionalProperties（用于 DictField）
+        if 'additionalProperties' in schema:
+            value_type = format_schema_type(schema['additionalProperties'])
+            return f'Record<string, {value_type}>'
         return 'object'
     
     if 'anyOf' in schema:

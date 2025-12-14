@@ -1,15 +1,30 @@
 """
 视频分析API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
+
+数据库简化重构：
+- VideoAnalysis 关联到 Resume（原关联 ResumeData）
+- candidate_name/position_applied 从 Resume 关联获取
+- 评分字段合并到 analysis_result JSON
 """
 import logging
+
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+from rest_framework import serializers
 
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.exceptions import ValidationException, NotFoundException
+from apps.common.schemas import (
+    api_response, success_response,
+    VideoAnalysisItemSerializer, VideoAnalysisDetailSerializer,
+    VideoUploadResponseSerializer, VideoUpdateResponseSerializer,
+)
 
 from .models import VideoAnalysis
 from .services import VideoAnalysisService
+from apps.resume.models import Resume
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +35,30 @@ class VideoAnalysisView(SafeAPIView):
     POST: 上传视频并开始分析
     """
     
+    @extend_schema(
+        summary="上传视频并开始分析",
+        description="上传视频文件并在后台开始分析",
+        request={
+            'multipart/form-data': inline_serializer(
+                name='VideoUploadRequest',
+                fields={
+                    'video_file': serializers.FileField(help_text="视频文件"),
+                    'candidate_name': serializers.CharField(help_text="候选人姓名"),
+                    'position_applied': serializers.CharField(help_text="应聘岗位"),
+                    'resume_data_id': serializers.CharField(required=False, help_text="关联简历ID"),
+                    'video_name': serializers.CharField(required=False, help_text="视频名称"),
+                }
+            )
+        },
+        responses={201: api_response(VideoUploadResponseSerializer(), "VideoUpload")},
+        tags=["videos"],
+    )
     def handle_post(self, request):
         """上传视频并开始分析。"""
         video_file = request.FILES.get('video_file')
-        candidate_name = self.get_param(request, 'candidate_name', required=True)
-        position_applied = self.get_param(request, 'position_applied', required=True)
-        resume_data_id = self.get_param(request, 'resume_data_id')
+        candidate_name = self.get_param(request, 'candidate_name')
+        position_applied = self.get_param(request, 'position_applied')
+        resume_id = self.get_param(request, 'resume_id') or self.get_param(request, 'resume_data_id')
         video_name = self.get_param(request, 'video_name') or (video_file.name if video_file else None)
         
         if not video_file:
@@ -34,29 +67,29 @@ class VideoAnalysisView(SafeAPIView):
         if not video_name:
             raise ValidationException("无法确定视频名称")
         
-        # 如果提供了简历数据则进行验证
-        resume_data = None
-        if resume_data_id:
-            from apps.resume_screening.models import ResumeData
+        # 获取关联简历（新模型必须关联 Resume）
+        resume = None
+        if resume_id:
             try:
-                resume_data = ResumeData.objects.get(id=resume_data_id)
-            except ResumeData.DoesNotExist:
-                raise NotFoundException("指定的简历数据不存在")
+                resume = Resume.objects.get(id=resume_id)
+                # 从 Resume 获取候选人信息
+                if not candidate_name:
+                    candidate_name = resume.candidate_name
+                if not position_applied and resume.position:
+                    position_applied = resume.position.title
+            except Resume.DoesNotExist:
+                raise NotFoundException("指定的简历不存在")
         
-        # 创建视频分析记录
+        if not resume:
+            raise ValidationException("必须提供 resume_id 关联简历")
+        
+        # 创建视频分析记录（关联到 Resume）
         video_analysis = VideoAnalysis.objects.create(
+            resume=resume,
             video_name=video_name,
             video_file=video_file,
-            file_size=video_file.size if video_file else None,
-            candidate_name=candidate_name,
-            position_applied=position_applied,
             status='pending'
         )
-        
-        # 如果提供了简历数据则关联
-        if resume_data:
-            resume_data.video_analysis = video_analysis
-            resume_data.save()
         
         # 开始分析
         self._start_analysis(video_analysis)
@@ -64,14 +97,12 @@ class VideoAnalysisView(SafeAPIView):
         response_data = {
             "id": str(video_analysis.id),
             "video_name": video_analysis.video_name,
-            "candidate_name": video_analysis.candidate_name,
-            "position_applied": video_analysis.position_applied,
+            "candidate_name": resume.candidate_name,
+            "position_applied": resume.position.title if resume.position else None,
+            "resume_id": str(resume.id),
             "status": video_analysis.status,
             "created_at": video_analysis.created_at.isoformat()
         }
-        
-        if resume_data:
-            response_data["resume_data_id"] = str(resume_data.id)
         
         # 返回统一格式
         return ApiResponse.created(
@@ -100,24 +131,33 @@ class VideoAnalysisStatusView(SafeAPIView):
     GET: 获取视频分析状态和结果
     """
     
+    @extend_schema(
+        summary="获取视频分析状态",
+        description="获取指定视频的分析状态和结果",
+        responses={200: api_response(VideoAnalysisDetailSerializer(), "VideoStatus")},
+        tags=["videos"],
+    )
     def handle_get(self, request, video_id):
         """获取视频分析状态。"""
         video_analysis = self.get_object_or_404(VideoAnalysis, id=video_id)
         
+        # 从关联的 Resume 获取候选人信息
+        resume = video_analysis.resume
         response_data = {
             "id": str(video_analysis.id),
             "video_name": video_analysis.video_name,
-            "candidate_name": video_analysis.candidate_name,
-            "position_applied": video_analysis.position_applied,
+            "candidate_name": resume.candidate_name if resume else None,
+            "position_applied": resume.position.title if resume and resume.position else None,
+            "resume_id": str(resume.id) if resume else None,
             "status": video_analysis.status,
             "created_at": video_analysis.created_at.isoformat()
         }
         
-        if video_analysis.status == 'completed':
+        if video_analysis.status == 'completed' and video_analysis.analysis_result:
             response_data.update({
                 "analysis_result": video_analysis.analysis_result,
-                "summary": video_analysis.summary,
-                "confidence_score": video_analysis.confidence_score
+                "summary": video_analysis.analysis_result.get('summary'),
+                "confidence_score": video_analysis.analysis_result.get('confidence_score')
             })
         
         if video_analysis.status == 'failed' and video_analysis.error_message:
@@ -133,6 +173,26 @@ class VideoAnalysisUpdateView(SafeAPIView):
     POST: 更新视频分析结果
     """
     
+    @extend_schema(
+        summary="更新视频分析结果",
+        description="更新视频分析的各项评分和状态",
+        request=inline_serializer(
+            name='VideoUpdateRequest',
+            fields={
+                'fraud_score': serializers.FloatField(required=False, help_text="欺诈评分"),
+                'neuroticism_score': serializers.FloatField(required=False, help_text="神经质评分"),
+                'extraversion_score': serializers.FloatField(required=False, help_text="外向性评分"),
+                'openness_score': serializers.FloatField(required=False, help_text="开放性评分"),
+                'agreeableness_score': serializers.FloatField(required=False, help_text="宜人性评分"),
+                'conscientiousness_score': serializers.FloatField(required=False, help_text="尽责性评分"),
+                'summary': serializers.CharField(required=False, help_text="分析摘要"),
+                'confidence_score': serializers.FloatField(required=False, help_text="置信度"),
+                'status': serializers.CharField(required=False, help_text="状态"),
+            }
+        ),
+        responses={200: api_response(VideoUpdateResponseSerializer(), "VideoUpdate")},
+        tags=["videos"],
+    )
     def handle_post(self, request, video_id):
         """更新视频分析结果。"""
         scores = {
@@ -165,8 +225,8 @@ class VideoAnalysisUpdateView(SafeAPIView):
             "analysis_result": video_analysis.analysis_result
         }
         
-        if hasattr(video_analysis, 'linked_resume_data') and video_analysis.linked_resume_data:
-            response_data["resume_data_id"] = str(video_analysis.linked_resume_data.id)
+        if video_analysis.resume:
+            response_data["resume_id"] = str(video_analysis.resume.id)
         
         # 返回与原版一致的格式
         return ApiResponse.success(
@@ -181,6 +241,30 @@ class VideoAnalysisListView(SafeAPIView):
     GET: 获取视频分析列表
     """
     
+    @extend_schema(
+        summary="获取视频分析列表",
+        description="获取视频分析列表，支持过滤和分页",
+        parameters=[
+            OpenApiParameter(name='candidate_name', type=str, description='候选人姓名过滤'),
+            OpenApiParameter(name='position_applied', type=str, description='应聘岗位过滤'),
+            OpenApiParameter(name='status', type=str, description='状态过滤'),
+            OpenApiParameter(name='page', type=int, description='页码'),
+            OpenApiParameter(name='page_size', type=int, description='每页数量'),
+        ],
+        responses={200: api_response(
+            inline_serializer(
+                name='VideoListData',
+                fields={
+                    'videos': VideoAnalysisItemSerializer(many=True),
+                    'total': serializers.IntegerField(),
+                    'page': serializers.IntegerField(),
+                    'page_size': serializers.IntegerField(),
+                }
+            ),
+            "VideoList"
+        )},
+        tags=["videos"],
+    )
     def handle_get(self, request):
         """获取视频分析列表，支持过滤和分页。"""
         candidate_name = request.GET.get('candidate_name')
@@ -200,17 +284,19 @@ class VideoAnalysisListView(SafeAPIView):
         
         result = []
         for video in items:
+            resume = video.resume
             data = {
                 "id": str(video.id),
                 "video_name": video.video_name,
-                "candidate_name": video.candidate_name,
-                "position_applied": video.position_applied,
+                "candidate_name": resume.candidate_name if resume else None,
+                "position_applied": resume.position.title if resume and resume.position else None,
+                "resume_id": str(resume.id) if resume else None,
                 "status": video.status,
-                "confidence_score": video.confidence_score,
+                "confidence_score": video.analysis_result.get('confidence_score') if video.analysis_result else None,
                 "created_at": video.created_at.isoformat()
             }
             
-            if video.status == 'completed':
+            if video.status == 'completed' and video.analysis_result:
                 data["analysis_result"] = video.analysis_result
             
             result.append(data)

@@ -302,7 +302,6 @@ class TestUrlStructureIntegrity:
             'api/screening/',
             'api/screening/tasks/',
             'api/screening/groups/',
-            'api/screening/data/',
             # 视频分析
             'api/videos/',
             'api/videos/upload/',

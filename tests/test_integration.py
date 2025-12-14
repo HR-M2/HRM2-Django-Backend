@@ -92,16 +92,6 @@ class TestUnifiedResponseFormat:
         self._assert_response_format(data)
         assert data['code'] == 200
     
-    @pytest.mark.django_db
-    def test_screening_data_response_format(self, client):
-        """筛选数据API应返回统一响应格式"""
-        response = client.get('/api/screening/data/')
-        assert response.status_code == 200
-        
-        data = response.json()
-        self._assert_response_format(data)
-        assert data['code'] == 200
-    
     def _assert_response_format(self, data):
         """验证响应格式包含必需字段"""
         assert 'code' in data, "响应应包含 'code' 字段"
@@ -323,19 +313,19 @@ class TestCrossModuleIntegration:
     @pytest.mark.django_db
     def test_screening_and_groups_integration(self, client):
         """简历筛选与分组功能集成测试"""
-        # 获取筛选数据
-        screening_response = client.get('/api/screening/data/')
-        assert screening_response.status_code == 200
+        # 获取筛选任务列表
+        tasks_response = client.get('/api/screening/tasks/')
+        assert tasks_response.status_code == 200
         
         # 获取分组列表
         groups_response = client.get('/api/screening/groups/')
         assert groups_response.status_code == 200
         
         # 两个API都应返回统一格式
-        screening_data = screening_response.json()
+        tasks_data = tasks_response.json()
         groups_data = groups_response.json()
         
-        assert screening_data['code'] == 200
+        assert tasks_data['code'] == 200
         assert groups_data['code'] == 200
     
     @pytest.mark.django_db
@@ -387,19 +377,6 @@ class TestFieldNamingConsistency:
         data = response.json()
         if data['code'] == 200 and data['data']:
             self._check_snake_case_keys(data['data'])
-    
-    @pytest.mark.django_db
-    def test_screening_data_field_names(self, client):
-        """筛选数据字段应使用统一命名"""
-        response = client.get('/api/screening/data/')
-        data = response.json()
-        
-        if data['code'] == 200 and data['data']:
-            # 检查是否使用 screening_score 而非 scores
-            if isinstance(data['data'], list):
-                for item in data['data']:
-                    if 'score' in str(item).lower():
-                        assert 'screening_score' in item or 'scores' not in item
     
     def _check_snake_case_keys(self, obj, path=""):
         """递归检查所有键是否为 snake_case"""

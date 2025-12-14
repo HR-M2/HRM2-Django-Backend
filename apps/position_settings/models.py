@@ -1,107 +1,109 @@
 """
 岗位设置数据模型模块。
+
+数据库简化重构：
+- PositionCriteria -> Position (重命名+简化)
+- ResumePositionAssignment -> 删除 (改为 Resume.position 外键)
 """
 from django.db import models
 from django.utils import timezone
 import uuid
 
 
-class PositionCriteria(models.Model):
-    """岗位招聘标准模型 - 支持多岗位，每个岗位即为一个简历组"""
+class Position(models.Model):
+    """
+    岗位模型 - 简化版
+    
+    合并原 PositionCriteria 的多个字段为 requirements JSON
+    """
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
     
-    # 岗位信息
-    position = models.CharField(max_length=255, verbose_name="职位名称")
+    # 基本信息
+    title = models.CharField(max_length=255, verbose_name="岗位名称")
     department = models.CharField(max_length=255, blank=True, verbose_name="部门")
     description = models.TextField(blank=True, verbose_name="岗位描述")
     
-    # 要求
-    required_skills = models.JSONField(default=list, verbose_name="必备技能")
-    optional_skills = models.JSONField(default=list, verbose_name="加分技能")
-    min_experience = models.IntegerField(default=0, verbose_name="最低工作年限")
-    education = models.JSONField(default=list, verbose_name="学历要求")
-    certifications = models.JSONField(default=list, verbose_name="证书要求")
+    # 岗位要求（JSON合并）
+    requirements = models.JSONField(default=dict, verbose_name="岗位要求")
+    # 格式示例:
+    # {
+    #     "required_skills": ["Python", "Django"],
+    #     "optional_skills": ["React", "Docker"],
+    #     "min_experience": 3,
+    #     "education": ["本科", "硕士"],
+    #     "certifications": [],
+    #     "salary_range": [15000, 25000],
+    #     "project_requirements": {}
+    # }
     
-    # 薪资
-    salary_min = models.IntegerField(default=0, verbose_name="最低薪资")
-    salary_max = models.IntegerField(default=0, verbose_name="最高薪资")
-    
-    # 项目经验要求
-    project_requirements = models.JSONField(default=dict, verbose_name="项目经验要求")
-    
-    # 状态管理
     is_active = models.BooleanField(default=True, verbose_name="是否启用")
     
-    # 简历数量缓存（便于快速查询）
-    resume_count = models.IntegerField(default=0, verbose_name="简历数量")
-    
     class Meta:
-        db_table = 'position_criteria'
+        db_table = 'positions'
         ordering = ['-created_at']
-        verbose_name = "岗位招聘标准"
-        verbose_name_plural = "岗位招聘标准"
+        verbose_name = "岗位"
+        verbose_name_plural = "岗位"
         indexes = [
-            models.Index(fields=['position']),
+            models.Index(fields=['title']),
             models.Index(fields=['is_active']),
         ]
     
+    def __str__(self):
+        return self.title
+    
     def to_dict(self):
-        """转换为字典格式。"""
+        """转换为字典格式（兼容旧API）。"""
+        reqs = self.requirements or {}
+        salary_range = reqs.get('salary_range', [0, 0])
         return {
             "id": str(self.id),
-            "position": self.position,
+            "position": self.title,  # 兼容旧字段名
+            "title": self.title,
             "department": self.department,
             "description": self.description,
-            "required_skills": self.required_skills,
-            "optional_skills": self.optional_skills,
-            "min_experience": self.min_experience,
-            "education": self.education,
-            "certifications": self.certifications,
-            "salary_range": [self.salary_min, self.salary_max],
-            "project_requirements": self.project_requirements,
+            "required_skills": reqs.get('required_skills', []),
+            "optional_skills": reqs.get('optional_skills', []),
+            "min_experience": reqs.get('min_experience', 0),
+            "education": reqs.get('education', []),
+            "certifications": reqs.get('certifications', []),
+            "salary_range": salary_range,
+            "salary_min": salary_range[0] if len(salary_range) > 0 else 0,
+            "salary_max": salary_range[1] if len(salary_range) > 1 else 0,
+            "project_requirements": reqs.get('project_requirements', {}),
             "is_active": self.is_active,
-            "resume_count": self.resume_count,
+            "resume_count": self.get_resume_count(),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
     
-    def update_resume_count(self):
-        """更新简历数量缓存。"""
-        self.resume_count = self.resume_assignments.count()
-        self.save(update_fields=['resume_count'])
+    def get_resume_count(self):
+        """动态计算简历数量（不再使用缓存字段）。"""
+        return self.resumes.count()
     
-    def get_assigned_resumes(self):
-        """获取分配到该岗位的所有简历。"""
-        from apps.resume_screening.models import ResumeData
-        resume_ids = self.resume_assignments.values_list('resume_data_id', flat=True)
-        return ResumeData.objects.filter(id__in=resume_ids)
+    @classmethod
+    def from_legacy_data(cls, data: dict) -> 'Position':
+        """从旧格式数据创建岗位（用于API兼容）。"""
+        requirements = {
+            'required_skills': data.get('required_skills', []),
+            'optional_skills': data.get('optional_skills', []),
+            'min_experience': data.get('min_experience', 0),
+            'education': data.get('education', []),
+            'certifications': data.get('certifications', []),
+            'salary_range': [
+                data.get('salary_min', 0),
+                data.get('salary_max', 0)
+            ],
+            'project_requirements': data.get('project_requirements', {}),
+        }
+        return cls(
+            title=data.get('position', data.get('title', '')),
+            department=data.get('department', ''),
+            description=data.get('description', ''),
+            requirements=requirements,
+            is_active=data.get('is_active', True),
+        )
 
 
-class ResumePositionAssignment(models.Model):
-    """简历-岗位分配中间表，支持多对多关系"""
-    
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    position = models.ForeignKey(
-        PositionCriteria,
-        on_delete=models.CASCADE,
-        related_name='resume_assignments',
-        verbose_name="岗位"
-    )
-    resume_data = models.ForeignKey(
-        'resume_screening.ResumeData',
-        on_delete=models.CASCADE,
-        related_name='position_assignments',
-        verbose_name="简历数据"
-    )
-    assigned_at = models.DateTimeField(default=timezone.now, verbose_name="分配时间")
-    notes = models.TextField(blank=True, verbose_name="备注")
-    
-    class Meta:
-        db_table = 'resume_position_assignments'
-        unique_together = ['position', 'resume_data']
-        ordering = ['-assigned_at']
-        verbose_name = "简历岗位分配"
-        verbose_name_plural = "简历岗位分配"

@@ -4,10 +4,17 @@
 """
 import logging
 
+from drf_spectacular.utils import extend_schema
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
-from apps.resume_library.models import ResumeLibrary
+from apps.common.schemas import (
+    api_response,
+    GenerateResumesRequestSerializer, GenerateResumesResponseSerializer,
+)
+from apps.resume.models import Resume
+from apps.position_settings.models import Position
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +25,13 @@ class GenerateRandomResumesView(SafeAPIView):
     POST: 根据岗位要求生成随机简历并添加到简历库
     """
     
+    @extend_schema(
+        summary="生成随机简历",
+        description="根据岗位要求使用AI生成随机简历并添加到简历库（开发测试用）",
+        request=GenerateResumesRequestSerializer,
+        responses={200: api_response(GenerateResumesResponseSerializer(), "GenerateResumes")},
+        tags=["screening"],
+    )
     def handle_post(self, request):
         """生成随机简历并添加到简历库"""
         from services.agents import get_dev_tools_service
@@ -39,36 +53,43 @@ class GenerateRandomResumesView(SafeAPIView):
             service = get_dev_tools_service()
             resumes = service.generate_batch_resumes(position_data, count)
             
+            # 获取或创建岗位
+            position_title = position_data.get('position', '未指定岗位')
+            position, _ = Position.objects.get_or_create(
+                title=position_title,
+                defaults={'requirements': position_data}
+            )
+            
             # 添加到简历库
             added_resumes = []
             skipped_resumes = []
             
             for resume in resumes:
                 # 检查哈希是否已存在
-                if ResumeLibrary.objects.filter(file_hash=resume['file_hash']).exists():
+                if Resume.objects.filter(file_hash=resume['file_hash']).exists():
                     skipped_resumes.append({
                         'filename': resume['name'],
                         'reason': '哈希值已存在'
                     })
                     continue
                 
-                # 创建简历库记录
-                library_entry = ResumeLibrary.objects.create(
+                # 创建简历记录
+                resume_entry = Resume.objects.create(
                     filename=resume['name'],
                     file_hash=resume['file_hash'],
                     file_size=len(resume['content'].encode('utf-8')),
                     file_type='text/plain',
                     content=resume['content'],
                     candidate_name=resume['candidate_name'],
-                    is_screened=False,
-                    is_assigned=False,
-                    notes=f"由开发测试工具自动生成，目标岗位：{position_data.get('position', '未知')}"
+                    position=position,
+                    status=Resume.Status.PENDING,
+                    notes=f"由开发测试工具自动生成"
                 )
                 
                 added_resumes.append({
-                    'id': str(library_entry.id),
-                    'filename': library_entry.filename,
-                    'candidate_name': library_entry.candidate_name
+                    'id': str(resume_entry.id),
+                    'filename': resume_entry.filename,
+                    'candidate_name': resume_entry.candidate_name
                 })
             
             return ApiResponse.success(
@@ -85,75 +106,3 @@ class GenerateRandomResumesView(SafeAPIView):
         except Exception as e:
             logger.error(f"Failed to generate resumes: {e}")
             raise ValidationException(f"生成简历失败: {str(e)}")
-
-
-class ForceScreeningErrorView(SafeAPIView):
-    """
-    强制简历筛选任务失败测试钩子
-    POST: 通过环境变量控制是否强制筛选任务失败
-    """
-    
-    def handle_post(self, request):
-        """设置/取消强制筛选任务失败的标志"""
-        from django.core.cache import cache
-        
-        data = request.data
-        force_error = data.get('force_error', True)
-        error_message = data.get('error_message', '测试：强制触发的简历筛选任务失败')
-        error_type = data.get('error_type', 'runtime')  # runtime, validation, service
-        
-        # 设置缓存，影响后续的筛选任务
-        cache.set('test_force_screening_error', {
-            'active': force_error,
-            'message': error_message,
-            'type': error_type
-        }, timeout=3600)  # 1小时后过期
-        
-        status_text = "启用" if force_error else "禁用"
-        return ApiResponse.success(
-            data={
-                'force_error': force_error,
-                'error_message': error_message,
-                'error_type': error_type,
-                'expires_in': 3600  # 秒
-            },
-            message=f'已{status_text}强制筛选任务失败测试钩子'
-        )
-    
-    def handle_get(self, request):
-        """查询当前强制错误状态"""
-        from django.core.cache import cache
-        
-        error_config = cache.get('test_force_screening_error')
-        
-        if not error_config or not error_config.get('active', False):
-            return ApiResponse.success(
-                data={'active': False},
-                message='当前未启用强制错误钩子'
-            )
-        
-        return ApiResponse.success(
-            data={
-                'active': True,
-                'error_message': error_config.get('message'),
-                'error_type': error_config.get('type'),
-                'remaining_seconds': cache.ttl('test_force_screening_error')
-            },
-            message='当前已启用强制错误钩子'
-        )
-
-
-class ResetScreeningTestStateView(SafeAPIView):
-    """
-    重置简历筛选测试状态
-    POST: 清除所有测试相关的缓存和状态
-    """
-    
-    def handle_post(self, request):
-        """重置所有测试状态"""
-        from django.core.cache import cache
-        
-        # 清除强制错误标志
-        cache.delete('test_force_screening_error')
-        
-        return ApiResponse.success(message='已重置所有简历筛选测试状态')

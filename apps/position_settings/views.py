@@ -1,15 +1,31 @@
 """
 岗位设置API视图模块 - 与原版 RecruitmentSystemAPI 返回格式保持一致。
+
+数据库简化重构：
+- 使用 Position 模型（原 PositionCriteria 已重命名）
+- 简历分配改为直接更新 Resume.position 外键
+- 删除 ResumePositionAssignment 中间表相关逻辑
 """
 import os
 import json
 import logging
 from django.conf import settings
+
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from rest_framework import serializers
+
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException, NotFoundException
+from apps.common.schemas import (
+    api_response, success_response,
+    PositionItemSerializer, PositionDetailSerializer, PositionListDataSerializer,
+    PositionCreateRequestSerializer, AssignResumesRequestSerializer,
+    AssignResumesResponseSerializer, RemoveResumeResponseSerializer,
+    AIGenerateRequestSerializer,
+)
 
-from .models import PositionCriteria
+from .models import Position
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +40,12 @@ class RecruitmentCriteriaView(SafeAPIView):
     # 默认标准文件路径（用于向后兼容）- 与原版路径一致
     CRITERIA_FILE = os.path.join('apps', 'position_settings', 'migrations', 'recruitment_criteria.json')
     
+    @extend_schema(
+        summary="获取招聘标准",
+        description="获取当前招聘标准（向后兼容API）",
+        responses={200: api_response(PositionItemSerializer(), "RecruitmentCriteria")},
+        tags=["positions"],
+    )
     def handle_get(self, request):
         """获取招聘标准。"""
         # 首先尝试从文件获取（与原版一致）
@@ -42,14 +64,21 @@ class RecruitmentCriteriaView(SafeAPIView):
                 return ApiResponse.server_error(message=f'服务器内部错误: {str(e)}')
         
         # 尝试从数据库获取
-        criteria = PositionCriteria.objects.filter(is_active=True).first()
-        if criteria:
-            return ApiResponse.success(data=criteria.to_dict())
+        position = Position.objects.filter(is_active=True).first()
+        if position:
+            return ApiResponse.success(data=position.to_dict())
         
         # 返回默认标准
         default_criteria = self._get_default_criteria()
         return ApiResponse.success(data=default_criteria)
     
+    @extend_schema(
+        summary="更新招聘标准",
+        description="更新招聘标准（向后兼容API）",
+        request=PositionCreateRequestSerializer,
+        responses={200: api_response(PositionItemSerializer(), "RecruitmentCriteriaUpdate")},
+        tags=["positions"],
+    )
     def handle_post(self, request):
         """更新招聘标准。"""
         data = request.data
@@ -63,18 +92,21 @@ class RecruitmentCriteriaView(SafeAPIView):
             if field not in data:
                 raise ValidationException(f"缺少必要字段: {field}")
         
-        # 保存到数据库
-        criteria, created = PositionCriteria.objects.update_or_create(
-            position=data.get('position'),
+        # 保存到数据库（使用新的 Position 模型）
+        salary_range = data.get('salary_range', [0, 0])
+        requirements = {
+            'required_skills': data.get('required_skills', []),
+            'optional_skills': data.get('optional_skills', []),
+            'min_experience': data.get('min_experience', 0),
+            'education': data.get('education', []),
+            'certifications': data.get('certifications', []),
+            'salary_range': salary_range,
+            'project_requirements': data.get('project_requirements', {}),
+        }
+        position, created = Position.objects.update_or_create(
+            title=data.get('position'),
             defaults={
-                'required_skills': data.get('required_skills', []),
-                'optional_skills': data.get('optional_skills', []),
-                'min_experience': data.get('min_experience', 0),
-                'education': data.get('education', []),
-                'certifications': data.get('certifications', []),
-                'salary_min': data.get('salary_range', [0, 0])[0] if data.get('salary_range') else 0,
-                'salary_max': data.get('salary_range', [0, 0])[1] if len(data.get('salary_range', [])) > 1 else 0,
-                'project_requirements': data.get('project_requirements', {}),
+                'requirements': requirements,
                 'is_active': True
             }
         )
@@ -89,7 +121,7 @@ class RecruitmentCriteriaView(SafeAPIView):
             logger.warning(f"Failed to save criteria to file: {e}")
         
         # 返回与原版一致的格式
-        return ApiResponse.success(data=criteria.to_dict(), message='招聘标准更新成功')
+        return ApiResponse.success(data=position.to_dict(), message='招聘标准更新成功')
     
     def _get_default_criteria(self):
         """获取默认招聘标准。"""
@@ -115,27 +147,40 @@ class PositionCriteriaListView(SafeAPIView):
     POST: 创建新岗位
     """
     
+    @extend_schema(
+        summary="获取岗位列表",
+        description="获取所有激活的岗位标准列表",
+        parameters=[
+            OpenApiParameter(name='include_resumes', type=bool, description='是否包含关联简历'),
+        ],
+        responses={200: api_response(PositionListDataSerializer(), "PositionList")},
+        tags=["positions"],
+    )
     def handle_get(self, request):
         """获取所有岗位标准。"""
         include_resumes = request.GET.get('include_resumes', 'false').lower() == 'true'
-        criteria_list = PositionCriteria.objects.filter(is_active=True)
+        positions = Position.objects.filter(is_active=True)
         
         data = []
-        for c in criteria_list:
-            item = c.to_dict()
+        for p in positions:
+            item = p.to_dict()
             if include_resumes:
-                # 获取分配到该岗位的简历
-                resumes = c.get_assigned_resumes()
+                # 获取分配到该岗位的简历（直接通过外键关联）
+                resumes = p.resumes.all()
                 item['resumes'] = [
                     {
                         'id': str(r.id),
                         'candidate_name': r.candidate_name,
-                        'position_title': r.position_title,
-                        'resume_content': r.resume_content,
-                        'screening_score': r.screening_score,
-                        'screening_summary': r.screening_summary,
-                        'report_md_url': r.report_md_file.url if r.report_md_file else None,
-                        'report_json_url': r.report_json_file.url if r.report_json_file else None,
+                        'position_title': p.title,
+                        'resume_content': r.content,
+                        'screening_score': {
+                            'comprehensive_score': r.screening_result.get('comprehensive_score') or r.screening_result.get('score'),
+                            'hr_score': r.screening_result.get('hr_score'),
+                            'technical_score': r.screening_result.get('technical_score'),
+                            'manager_score': r.screening_result.get('manager_score'),
+                        } if r.screening_result else None,
+                        'screening_summary': r.screening_result.get('summary') if r.screening_result else None,
+                        'screening_report': r.screening_report,
                         'created_at': r.created_at.isoformat() if r.created_at else None
                     }
                     for r in resumes
@@ -147,6 +192,13 @@ class PositionCriteriaListView(SafeAPIView):
             'total': len(data)
         })
     
+    @extend_schema(
+        summary="创建新岗位",
+        description="创建新的岗位标准",
+        request=PositionCreateRequestSerializer,
+        responses={201: api_response(PositionItemSerializer(), "PositionCreate")},
+        tags=["positions"],
+    )
     def handle_post(self, request):
         """创建新岗位。"""
         data = request.data
@@ -159,25 +211,30 @@ class PositionCriteriaListView(SafeAPIView):
             raise ValidationException("岗位名称不能为空")
         
         # 检查是否已存在同名岗位
-        if PositionCriteria.objects.filter(position=position_name, is_active=True).exists():
+        if Position.objects.filter(title=position_name, is_active=True).exists():
             raise ValidationException(f"岗位 '{position_name}' 已存在")
         
-        criteria = PositionCriteria.objects.create(
-            position=position_name,
+        # 构建 requirements JSON
+        salary_range = data.get('salary_range', [0, 0])
+        requirements = {
+            'required_skills': data.get('required_skills', []),
+            'optional_skills': data.get('optional_skills', []),
+            'min_experience': data.get('min_experience', 0),
+            'education': data.get('education', []),
+            'certifications': data.get('certifications', []),
+            'salary_range': salary_range,
+            'project_requirements': data.get('project_requirements', {}),
+        }
+        
+        position = Position.objects.create(
+            title=position_name,
             department=data.get('department', ''),
             description=data.get('description', ''),
-            required_skills=data.get('required_skills', []),
-            optional_skills=data.get('optional_skills', []),
-            min_experience=data.get('min_experience', 0),
-            education=data.get('education', []),
-            certifications=data.get('certifications', []),
-            salary_min=data.get('salary_range', [0, 0])[0] if data.get('salary_range') else 0,
-            salary_max=data.get('salary_range', [0, 0])[1] if len(data.get('salary_range', [])) > 1 else 0,
-            project_requirements=data.get('project_requirements', {}),
+            requirements=requirements,
             is_active=True
         )
         
-        return ApiResponse.created(data=criteria.to_dict(), message='岗位创建成功')
+        return ApiResponse.created(data=position.to_dict(), message='岗位创建成功')
 
 
 class PositionCriteriaDetailView(SafeAPIView):
@@ -188,29 +245,42 @@ class PositionCriteriaDetailView(SafeAPIView):
     DELETE: 删除岗位（软删除）
     """
     
+    @extend_schema(
+        summary="获取岗位详情",
+        description="获取指定岗位的详细信息，包含关联简历",
+        parameters=[
+            OpenApiParameter(name='include_resumes', type=bool, description='是否包含关联简历'),
+        ],
+        responses={200: api_response(PositionDetailSerializer(), "PositionDetail")},
+        tags=["positions"],
+    )
     def handle_get(self, request, position_id):
         """获取岗位详情。"""
         try:
-            criteria = PositionCriteria.objects.get(id=position_id, is_active=True)
-        except PositionCriteria.DoesNotExist:
+            position = Position.objects.get(id=position_id, is_active=True)
+        except Position.DoesNotExist:
             raise NotFoundException(f"岗位不存在: {position_id}")
         
-        data = criteria.to_dict()
+        data = position.to_dict()
         
-        # 获取分配的简历
+        # 获取分配的简历（直接通过外键关联）
         include_resumes = request.GET.get('include_resumes', 'true').lower() == 'true'
         if include_resumes:
-            resumes = criteria.get_assigned_resumes()
+            resumes = position.resumes.all()
             data['resumes'] = [
                 {
                     'id': str(r.id),
                     'candidate_name': r.candidate_name,
-                    'position_title': r.position_title,
-                    'resume_content': r.resume_content,
-                    'screening_score': r.screening_score,
-                    'screening_summary': r.screening_summary,
-                    'report_md_url': r.report_md_file.url if r.report_md_file else None,
-                    'report_json_url': r.report_json_file.url if r.report_json_file else None,
+                    'position_title': position.title,
+                    'resume_content': r.content,
+                    'screening_score': {
+                        'comprehensive_score': r.screening_result.get('comprehensive_score') or r.screening_result.get('score'),
+                        'hr_score': r.screening_result.get('hr_score'),
+                        'technical_score': r.screening_result.get('technical_score'),
+                        'manager_score': r.screening_result.get('manager_score'),
+                    } if r.screening_result else None,
+                    'screening_summary': r.screening_result.get('summary') if r.screening_result else None,
+                    'screening_report': r.screening_report,
                     'created_at': r.created_at.isoformat() if r.created_at else None
                 }
                 for r in resumes
@@ -218,53 +288,69 @@ class PositionCriteriaDetailView(SafeAPIView):
         
         return ApiResponse.success(data=data)
     
+    @extend_schema(
+        summary="更新岗位",
+        description="更新指定岗位的信息",
+        request=PositionCreateRequestSerializer,
+        responses={200: api_response(PositionItemSerializer(), "PositionUpdate")},
+        tags=["positions"],
+    )
     def handle_put(self, request, position_id):
         """更新岗位。"""
         try:
-            criteria = PositionCriteria.objects.get(id=position_id, is_active=True)
-        except PositionCriteria.DoesNotExist:
+            position = Position.objects.get(id=position_id, is_active=True)
+        except Position.DoesNotExist:
             raise NotFoundException(f"岗位不存在: {position_id}")
         
         data = request.data
         if not data:
             raise ValidationException("请求数据不能为空")
         
-        # 更新字段
+        # 更新基本字段
         if 'position' in data:
-            criteria.position = data['position']
+            position.title = data['position']
         if 'department' in data:
-            criteria.department = data['department']
+            position.department = data['department']
         if 'description' in data:
-            criteria.description = data['description']
+            position.description = data['description']
+        
+        # 更新 requirements JSON
+        requirements = position.requirements or {}
         if 'required_skills' in data:
-            criteria.required_skills = data['required_skills']
+            requirements['required_skills'] = data['required_skills']
         if 'optional_skills' in data:
-            criteria.optional_skills = data['optional_skills']
+            requirements['optional_skills'] = data['optional_skills']
         if 'min_experience' in data:
-            criteria.min_experience = data['min_experience']
+            requirements['min_experience'] = data['min_experience']
         if 'education' in data:
-            criteria.education = data['education']
+            requirements['education'] = data['education']
         if 'certifications' in data:
-            criteria.certifications = data['certifications']
+            requirements['certifications'] = data['certifications']
         if 'salary_range' in data and len(data['salary_range']) >= 2:
-            criteria.salary_min = data['salary_range'][0]
-            criteria.salary_max = data['salary_range'][1]
+            requirements['salary_range'] = data['salary_range']
         if 'project_requirements' in data:
-            criteria.project_requirements = data['project_requirements']
+            requirements['project_requirements'] = data['project_requirements']
         
-        criteria.save()
+        position.requirements = requirements
+        position.save()
         
-        return ApiResponse.success(data=criteria.to_dict(), message='岗位更新成功')
+        return ApiResponse.success(data=position.to_dict(), message='岗位更新成功')
     
+    @extend_schema(
+        summary="删除岗位",
+        description="软删除指定岗位",
+        responses={200: success_response("PositionDelete")},
+        tags=["positions"],
+    )
     def handle_delete(self, request, position_id):
         """删除岗位（软删除）。"""
         try:
-            criteria = PositionCriteria.objects.get(id=position_id, is_active=True)
-        except PositionCriteria.DoesNotExist:
+            position = Position.objects.get(id=position_id, is_active=True)
+        except Position.DoesNotExist:
             raise NotFoundException(f"岗位不存在: {position_id}")
         
-        criteria.is_active = False
-        criteria.save()
+        position.is_active = False
+        position.save()
         
         return ApiResponse.success(message='岗位已删除')
 
@@ -275,18 +361,24 @@ class PositionAssignResumesView(SafeAPIView):
     POST: 将简历分配到岗位
     """
     
+    @extend_schema(
+        summary="分配简历到岗位",
+        description="将一个或多个简历分配到指定岗位",
+        request=AssignResumesRequestSerializer,
+        responses={200: api_response(AssignResumesResponseSerializer(), "AssignResumes")},
+        tags=["positions"],
+    )
     def handle_post(self, request, position_id):
         """将简历分配到岗位。"""
-        from apps.resume_screening.models import ResumeData
-        from .models import ResumePositionAssignment
+        from apps.resume.models import Resume
         
         try:
-            position = PositionCriteria.objects.get(id=position_id, is_active=True)
-        except PositionCriteria.DoesNotExist:
+            position = Position.objects.get(id=position_id, is_active=True)
+        except Position.DoesNotExist:
             raise NotFoundException(f"岗位不存在: {position_id}")
         
         data = request.data
-        resume_ids = data.get('resume_data_ids', [])
+        resume_ids = data.get('resume_data_ids', []) or data.get('resume_ids', [])
         
         if not resume_ids:
             raise ValidationException("请提供要分配的简历ID列表")
@@ -296,30 +388,24 @@ class PositionAssignResumesView(SafeAPIView):
         
         for resume_id in resume_ids:
             try:
-                resume = ResumeData.objects.get(id=resume_id)
-                # 检查是否已分配
-                assignment, created = ResumePositionAssignment.objects.get_or_create(
-                    position=position,
-                    resume_data=resume,
-                    defaults={'notes': data.get('notes', '')}
-                )
-                if created:
-                    assigned_count += 1
-                else:
+                resume = Resume.objects.get(id=resume_id)
+                # 检查是否已分配到该岗位
+                if resume.position_id == position.id:
                     skipped_count += 1
-            except ResumeData.DoesNotExist:
+                else:
+                    resume.position = position
+                    resume.save(update_fields=['position', 'updated_at'])
+                    assigned_count += 1
+            except Resume.DoesNotExist:
                 logger.warning(f"简历不存在: {resume_id}")
                 continue
-        
-        # 更新简历数量
-        position.update_resume_count()
         
         return ApiResponse.success(
             data={
                 'position_id': str(position.id),
                 'assigned_count': assigned_count,
                 'skipped_count': skipped_count,
-                'total_resumes': position.resume_count
+                'total_resumes': position.get_resume_count()
             },
             message=f'成功分配 {assigned_count} 份简历，跳过 {skipped_count} 份已分配简历'
         )
@@ -331,34 +417,35 @@ class PositionRemoveResumeView(SafeAPIView):
     DELETE: 从岗位移除指定简历
     """
     
+    @extend_schema(
+        summary="从岗位移除简历",
+        description="从指定岗位移除指定简历",
+        responses={200: api_response(RemoveResumeResponseSerializer(), "RemoveResume")},
+        tags=["positions"],
+    )
     def handle_delete(self, request, position_id, resume_id):
         """从岗位移除简历。"""
-        from .models import ResumePositionAssignment
+        from apps.resume.models import Resume
         
         try:
-            position = PositionCriteria.objects.get(id=position_id, is_active=True)
-        except PositionCriteria.DoesNotExist:
+            position = Position.objects.get(id=position_id, is_active=True)
+        except Position.DoesNotExist:
             raise NotFoundException(f"岗位不存在: {position_id}")
         
         try:
-            assignment = ResumePositionAssignment.objects.get(
-                position=position,
-                resume_data_id=resume_id
-            )
-            assignment.delete()
-            
-            # 更新简历数量
-            position.update_resume_count()
+            resume = Resume.objects.get(id=resume_id, position=position)
+            resume.position = None
+            resume.save(update_fields=['position', 'updated_at'])
             
             return ApiResponse.success(
                 data={
                     'position_id': str(position.id),
                     'resume_id': str(resume_id),
-                    'total_resumes': position.resume_count
+                    'total_resumes': position.get_resume_count()
                 },
                 message='简历已从岗位移除'
             )
-        except ResumePositionAssignment.DoesNotExist:
+        except Resume.DoesNotExist:
             raise NotFoundException(f"该简历未分配到此岗位")
 
 
@@ -368,6 +455,13 @@ class PositionAIGenerateView(SafeAPIView):
     POST: 根据描述和文档生成岗位要求
     """
     
+    @extend_schema(
+        summary="AI生成岗位要求",
+        description="根据描述和参考文档，使用AI生成岗位要求",
+        request=AIGenerateRequestSerializer,
+        responses={200: api_response(PositionItemSerializer(), "AIGenerate")},
+        tags=["positions"],
+    )
     def handle_post(self, request):
         """根据用户输入生成岗位要求。"""
         from services.agents import get_position_ai_service
