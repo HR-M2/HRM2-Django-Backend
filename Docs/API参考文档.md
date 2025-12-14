@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-14 20:15:02
+> **生成时间**: 2025-12-14 20:24:08
 
 智能招聘管理系统后端API文档
 
@@ -421,6 +421,8 @@
 **提交简历筛选任务**
 
 提交简历筛选任务，后台异步处理
+
+**请求体**: `ResumeScreeningInputRequest`
 
 **响应**:
 
@@ -1591,25 +1593,25 @@ ID 响应
 | `updated_at` | string | 是 | - |
 | `filename` | string | 是 | - |
 | `file_hash` | string | 是 | - |
-| `file_hash_short` | string | 是 | - |
+| `file_hash_short` | string | 是 | 返回文件哈希值的前8位。 |
 | `file_size` | integer | 否 | - |
 | `file_type` | string | 否 | - |
 | `content` | string | 是 | - |
-| `content_preview` | string | 是 | - |
+| `content_preview` | string | 是 | 返回简历内容预览（前200字符）。 |
 | `candidate_name` | string | 是 | - |
 | `status` | string | 否 | * `pending` - 待筛选
 * `screened` - 已筛选
 * `interviewing` - 面试中
 * `analyzed` - 已分析 |
-| `status_display` | string | 是 | - |
+| `status_display` | string | 是 | 返回状态的显示名称。 |
 | `position` | string | 否 | - |
-| `position_title` | string | 是 | - |
-| `position_details` | string | 是 | - |
-| `is_screened` | string | 是 | - |
-| `is_assigned` | string | 是 | - |
+| `position_title` | string | 是 | 返回关联岗位名称。 |
+| `position_details` | Record<string, any> | 是 | 返回关联岗位详情（兼容旧 ResumeData.position_details）。 |
+| `is_screened` | boolean | 是 | 兼容旧API：是否已筛选。 |
+| `is_assigned` | boolean | 是 | 兼容旧API：是否已分配岗位。 |
 | `screening_result` | any | 否 | - |
-| `screening_score` | string | 是 | - |
-| `screening_summary` | string | 是 | - |
+| `screening_score` | number | 是 | 从 screening_result JSON 提取筛选分数。 |
+| `screening_summary` | string | 是 | 从 screening_result JSON 提取筛选摘要。 |
 | `screening_report` | string | 否 | - |
 | `notes` | string | 否 | - |
 
@@ -1621,7 +1623,7 @@ ID 响应
 |:-----|:-----|:-----|:-----|
 | `id` | string | 是 | - |
 | `filename` | string | 是 | - |
-| `file_hash_short` | string | 是 | - |
+| `file_hash_short` | string | 是 | 返回文件哈希值的前8位。 |
 | `file_size` | integer | 否 | - |
 | `file_type` | string | 否 | - |
 | `candidate_name` | string | 是 | - |
@@ -1629,14 +1631,14 @@ ID 响应
 * `screened` - 已筛选
 * `interviewing` - 面试中
 * `analyzed` - 已分析 |
-| `status_display` | string | 是 | - |
+| `status_display` | string | 是 | 返回状态的显示名称。 |
 | `position` | string | 否 | - |
-| `position_title` | string | 是 | - |
-| `is_screened` | string | 是 | - |
-| `is_assigned` | string | 是 | - |
+| `position_title` | string | 是 | 返回关联岗位名称。 |
+| `is_screened` | boolean | 是 | 兼容旧API：是否已筛选。 |
+| `is_assigned` | boolean | 是 | 兼容旧API：是否已分配岗位。 |
 | `notes` | string | 否 | - |
 | `created_at` | string | 否 | - |
-| `content_preview` | string | 是 | - |
+| `content_preview` | string | 是 | 返回简历内容预览（前200字符）。 |
 
 ### ResumeListResponse
 
@@ -1646,6 +1648,17 @@ ID 响应
 | `total` | integer | 是 | - |
 | `page` | integer | 是 | - |
 | `page_size` | integer | 是 | - |
+
+### ResumeScreeningInputRequest
+
+简历筛选输入序列化器（批量筛选）。
+
+| 字段 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `position` | Record<string, any> | 否 | 岗位信息（旧格式） |
+| `position_id` | string | 否 | 岗位ID（新格式） |
+| `resumes` | Record<string, any>[] | 否 | 简历列表（旧格式） |
+| `resume_ids` | string[] | 否 | 简历ID列表（新格式） |
 
 ### ResumeStatsResponse
 
