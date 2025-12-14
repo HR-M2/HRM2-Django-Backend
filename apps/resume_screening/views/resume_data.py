@@ -21,10 +21,10 @@ from apps.resume.models import Resume
 logger = logging.getLogger(__name__)
 
 
-class ResumeDataDetailView(SafeAPIView):
+class ScreeningReportView(SafeAPIView):
     """
-    简历数据详情API
-    GET: 获取简历数据详情
+    筛选报告详情API
+    GET: 获取筛选报告详情
     """
     
     @extend_schema(

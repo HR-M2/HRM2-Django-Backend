@@ -1,5 +1,5 @@
-from .screening import ResumeScreeningView, ScreeningTaskStatusView
-from .resume_data import ResumeDataDetailView
+from .screening import ScreeningSubmitView, ScreeningTaskStatusView
+from .resume_data import ScreeningReportView
 from .task import TaskHistoryView, TaskDeleteView, ReportDownloadView
 from .link import LinkResumeVideoView, UnlinkResumeVideoView
 from .dev_tools import GenerateRandomResumesView
@@ -8,9 +8,9 @@ from .dev_tools import GenerateRandomResumesView
 # 原 resume_library 应用已废弃
 
 __all__ = [
-    'ResumeScreeningView',
+    'ScreeningSubmitView',
     'ScreeningTaskStatusView',
-    'ResumeDataDetailView',
+    'ScreeningReportView',
     'TaskHistoryView',
     'TaskDeleteView',
     'ReportDownloadView',

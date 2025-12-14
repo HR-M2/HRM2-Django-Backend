@@ -6,9 +6,9 @@
 """
 from django.urls import path
 from .views import (
-    ResumeScreeningView,
+    ScreeningSubmitView,
     ScreeningTaskStatusView,
-    ResumeDataDetailView,
+    ScreeningReportView,
     TaskHistoryView,
     TaskDeleteView,
     ReportDownloadView,
@@ -21,7 +21,7 @@ app_name = 'resume_screening'
 
 urlpatterns = [
     # 提交筛选 - POST提交筛选任务
-    path('', ResumeScreeningView.as_view(), name='submit'),
+    path('', ScreeningSubmitView.as_view(), name='submit'),
     
     # 任务列表 - GET获取历史任务
     path('tasks/', TaskHistoryView.as_view(), name='task-list'),
@@ -33,7 +33,7 @@ urlpatterns = [
     path('tasks/<uuid:task_id>/status/', ScreeningTaskStatusView.as_view(), name='task-status'),
     
     # 报告 - GET获取报告详情
-    path('reports/<uuid:report_id>/', ResumeDataDetailView.as_view(), name='report'),
+    path('reports/<uuid:report_id>/', ScreeningReportView.as_view(), name='report'),
     
     # 报告下载 - GET下载报告文件
     path('reports/<uuid:report_id>/download/', ReportDownloadView.as_view(), name='report-download'),

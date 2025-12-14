@@ -29,9 +29,9 @@ from ..serializers import ResumeScreeningInputSerializer
 logger = logging.getLogger(__name__)
 
 
-class ResumeScreeningView(SafeAPIView):
+class ScreeningSubmitView(SafeAPIView):
     """
-    简历初筛API
+    简历筛选提交API
     POST: 提交简历筛选任务
     """
     

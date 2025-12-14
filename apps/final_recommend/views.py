@@ -56,9 +56,9 @@ class RecommendStatsView(SafeAPIView):
         })
 
 
-class CandidateComprehensiveAnalysisView(SafeAPIView):
+class ComprehensiveAnalysisView(SafeAPIView):
     """
-    单人综合分析API
+    综合分析API
     POST: 对单个候选人进行综合分析
     GET: 获取候选人的分析历史
     """

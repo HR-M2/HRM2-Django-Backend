@@ -32,7 +32,7 @@ from services.agents import InterviewAssistAgent
 logger = logging.getLogger(__name__)
 
 
-class SessionListView(SafeAPIView):
+class InterviewSessionListView(SafeAPIView):
     """
     面试会话列表API
     GET: 获取会话列表（需要 resume_id 参数）
@@ -132,7 +132,7 @@ class SessionListView(SafeAPIView):
         )
 
 
-class SessionDetailView(SafeAPIView):
+class InterviewSessionDetailView(SafeAPIView):
     """
     面试会话详情API
     GET: 获取会话详情
@@ -184,9 +184,9 @@ class SessionDetailView(SafeAPIView):
         return ApiResponse.success(message='会话已删除')
 
 
-class GenerateQuestionsView(SafeAPIView):
+class InterviewQuestionsView(SafeAPIView):
     """
-    生成问题API
+    面试问题生成API
     POST: 生成候选问题（临时生成，不保存到数据库）
     """
     
@@ -260,9 +260,9 @@ class GenerateQuestionsView(SafeAPIView):
         )
 
 
-class RecordQAView(SafeAPIView):
+class InterviewQAView(SafeAPIView):
     """
-    记录问答API
+    面试问答记录API
     POST: 记录问答并获取评估
     """
     
@@ -385,9 +385,9 @@ class RecordQAView(SafeAPIView):
         return hints
 
 
-class GenerateReportView(SafeAPIView):
+class InterviewReportView(SafeAPIView):
     """
-    生成报告API
+    面试报告生成API
     POST: 生成最终报告
     """
     
