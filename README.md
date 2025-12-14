@@ -28,10 +28,11 @@ HRM2-Django-Backend/
 ├── apps/
 │   ├── common/              # SafeAPIView、统一异常/响应、分页、日志中间件
 │   ├── position_settings/   # 岗位多维配置 & AI JD 生成
-│   ├── resume_screening/    # 简历组、筛选任务、报告、简历库
+│   ├── resume/              # 统一简历管理（合并原 resume_library）
+│   ├── resume_screening/    # 筛选任务、开发测试工具
 │   ├── video_analysis/      # 视频上传、状态跟踪、结果同步
 │   ├── interview_assist/    # AI 面试问答、记录、报告
-│   └── final_recommend/     # 面试评估与结果下载
+│   └── final_recommend/     # 综合分析与推荐
 ├── config/
 │   ├── settings/
 │   │   ├── base.py          # 基础配置（日志、REST、CORS 等）
@@ -149,12 +150,24 @@ export DJANGO_SETTINGS_MODULE=config.settings.development
 
 | 模块 | 说明 |
 | ---- | ---- |
-| `apps.position_settings` | 支持多岗位 CRUD、简历分配、AI JD 生成；兼容旧版接口。 |
-| `apps.resume_screening` | 简历组管理、筛选任务、报告下载、简历库、开发测试工具 API。 |
+| `apps.position_settings` | 岗位 CRUD、简历分配、AI JD 生成。 |
+| `apps.resume` | 统一简历管理：上传、状态跟踪、筛选结果、岗位分配（合并原 resume_library）。 |
+| `apps.resume_screening` | 筛选任务管理、报告下载、开发测试工具 API。 |
 | `apps.video_analysis` | 面试视频上传、状态查询、结果回写。 |
 | `apps.interview_assist` | 面试会话管理、AI 生成问题（含兴趣点）、记录问答、生成候选提问、生成最终报告。 |
 | `apps.final_recommend` | 单人综合分析、多维度评估（Rubric量表）、生成综合报告与录用建议。 |
 | `services/agents` | 面向岗位/筛选/评估/面试辅助的 Agent 封装，统一 LLM 调用，支持可配置模型与温度。 |
+
+### 📊 数据库结构（6 个业务表）
+
+| 表名 | 模型 | 说明 |
+| ---- | ---- | ---- |
+| `positions` | Position | 岗位配置，requirements JSON 存储技能要求等 |
+| `resumes` | Resume | 统一简历，包含状态、筛选结果、岗位关联 |
+| `screening_tasks` | ScreeningTask | 筛选任务，关联 Position |
+| `video_analyses` | VideoAnalysis | 视频分析，关联 Resume |
+| `interview_sessions` | InterviewSession | 面试会话，关联 Resume |
+| `comprehensive_analyses` | ComprehensiveAnalysis | 综合分析，关联 Resume |
 
 ## 📡 API 端点
 
@@ -170,29 +183,30 @@ export DJANGO_SETTINGS_MODULE=config.settings.development
 | POST | `/ai/generate/` | 基于 JD 关键字 AI 生成岗位要求 |
 | GET | `/list/` | 旧版岗位列表（兼容） |
 
-### 简历筛选 `resume-screening/`
+### 简历管理 `resumes/`
 
 | 方法 | 路径 | 说明 |
 | ---- | ---- | ---- |
-| POST | `/screening/` | 创建筛选任务 |
+| GET/POST | `/` | 简历列表 / 批量上传 |
+| GET | `/stats/` | 简历统计 |
+| POST | `/batch-delete/` | 批量删除 |
+| POST | `/check-hash/` | 去重校验 |
+| POST | `/assign/` | 分配简历到岗位 |
+| GET/PUT/DELETE | `/<uuid:resume_id>/` | 简历详情/更新/删除 |
+| GET/PUT | `/<uuid:resume_id>/screening/` | 筛选结果获取/更新 |
+
+### 简历筛选 `screening/`
+
+| 方法 | 路径 | 说明 |
+| ---- | ---- | ---- |
+| POST | `/` | 创建筛选任务 |
+| GET | `/tasks/` | 历史任务列表 |
 | GET | `/tasks/<uuid:task_id>/status/` | 查询任务状态 |
-| GET | `/tasks-history/` | 历史任务列表 |
 | DELETE | `/tasks/<uuid:task_id>/` | 删除任务 |
-| GET | `/reports/<uuid:report_id>/detail/` | 报告详情 |
+| GET | `/reports/<uuid:report_id>/` | 报告详情 |
 | GET | `/reports/<uuid:report_id>/download/` | 下载报告 |
-| GET | `/data/` | 简历数据列表 |
-| GET | `/groups/` | 简历组列表 |
-| GET | `/groups/<uuid:group_id>/` | 简历组详情 |
-| POST | `/groups/create/` | 创建组 |
-| POST | `/groups/add-resume/` | 添加简历到组 |
-| POST | `/groups/remove-resume/` | 从组移除简历 |
-| POST | `/groups/set-status/` | 更新组状态 |
-| POST | `/link-resume-to-video/` | 关联简历与视频 |
-| POST | `/unlink-resume-from-video/` | 取消关联 |
-| GET/POST | `/library/` | 简历库列表 / 新增简历 |
-| GET/PATCH/DELETE | `/library/<uuid:resume_id>/` | 简历库详情维护 |
-| DELETE | `/library/batch-delete/` | 批量删除简历 |
-| POST | `/library/check-hash/` | 去重校验 |
+| POST | `/videos/link/` | 关联简历与视频 |
+| POST | `/videos/unlink/` | 取消关联 |
 | POST | `/dev/generate-resumes/` | 开发测试生成假数据 |
 
 ### 视频分析 `video-analysis/`
@@ -285,6 +299,7 @@ MIT License
 
 ## 📝 更新日志
 
+- **2024-12-14**: 数据库简化重构完成，11 表 → 6 表；新增 `apps.resume` 模块（合并原 resume_library）；统一简历状态管理
 - **2025-12**: 新增 `interview_assist` 面试辅助模块，支持 AI 生成问题池、记录问答生成候选提问、最终报告生成
 - **2025-12**: 新增 `dev_tools_service` 开发测试服务，支持批量生成模拟简历
 - **2025-12**: `services/agents` 重构，新增 `interview_assist_agent.py` 面试辅助 Agent
