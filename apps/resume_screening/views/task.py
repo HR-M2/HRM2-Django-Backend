@@ -89,17 +89,27 @@ class TaskHistoryView(SafeAPIView):
         })
     
     def _get_resume_data(self, task):
-        """获取任务关联岗位的简历数据。"""
-        # 通过 Position 关联获取简历
-        resumes = Resume.objects.filter(position=task.position)
+        """获取任务关联的简历数据（通过 ManyToMany）。"""
+        # 通过 task.resumes 获取该任务实际筛选的简历
+        resumes = task.resumes.all()
         result = []
         
         for resume in resumes:
+            # 构建符合前端 ScreeningScore 接口的分数对象
+            screening_score = None
+            if resume.screening_result:
+                screening_score = {
+                    "comprehensive_score": resume.screening_result.get('comprehensive_score') or resume.screening_result.get('score'),
+                    "hr_score": resume.screening_result.get('hr_score'),
+                    "technical_score": resume.screening_result.get('technical_score'),
+                    "manager_score": resume.screening_result.get('manager_score'),
+                }
+            
             data = {
                 "id": str(resume.id),
                 "candidate_name": resume.candidate_name,
-                "position_title": task.position.title,
-                "screening_score": resume.screening_result.get('score') if resume.screening_result else None,
+                "position_title": task.position.title if task.position else None,
+                "screening_score": screening_score,
                 "screening_summary": resume.screening_result.get('summary') if resume.screening_result else None,
                 "resume_content": resume.content,
                 "screening_report": resume.screening_report,

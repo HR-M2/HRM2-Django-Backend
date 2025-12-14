@@ -6,7 +6,6 @@
 - 实现: 列表、详情、上传、更新、删除、分配
 """
 import logging
-import hashlib
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from rest_framework import serializers
@@ -15,6 +14,7 @@ from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.pagination import paginate_queryset
 from apps.common.exceptions import ValidationException, NotFoundException
+from apps.common.utils import generate_hash
 
 from .models import Resume
 from .serializers import (
@@ -119,7 +119,7 @@ class ResumeListView(SafeAPIView):
                 skipped_count += 1
                 continue
             
-            file_hash = hashlib.md5(content.encode('utf-8')).hexdigest()
+            file_hash = generate_hash(content)
             
             if Resume.objects.filter(file_hash=file_hash).exists():
                 skipped_count += 1
@@ -426,6 +426,7 @@ class ResumeStatsView(SafeAPIView):
     def handle_get(self, request):
         """获取简历统计。"""
         from django.db.models import Count, Q
+        from apps.interview_assist.models import InterviewSession
         
         stats = Resume.objects.aggregate(
             total_count=Count('id'),
@@ -436,5 +437,9 @@ class ResumeStatsView(SafeAPIView):
             assigned_count=Count('id', filter=Q(position__isnull=False)),
             unassigned_count=Count('id', filter=Q(position__isnull=True)),
         )
+        
+        # 添加面试统计
+        stats['interview_total'] = InterviewSession.objects.count()
+        stats['interview_completed'] = InterviewSession.objects.filter(final_report__isnull=False).count()
         
         return ApiResponse.success(data=stats)

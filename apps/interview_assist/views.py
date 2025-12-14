@@ -112,7 +112,12 @@ class SessionListView(SafeAPIView):
             'position_title': resume.position.title if resume.position else None,
         }
         if resume.screening_result:
-            resume_summary['screening_score'] = resume.screening_result.get('score')
+            resume_summary['screening_score'] = {
+                'comprehensive_score': resume.screening_result.get('comprehensive_score') or resume.screening_result.get('score'),
+                'hr_score': resume.screening_result.get('hr_score'),
+                'technical_score': resume.screening_result.get('technical_score'),
+                'manager_score': resume.screening_result.get('manager_score'),
+            }
             resume_summary['screening_summary'] = resume.screening_result.get('summary', '')[:200]
         
         return ApiResponse.created(

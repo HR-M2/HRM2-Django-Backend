@@ -14,6 +14,7 @@ from apps.common.schemas import (
     GenerateResumesRequestSerializer, GenerateResumesResponseSerializer,
 )
 from apps.resume.models import Resume
+from apps.position_settings.models import Position
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,13 @@ class GenerateRandomResumesView(SafeAPIView):
             service = get_dev_tools_service()
             resumes = service.generate_batch_resumes(position_data, count)
             
+            # 获取或创建岗位
+            position_title = position_data.get('position', '未指定岗位')
+            position, _ = Position.objects.get_or_create(
+                title=position_title,
+                defaults={'requirements': position_data}
+            )
+            
             # 添加到简历库
             added_resumes = []
             skipped_resumes = []
@@ -73,8 +81,9 @@ class GenerateRandomResumesView(SafeAPIView):
                     file_type='text/plain',
                     content=resume['content'],
                     candidate_name=resume['candidate_name'],
+                    position=position,
                     status=Resume.Status.PENDING,
-                    notes=f"由开发测试工具自动生成，目标岗位：{position_data.get('position', '未知')}"
+                    notes=f"由开发测试工具自动生成"
                 )
                 
                 added_resumes.append({

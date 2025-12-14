@@ -14,11 +14,6 @@ def generate_hash(content: str) -> str:
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
 
-def generate_md5(content: str) -> str:
-    """生成内容的MD5哈希值。"""
-    return hashlib.md5(content.encode('utf-8')).hexdigest()
-
-
 def safe_json_loads(content: str, default: Any = None) -> Any:
     """安全加载JSON字符串。"""
     try:

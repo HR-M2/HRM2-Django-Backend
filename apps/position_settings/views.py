@@ -173,7 +173,12 @@ class PositionCriteriaListView(SafeAPIView):
                         'candidate_name': r.candidate_name,
                         'position_title': p.title,
                         'resume_content': r.content,
-                        'screening_score': r.screening_result.get('score') if r.screening_result else None,
+                        'screening_score': {
+                            'comprehensive_score': r.screening_result.get('comprehensive_score') or r.screening_result.get('score'),
+                            'hr_score': r.screening_result.get('hr_score'),
+                            'technical_score': r.screening_result.get('technical_score'),
+                            'manager_score': r.screening_result.get('manager_score'),
+                        } if r.screening_result else None,
                         'screening_summary': r.screening_result.get('summary') if r.screening_result else None,
                         'screening_report': r.screening_report,
                         'created_at': r.created_at.isoformat() if r.created_at else None
@@ -268,7 +273,12 @@ class PositionCriteriaDetailView(SafeAPIView):
                     'candidate_name': r.candidate_name,
                     'position_title': position.title,
                     'resume_content': r.content,
-                    'screening_score': r.screening_result.get('score') if r.screening_result else None,
+                    'screening_score': {
+                        'comprehensive_score': r.screening_result.get('comprehensive_score') or r.screening_result.get('score'),
+                        'hr_score': r.screening_result.get('hr_score'),
+                        'technical_score': r.screening_result.get('technical_score'),
+                        'manager_score': r.screening_result.get('manager_score'),
+                    } if r.screening_result else None,
                     'screening_summary': r.screening_result.get('summary') if r.screening_result else None,
                     'screening_report': r.screening_report,
                     'created_at': r.created_at.isoformat() if r.created_at else None

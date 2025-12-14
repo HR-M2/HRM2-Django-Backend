@@ -14,6 +14,7 @@ from drf_spectacular.utils import extend_schema
 from apps.common.mixins import SafeAPIView
 from apps.common.response import ApiResponse
 from apps.common.exceptions import ValidationException
+from apps.common.utils import extract_name_from_filename, generate_hash
 from apps.common.schemas import (
     api_response,
     TaskSubmitSerializer, TaskStatusSerializer,
@@ -74,12 +75,10 @@ class ResumeScreeningView(SafeAPIView):
             )
             
             # 立即保存简历数据到 Resume 模型
-            import hashlib
-            from apps.common.utils import extract_name_from_filename
             for resume in resumes_data:
                 candidate_name = extract_name_from_filename(resume['name'])
                 content = resume['content']
-                file_hash = hashlib.md5(content.encode('utf-8')).hexdigest()
+                file_hash = generate_hash(content)
                 
                 # 检查是否已存在
                 existing = Resume.objects.filter(file_hash=file_hash).first()
@@ -163,7 +162,7 @@ class ResumeScreeningView(SafeAPIView):
             for resume in resumes_data:
                 candidate_name = extract_name_from_filename(resume['name'])
                 content = resume['content']
-                file_hash = hashlib.md5(content.encode('utf-8')).hexdigest()
+                file_hash = generate_hash(content)
                 result = results.get(candidate_name, {})
                 
                 # 查找或创建 Resume
@@ -180,12 +179,20 @@ class ResumeScreeningView(SafeAPIView):
                 
                 # 更新筛选结果
                 if result:
+                    scores = result.get('scores', {})
                     screening_result = {
-                        'score': result.get('comprehensive_score', result.get('score')),
+                        'score': scores.get('comprehensive_score', result.get('comprehensive_score', result.get('score'))),
+                        'hr_score': scores.get('hr_score'),
+                        'technical_score': scores.get('technical_score'),
+                        'manager_score': scores.get('manager_score'),
+                        'comprehensive_score': scores.get('comprehensive_score', result.get('comprehensive_score')),
                         'dimensions': result.get('dimensions', {}),
                         'summary': result.get('summary', result.get('screening_summary', '')),
                     }
-                    resume_obj.set_screening_result(screening_result, result.get('report_md'))
+                    resume_obj.set_screening_result(screening_result, result.get('md_content'))
+                
+                # 将简历添加到任务的多对多关系中
+                task.resumes.add(resume_obj)
                 
                 processed_count += 1
                 task.update_progress(processed_count, len(resumes_data))
@@ -233,17 +240,27 @@ class ScreeningTaskStatusView(SafeAPIView):
         return ApiResponse.success(data=response_data)
     
     def _get_resume_data(self, task):
-        """获取任务关联岗位的简历数据。"""
-        # 通过 Position 关联获取简历
-        resumes = Resume.objects.filter(position=task.position)
+        """获取任务关联的简历数据（通过 ManyToMany）。"""
+        # 通过 task.resumes 获取该任务实际筛选的简历
+        resumes = task.resumes.all()
         result = []
         
         for resume in resumes:
+            # 构建符合前端 ScreeningScore 接口的分数对象
+            screening_score = None
+            if resume.screening_result:
+                screening_score = {
+                    "comprehensive_score": resume.screening_result.get('comprehensive_score') or resume.screening_result.get('score'),
+                    "hr_score": resume.screening_result.get('hr_score'),
+                    "technical_score": resume.screening_result.get('technical_score'),
+                    "manager_score": resume.screening_result.get('manager_score'),
+                }
+            
             data = {
                 "id": str(resume.id),
                 "candidate_name": resume.candidate_name,
-                "position_title": task.position.title,
-                "screening_score": resume.screening_result.get('score') if resume.screening_result else None,
+                "position_title": task.position.title if task.position else None,
+                "screening_score": screening_score,
                 "screening_summary": resume.screening_result.get('summary') if resume.screening_result else None,
                 "resume_content": resume.content,
                 "screening_report": resume.screening_report,

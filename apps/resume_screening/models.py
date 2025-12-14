@@ -39,6 +39,14 @@ class ScreeningTask(models.Model):
         verbose_name="岗位"
     )
     
+    # 关联简历（多对多）- 记录该任务实际筛选的简历
+    resumes = models.ManyToManyField(
+        'resume.Resume',
+        related_name='screening_tasks',
+        blank=True,
+        verbose_name="筛选的简历"
+    )
+    
     # 任务状态
     status = models.CharField(
         max_length=20,
