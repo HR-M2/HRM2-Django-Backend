@@ -81,7 +81,7 @@ class InterviewSessionListView(SafeAPIView):
     )
     def handle_post(self, request):
         """创建面试会话。"""
-        resume_id = self.get_param(request, 'resume_id') or self.get_param(request, 'resume_data_id', required=True)
+        resume_id = self.get_param(request, 'resume_id', required=True)
         
         # 获取简历
         try:

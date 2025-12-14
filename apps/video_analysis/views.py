@@ -45,7 +45,7 @@ class VideoAnalysisView(SafeAPIView):
                     'video_file': serializers.FileField(help_text="视频文件"),
                     'candidate_name': serializers.CharField(help_text="候选人姓名"),
                     'position_applied': serializers.CharField(help_text="应聘岗位"),
-                    'resume_data_id': serializers.CharField(required=False, help_text="关联简历ID"),
+                    'resume_id': serializers.CharField(required=False, help_text="关联简历ID"),
                     'video_name': serializers.CharField(required=False, help_text="视频名称"),
                 }
             )
@@ -58,7 +58,7 @@ class VideoAnalysisView(SafeAPIView):
         video_file = request.FILES.get('video_file')
         candidate_name = self.get_param(request, 'candidate_name')
         position_applied = self.get_param(request, 'position_applied')
-        resume_id = self.get_param(request, 'resume_id') or self.get_param(request, 'resume_data_id')
+        resume_id = self.get_param(request, 'resume_id')
         video_name = self.get_param(request, 'video_name') or (video_file.name if video_file else None)
         
         if not video_file:

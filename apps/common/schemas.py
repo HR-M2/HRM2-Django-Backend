@@ -303,7 +303,7 @@ class VideoAnalysisDetailSerializer(VideoAnalysisItemSerializer):
     """视频分析详情"""
     summary = serializers.CharField(required=False, help_text="分析摘要")
     error_message = serializers.CharField(required=False, help_text="错误信息")
-    resume_data_id = serializers.CharField(required=False, help_text="关联简历ID")
+    resume_id = serializers.CharField(required=False, help_text="关联简历ID")
 
 
 class VideoUploadResponseSerializer(serializers.Serializer):
@@ -314,7 +314,7 @@ class VideoUploadResponseSerializer(serializers.Serializer):
     position_applied = serializers.CharField(help_text="应聘岗位")
     status = serializers.CharField(help_text="状态")
     created_at = serializers.DateTimeField(help_text="创建时间")
-    resume_data_id = serializers.CharField(required=False, help_text="关联简历ID")
+    resume_id = serializers.CharField(required=False, help_text="关联简历ID")
 
 
 class VideoUpdateResponseSerializer(serializers.Serializer):
@@ -322,7 +322,7 @@ class VideoUpdateResponseSerializer(serializers.Serializer):
     id = serializers.CharField(help_text="视频分析ID")
     status = serializers.CharField(help_text="状态")
     analysis_result = VideoAnalysisResultSerializer(help_text="分析结果")
-    resume_data_id = serializers.CharField(required=False, help_text="关联简历ID")
+    resume_id = serializers.CharField(required=False, help_text="关联简历ID")
 
 
 # =============================================================================
@@ -486,7 +486,7 @@ class RemoveResumeResponseSerializer(serializers.Serializer):
 class SessionItemSerializer(serializers.Serializer):
     """会话列表项"""
     id = serializers.CharField(help_text="会话ID")
-    resume_data_id = serializers.CharField(help_text="简历数据ID")
+    resume_id = serializers.CharField(help_text="简历ID")
     qa_records = QARecordSerializer(many=True, help_text="问答记录")
     created_at = serializers.DateTimeField(help_text="创建时间")
     final_report = FinalReportSerializer(required=False, allow_null=True, help_text="最终报告")
@@ -652,7 +652,7 @@ class TaskListDataSerializer(serializers.Serializer):
 
 class LinkVideoResponseSerializer(serializers.Serializer):
     """关联视频响应"""
-    resume_data_id = serializers.CharField(help_text="简历数据ID")
+    resume_id = serializers.CharField(help_text="简历ID")
     video_analysis_id = serializers.CharField(help_text="视频分析ID")
     candidate_name = serializers.CharField(help_text="候选人姓名")
     video_name = serializers.CharField(help_text="视频名称")
@@ -660,7 +660,7 @@ class LinkVideoResponseSerializer(serializers.Serializer):
 
 class UnlinkVideoResponseSerializer(serializers.Serializer):
     """解除关联响应"""
-    resume_data_id = serializers.CharField(help_text="简历数据ID")
+    resume_id = serializers.CharField(help_text="简历ID")
     disconnected_video_id = serializers.CharField(help_text="断开的视频ID")
     candidate_name = serializers.CharField(help_text="候选人姓名")
     video_name = serializers.CharField(help_text="视频名称")
@@ -695,7 +695,7 @@ class PositionCreateRequestSerializer(serializers.Serializer):
 
 class AssignResumesRequestSerializer(serializers.Serializer):
     """分配简历请求"""
-    resume_data_ids = serializers.ListField(child=serializers.CharField(), help_text="简历ID列表")
+    resume_ids = serializers.ListField(child=serializers.CharField(), help_text="简历ID列表")
     notes = serializers.CharField(required=False, help_text="备注")
 
 
@@ -729,7 +729,7 @@ class HashCheckRequestSerializer(serializers.Serializer):
 
 class SessionCreateRequestSerializer(serializers.Serializer):
     """创建会话请求"""
-    resume_data_id = serializers.CharField(help_text="简历数据ID")
+    resume_id = serializers.CharField(help_text="简历ID")
     job_config = serializers.JSONField(required=False, help_text="岗位配置")
 
 
@@ -759,13 +759,13 @@ class GenerateReportRequestSerializer(serializers.Serializer):
 
 class LinkVideoRequestSerializer(serializers.Serializer):
     """关联视频请求"""
-    resume_data_id = serializers.CharField(help_text="简历数据ID")
+    resume_id = serializers.CharField(help_text="简历ID")
     video_analysis_id = serializers.CharField(help_text="视频分析ID")
 
 
 class UnlinkVideoRequestSerializer(serializers.Serializer):
     """解除关联请求"""
-    resume_data_id = serializers.CharField(help_text="简历数据ID")
+    resume_id = serializers.CharField(help_text="简历ID")
 
 
 class GenerateResumesPositionSerializer(serializers.Serializer):

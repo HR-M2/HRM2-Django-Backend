@@ -36,7 +36,7 @@ class LinkResumeVideoView(SafeAPIView):
         """将简历数据与视频分析关联。"""
         from apps.video_analysis.models import VideoAnalysis
         
-        resume_id = self.get_param(request, 'resume_data_id', required=True)  # 兼容旧参数名
+        resume_id = self.get_param(request, 'resume_id', required=True)
         video_analysis_id = self.get_param(request, 'video_analysis_id', required=True)
         
         # 获取简历
@@ -63,7 +63,7 @@ class LinkResumeVideoView(SafeAPIView):
         # 返回与原版一致的格式
         return ApiResponse.success(
             data={
-                "resume_data_id": str(resume.id),
+                "resume_id": str(resume.id),
                 "video_analysis_id": str(video_analysis.id),
                 "candidate_name": resume.candidate_name,
                 "video_name": video_analysis.video_name
@@ -87,7 +87,7 @@ class UnlinkResumeVideoView(SafeAPIView):
     )
     def handle_post(self, request):
         """解除简历数据与视频分析的关联。"""
-        resume_id = self.get_param(request, 'resume_data_id', required=True)  # 兼容旧参数名
+        resume_id = self.get_param(request, 'resume_id', required=True)
         
         # 获取简历
         resume = self.get_object_or_404(Resume, id=resume_id)
@@ -108,7 +108,7 @@ class UnlinkResumeVideoView(SafeAPIView):
         # 返回与原版一致的格式
         return ApiResponse.success(
             data={
-                "resume_data_id": str(resume.id),
+                "resume_id": str(resume.id),
                 "disconnected_video_id": video_id,
                 "candidate_name": resume.candidate_name,
                 "video_name": video_name

@@ -378,7 +378,7 @@ class PositionAssignResumesView(SafeAPIView):
             raise NotFoundException(f"岗位不存在: {position_id}")
         
         data = request.data
-        resume_ids = data.get('resume_data_ids', []) or data.get('resume_ids', [])
+        resume_ids = data.get('resume_ids', [])
         
         if not resume_ids:
             raise ValidationException("请提供要分配的简历ID列表")

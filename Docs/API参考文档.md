@@ -1,7 +1,7 @@
 # HR招聘系统 API
 
 > **版本**: 1.0.0
-> **生成时间**: 2025-12-14 19:04:16
+> **生成时间**: 2025-12-14 20:15:02
 
 智能招聘管理系统后端API文档
 
@@ -1052,7 +1052,7 @@ AI生成岗位请求
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resume_data_ids` | string[] | 是 | 简历ID列表 |
+| `resume_ids` | string[] | 是 | 简历ID列表 |
 | `notes` | string | 否 | 备注 |
 
 ### AssignResumesResponse
@@ -1309,7 +1309,7 @@ ID 响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resume_data_id` | string | 是 | 简历数据ID |
+| `resume_id` | string | 是 | 简历ID |
 | `video_analysis_id` | string | 是 | 视频分析ID |
 
 ### LinkVideoResponse
@@ -1318,7 +1318,7 @@ ID 响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resume_data_id` | string | 是 | 简历数据ID |
+| `resume_id` | string | 是 | 简历ID |
 | `video_analysis_id` | string | 是 | 视频分析ID |
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `video_name` | string | 是 | 视频名称 |
@@ -1728,7 +1728,7 @@ ID 响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resume_data_id` | string | 是 | 简历数据ID |
+| `resume_id` | string | 是 | 简历ID |
 | `job_config` | any | 否 | 岗位配置 |
 
 ### SessionCreateResponse
@@ -1775,7 +1775,7 @@ ID 响应
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
 | `id` | string | 是 | 会话ID |
-| `resume_data_id` | string | 是 | 简历数据ID |
+| `resume_id` | string | 是 | 简历ID |
 | `qa_records` | QARecord[] | 是 | 问答记录 |
 | `created_at` | string | 是 | 创建时间 |
 | `final_report` | FinalReport | 否 | 最终报告 |
@@ -1855,7 +1855,7 @@ ID 响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resume_data_id` | string | 是 | 简历数据ID |
+| `resume_id` | string | 是 | 简历ID |
 
 ### UnlinkVideoResponse
 
@@ -1863,7 +1863,7 @@ ID 响应
 
 | 字段 | 类型 | 必填 | 说明 |
 |:-----|:-----|:-----|:-----|
-| `resume_data_id` | string | 是 | 简历数据ID |
+| `resume_id` | string | 是 | 简历ID |
 | `disconnected_video_id` | string | 是 | 断开的视频ID |
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `video_name` | string | 是 | 视频名称 |
@@ -1914,7 +1914,7 @@ ID 响应
 | `analysis_result` | VideoAnalysisResult | 否 | 分析结果 |
 | `summary` | string | 否 | 分析摘要 |
 | `error_message` | string | 否 | 错误信息 |
-| `resume_data_id` | string | 否 | 关联简历ID |
+| `resume_id` | string | 否 | 关联简历ID |
 
 ### VideoAnalysisItem
 
@@ -1981,7 +1981,7 @@ ID 响应
 | `id` | string | 是 | 视频分析ID |
 | `status` | string | 是 | 状态 |
 | `analysis_result` | VideoAnalysisResult | 是 | 分析结果 |
-| `resume_data_id` | string | 否 | 关联简历ID |
+| `resume_id` | string | 否 | 关联简历ID |
 
 ### VideoUploadRequestRequest
 
@@ -1990,7 +1990,7 @@ ID 响应
 | `video_file` | string | 是 | 视频文件 |
 | `candidate_name` | string | 是 | 候选人姓名 |
 | `position_applied` | string | 是 | 应聘岗位 |
-| `resume_data_id` | string | 否 | 关联简历ID |
+| `resume_id` | string | 否 | 关联简历ID |
 | `video_name` | string | 否 | 视频名称 |
 
 ### VideoUploadResponse
@@ -2005,4 +2005,4 @@ ID 响应
 | `position_applied` | string | 是 | 应聘岗位 |
 | `status` | string | 是 | 状态 |
 | `created_at` | string | 是 | 创建时间 |
-| `resume_data_id` | string | 否 | 关联简历ID |
+| `resume_id` | string | 否 | 关联简历ID |
