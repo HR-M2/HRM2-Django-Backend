@@ -38,6 +38,7 @@ class ScreeningSubmitView(SafeAPIView):
     @extend_schema(
         summary="提交简历筛选任务",
         description="提交简历筛选任务，后台异步处理",
+        request=ResumeScreeningInputSerializer,
         responses={202: api_response(TaskSubmitSerializer(), "ScreeningSubmit")},
         tags=["screening"],
     )

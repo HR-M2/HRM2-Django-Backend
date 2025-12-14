@@ -42,6 +42,7 @@ class InterviewSessionListView(SafeAPIView):
     @extend_schema(
         summary="获取面试会话列表",
         description="获取指定简历的面试会话列表",
+        operation_id="interviews_sessions_list",
         parameters=[
             OpenApiParameter(name='resume_id', type=str, required=True, description='简历ID（必填）'),
         ],
@@ -142,6 +143,7 @@ class InterviewSessionDetailView(SafeAPIView):
     @extend_schema(
         summary="获取会话详情",
         description="获取指定面试会话的详细信息",
+        operation_id="interviews_sessions_detail",
         responses={200: api_response(SessionDetailSerializer(), "SessionDetail")},
         tags=["interviews"],
     )

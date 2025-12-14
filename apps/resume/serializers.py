@@ -5,7 +5,10 @@
 - 合并原 ResumeLibrary 和 ResumeData 的序列化器
 - 兼容原 API 响应格式
 """
+from typing import Optional, Dict, Any
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 from .models import Resume
 
 
@@ -30,29 +33,35 @@ class ResumeListSerializer(serializers.ModelSerializer):
             'notes', 'created_at', 'content_preview'
         ]
     
-    def get_content_preview(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_content_preview(self, obj) -> Optional[str]:
         """返回简历内容预览（前200字符）。"""
         if obj.content and len(obj.content) > 200:
             return obj.content[:200] + '...'
         return obj.content
     
-    def get_file_hash_short(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_file_hash_short(self, obj) -> str:
         """返回文件哈希值的前8位。"""
         return obj.file_hash[:8] if obj.file_hash else ''
     
-    def get_position_title(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_position_title(self, obj) -> Optional[str]:
         """返回关联岗位名称。"""
         return obj.position.title if obj.position else None
     
-    def get_status_display(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_status_display(self, obj) -> str:
         """返回状态的显示名称。"""
         return obj.get_status_display()
     
-    def get_is_screened(self, obj):
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_is_screened(self, obj) -> bool:
         """兼容旧API：是否已筛选。"""
         return obj.status != Resume.Status.PENDING
     
-    def get_is_assigned(self, obj):
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_is_assigned(self, obj) -> bool:
         """兼容旧API：是否已分配岗位。"""
         return obj.position_id is not None
 
@@ -86,45 +95,54 @@ class ResumeDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'file_hash']
     
-    def get_content_preview(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_content_preview(self, obj) -> Optional[str]:
         """返回简历内容预览（前200字符）。"""
         if obj.content and len(obj.content) > 200:
             return obj.content[:200] + '...'
         return obj.content
     
-    def get_file_hash_short(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_file_hash_short(self, obj) -> str:
         """返回文件哈希值的前8位。"""
         return obj.file_hash[:8] if obj.file_hash else ''
     
-    def get_position_title(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_position_title(self, obj) -> Optional[str]:
         """返回关联岗位名称。"""
         return obj.position.title if obj.position else None
     
-    def get_position_details(self, obj):
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_position_details(self, obj) -> Optional[Dict[str, Any]]:
         """返回关联岗位详情（兼容旧 ResumeData.position_details）。"""
         if obj.position:
             return obj.position.to_dict()
         return None
     
-    def get_status_display(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_status_display(self, obj) -> str:
         """返回状态的显示名称。"""
         return obj.get_status_display()
     
-    def get_is_screened(self, obj):
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_is_screened(self, obj) -> bool:
         """兼容旧API：是否已筛选。"""
         return obj.status != Resume.Status.PENDING
     
-    def get_is_assigned(self, obj):
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_is_assigned(self, obj) -> bool:
         """兼容旧API：是否已分配岗位。"""
         return obj.position_id is not None
     
-    def get_screening_score(self, obj):
+    @extend_schema_field(OpenApiTypes.NUMBER)
+    def get_screening_score(self, obj) -> Optional[float]:
         """从 screening_result JSON 提取筛选分数。"""
         if obj.screening_result:
             return obj.screening_result.get('score')
         return None
     
-    def get_screening_summary(self, obj):
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_screening_summary(self, obj) -> Optional[str]:
         """从 screening_result JSON 提取筛选摘要。"""
         if obj.screening_result:
             return obj.screening_result.get('summary')

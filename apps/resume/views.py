@@ -37,6 +37,7 @@ class ResumeListView(SafeAPIView):
     @extend_schema(
         summary="获取简历列表",
         description="获取简历列表，支持按岗位、状态、候选人过滤，支持分页",
+        operation_id="resumes_list",
         parameters=[
             OpenApiParameter(name='position_id', type=str, description='岗位ID过滤'),
             OpenApiParameter(name='status', type=str, description='状态过滤'),
@@ -177,6 +178,7 @@ class ResumeDetailView(SafeAPIView):
     @extend_schema(
         summary="获取简历详情",
         description="获取指定简历的详细信息",
+        operation_id="resumes_detail",
         responses={200: ResumeDetailSerializer},
         tags=["resumes"],
     )

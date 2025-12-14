@@ -150,6 +150,7 @@ class PositionListView(SafeAPIView):
     @extend_schema(
         summary="获取岗位列表",
         description="获取所有激活的岗位标准列表",
+        operation_id="positions_list",
         parameters=[
             OpenApiParameter(name='include_resumes', type=bool, description='是否包含关联简历'),
         ],
@@ -248,6 +249,7 @@ class PositionDetailView(SafeAPIView):
     @extend_schema(
         summary="获取岗位详情",
         description="获取指定岗位的详细信息，包含关联简历",
+        operation_id="positions_detail",
         parameters=[
             OpenApiParameter(name='include_resumes', type=bool, description='是否包含关联简历'),
         ],

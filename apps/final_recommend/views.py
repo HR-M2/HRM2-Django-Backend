@@ -101,6 +101,7 @@ class ComprehensiveAnalysisView(SafeAPIView):
     @extend_schema(
         summary="执行综合分析",
         description="对单个候选人进行综合分析，整合初筛报告和面试报告",
+        request=None,
         responses={
             200: api_response(ComprehensiveAnalysisSerializer(), "ComprehensiveAnalysisPost"),
         },
